@@ -1,0 +1,71 @@
+<svg viewBox="0 0 2000 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" role="img" aria-label="MyShots - Training Journal">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2d4a2e"/>
+      <stop offset="55%" stop-color="#3d3a26"/>
+      <stop offset="100%" stop-color="#4a3826"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="60%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.35"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="2000" height="100" fill="url(#bgGrad)"/>
+  <rect width="2000" height="100" fill="url(#vignette)"/>
+
+  <!-- Decorative double border -->
+  <rect x="10" y="10" width="1980" height="80" fill="none" stroke="#b8965a" stroke-width="1" opacity="0.55"/>
+  <rect x="14" y="14" width="1972" height="72" fill="none" stroke="#b8965a" stroke-width="0.4" opacity="0.4"/>
+
+  <!-- Left ornament: Longbow with nocked arrow -->
+  <g transform="translate(290, 50)" stroke-linecap="round">
+    <path d="M 0 -32 Q 12 -16 12 0 Q 12 16 0 32" fill="none" stroke="#c9a961" stroke-width="1.6" opacity="0.9"/>
+    <circle cx="0" cy="-32" r="1" fill="#c9a961"/>
+    <circle cx="0" cy="32" r="1" fill="#c9a961"/>
+    <path d="M 0 -32 L -3 0 L 0 32" fill="none" stroke="#f4ecd8" stroke-width="0.5" opacity="0.65"/>
+    <line x1="-28" y1="0" x2="24" y2="0" stroke="#f4ecd8" stroke-width="0.7" opacity="0.85"/>
+    <polygon points="24,0 20,-2 20,2" fill="#c9a961"/>
+    <path d="M -28 0 L -32 -2.5 L -25 -0.5 Z" fill="#c9a961" opacity="0.85"/>
+    <path d="M -28 0 L -32 2.5 L -25 0.5 Z" fill="#b8965a" opacity="0.7"/>
+  </g>
+
+  <!-- Right ornament: Concentric target -->
+  <g transform="translate(1710, 50)" fill="none" stroke="#c9a961">
+    <circle r="30" stroke-width="0.6" opacity="0.35"/>
+    <circle r="24" stroke-width="0.6" opacity="0.45"/>
+    <circle r="18" stroke-width="0.6" opacity="0.55"/>
+    <circle r="12" stroke-width="0.6" opacity="0.7"/>
+    <circle r="7" stroke-width="0.6" opacity="0.85"/>
+    <circle r="2.5" fill="#c9a961" opacity="0.95" stroke="none"/>
+  </g>
+
+  <!-- Top flourish -->
+  <g transform="translate(1000, 27)" opacity="0.7" fill="none" stroke="#b8965a" stroke-width="0.5">
+    <line x1="-50" y1="0" x2="-8" y2="0"/>
+    <line x1="8" y1="0" x2="50" y2="0"/>
+    <circle cx="0" cy="0" r="1.5" fill="#c9a961" stroke="none"/>
+    <path d="M -8 0 L -4 -2 L -4 2 Z" fill="#b8965a" stroke="none"/>
+    <path d="M 8 0 L 4 -2 L 4 2 Z" fill="#b8965a" stroke="none"/>
+  </g>
+
+  <!-- Title -->
+  <text x="1000" y="56" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="26" font-weight="400"
+        fill="#f4ecd8" letter-spacing="7">MYSHOTS</text>
+
+  <!-- Subtitle -->
+  <text x="1000" y="74" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="10" font-style="italic"
+        fill="#c9a961" letter-spacing="2">Training Journal</text>
+
+  <!-- Bottom flourish -->
+  <g transform="translate(1000, 85)" opacity="0.7" fill="none" stroke="#b8965a" stroke-width="0.5">
+    <line x1="-50" y1="0" x2="-8" y2="0"/>
+    <line x1="8" y1="0" x2="50" y2="0"/>
+    <circle cx="0" cy="0" r="1.5" fill="#c9a961" stroke="none"/>
+  </g>
+</svg>

@@ -8,16 +8,16 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: sans-serif; background: #fff; }
-        .page-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
         .page-header img { width: 100%; height: auto; display: block; }
+        .page-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    <header class="page-header">
+        <img src="{% static 'img/myshots_page_header_wide.svg' %}" alt="MyShots">
+    </header>
     <div class="page-wrap">
-        <header class="page-header">
-            <img src="{% static 'img/myshots_page_header.svg' %}" alt="MyShots">
-        </header>
         {% block content %}{% endblock %}
     </div>
     {% block extra_scripts %}{% endblock %}
