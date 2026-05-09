@@ -1,6 +1,5 @@
 import pytest
 
-from accounts.tests.factories import UserFactory
 from equipment.models import Bow, OlympicBowSetup
 from equipment.tests.factories import BowFactory, OlympicBowSetupFactory
 
@@ -10,11 +9,6 @@ class TestBow:
     def test_str(self):
         bow = BowFactory(name="Blue Hoyt", type=Bow.BowType.OLYMPIC_RECURVE)
         assert str(bow) == "Blue Hoyt (Olympic Recurve)"
-
-    def test_owner_fk(self):
-        user = UserFactory()
-        bow = BowFactory(owner=user)
-        assert bow.owner == user
 
     def test_draw_weight_nullable(self):
         bow = BowFactory(draw_weight_lbs=None)
@@ -31,23 +25,10 @@ class TestBow:
         bow.refresh_from_db()
         assert bow.notes == ""
 
-    def test_user_can_own_multiple_bows(self):
-        user = UserFactory()
-        BowFactory(owner=user)
-        BowFactory(owner=user)
-        assert Bow.objects.filter(owner=user).count() == 2
-
-    def test_cascade_delete_with_owner(self):
-        bow = BowFactory()
-        owner = bow.owner
-        owner.delete()
-        assert not Bow.objects.filter(pk=bow.pk).exists()
-
     def test_ordering_by_name(self):
-        user = UserFactory()
-        BowFactory(owner=user, name="Zebra")
-        BowFactory(owner=user, name="Alpha")
-        names = list(Bow.objects.filter(owner=user).values_list("name", flat=True))
+        BowFactory(name="Zebra")
+        BowFactory(name="Alpha")
+        names = list(Bow.objects.values_list("name", flat=True))
         assert names == ["Alpha", "Zebra"]
 
 

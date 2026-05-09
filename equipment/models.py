@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db import models
 
 
@@ -8,11 +7,6 @@ class Bow(models.Model):
     class BowType(models.TextChoices):
         OLYMPIC_RECURVE = "olympic_recurve", "Olympic Recurve"
 
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="bows",
-    )
     name = models.CharField(max_length=200)
     type = models.CharField(max_length=50, choices=BowType.choices)
     draw_weight_lbs = models.DecimalField(

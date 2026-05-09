@@ -21,11 +21,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.sites",
-    # third-party
-    "allauth",
-    "allauth.account",
-    "allauth.mfa",
     # local
     "accounts",
     "sessions.apps.SessionsConfig",
@@ -41,7 +36,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "archery_logger.urls"
@@ -69,13 +63,6 @@ DATABASES = {
 
 AUTH_USER_MODEL = "accounts.User"
 
-AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
-]
-
-SITE_ID = 1
-
 _VALIDATORS = "django.contrib.auth.password_validation"
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": f"{_VALIDATORS}.UserAttributeSimilarityValidator"},
@@ -93,15 +80,3 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# django-allauth
-ACCOUNT_LOGIN_METHODS = {"email"}
-ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-LOGIN_REDIRECT_URL = "/"
-ACCOUNT_LOGOUT_REDIRECT_URL = "/"
-
-EMAIL_BACKEND = env(
-    "EMAIL_BACKEND",
-    default="django.core.mail.backends.console.EmailBackend",
-)

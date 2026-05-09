@@ -1,6 +1,5 @@
 import factory
 
-from accounts.tests.factories import UserFactory
 from equipment.models import Bow, OlympicBowSetup
 
 
@@ -8,7 +7,6 @@ class BowFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Bow
 
-    owner = factory.SubFactory(UserFactory)
     name = factory.Sequence(lambda n: f"Bow {n}")
     type = Bow.BowType.OLYMPIC_RECURVE
     draw_weight_lbs = None
