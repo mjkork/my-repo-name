@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Archery Practice Logger
 
 ## Project Overview
@@ -10,19 +14,21 @@ A web-based application for logging and analyzing personal archery practice sess
 
 ## Tech Stack
 
+**Currently installed** (see `pyproject.toml`):
 - **Language:** Python 3.12+
-- **Framework:** Django 5.x (auth, admin, ORM, migrations, CSRF, sessions out of the box)
-- **Database:** PostgreSQL 16+
-- **Frontend:** Django templates + HTMX. Drop in a JS framework (likely React or Alpine) only on specific interactive surfaces such as the arrow-plot UI.
-- **Auth:** `django-allauth` (email verification, password reset, 2FA hooks, social login if needed later)
+- **Framework:** Django 5.x
+- **Auth:** `django-allauth[mfa]` — email-only login (`ACCOUNT_LOGIN_METHODS = {"email"}`), mandatory email verification
+- **Config:** `django-environ` — all settings from env vars; reads `.env` at startup
+- **Database:** SQLite in dev (via `DATABASE_URL` env var defaulting to `sqlite:///db.sqlite3`); PostgreSQL 16+ in production
+- **Testing:** pytest + pytest-django + factory_boy
+- **Lint & format:** ruff
+
+**Planned (not yet installed — discuss before adding):**
+- **Frontend interactivity:** HTMX; JS framework (React or Alpine) only on specific surfaces like the arrow-plot UI
 - **Async / background jobs:** Celery + Redis
 - **Cache & sessions:** Redis
-- **Object storage:** S3-compatible (local MinIO or filesystem in dev; S3/R2 in prod) via `django-storages`
+- **Object storage:** S3-compatible via `django-storages` (MinIO or filesystem in dev; S3/R2 in prod)
 - **Image processing:** Pillow + OpenCV
-- **Testing:** pytest + pytest-django + factory_boy
-- **Lint & format:** ruff (handles both)
-- **Dependency management:** uv; all deps pinned
-- **Version control:** Git + GitHub
 
 If a change to this stack is proposed, discuss trade-offs first before implementing.
 
@@ -103,6 +109,14 @@ A standalone model representing defined rounds such as WA Standard, WA 720, indo
 - Fields like `arrow_count` and `distance_m` may become derived from the round when one is attached, rather than user-entered. This will be decided when the feature lands.
 - Scoring (per-arrow or per-end) is a separate concern from the round itself — see the open question on scoring granularity.
 
+## Dev Environment Bootstrap
+
+```bash
+cp .env.example .env   # then edit SECRET_KEY at minimum
+```
+
+The `.env.example` defaults to SQLite — no Postgres needed to start developing locally.
+
 ## Build, Run, Test
 
 ```bash
@@ -149,8 +163,20 @@ uv run celery -A archery_logger worker -l info
 - Keep views thin; put business logic in `<app>/services.py`.
 - HTMX partial templates go in `templates/partials/<app>/`.
 
+## Current Implementation State
+
+The scaffold is in place but most models are empty stubs. What exists today:
+
+- `accounts.User` — thin `AbstractUser` extension (no extra fields yet); `AUTH_USER_MODEL` is set
+- `sessions`, `equipment`, `plotting` apps — created but models are empty; no migrations beyond the `accounts` initial migration
+- `archery_logger/urls.py` — only `admin/` and `accounts/` (allauth) routes wired up
+- `templates/base.html` — bare HTML shell with `title`, `content`, `extra_head`, `extra_scripts` blocks
+
+The domain models described below are the **design target**, not the current DB schema.
+
 ## Architecture & Design Principles
 
+- **`sessions` app naming:** Django has a built-in `django.contrib.sessions` app. Our `sessions` app must be registered in `INSTALLED_APPS` as `"sessions.apps.SessionsConfig"` (not just `"sessions"`) to avoid the name collision. This is already done in `settings.py`.
 - **Twelve-factor**: config via env vars (`django-environ`); no secrets in code or repo.
 - **Single source of truth**: schema lives in Django models; derived state is computed, not stored, where reasonable.
 - **Test-driven where it matters**: every model method, service function, and view has at least one test before it's considered done.
