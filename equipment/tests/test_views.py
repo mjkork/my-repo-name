@@ -1,8 +1,8 @@
 import pytest
 from django.urls import reverse
 
-from equipment.models import Bow
-from equipment.tests.factories import BowFactory
+from equipment.models import Bow, OlympicBowSetup
+from equipment.tests.factories import BowFactory, OlympicBowSetupFactory
 
 
 @pytest.mark.django_db
@@ -25,30 +25,42 @@ class TestMyBowsView:
         response = client.get(reverse("equipment:mybows"))
         assert b"No bows added" not in response.content
 
-    def test_valid_post_creates_bow_and_redirects(self, client):
+    def test_valid_post_creates_bow_and_setup(self, client):
         response = client.post(reverse("equipment:mybows"), {
-            "name": "Hoyt Prodigy",
-            "type": "olympic_recurve",
-            "draw_weight_lbs": "",
-            "notes": "",
+            "bow-name": "Hoyt Prodigy",
+            "bow-type": "olympic_recurve",
+            "bow-draw_weight_lbs": "",
+            "bow-notes": "",
         })
         assert response.status_code == 302
-        assert Bow.objects.filter(name="Hoyt Prodigy").exists()
+        bow = Bow.objects.get(name="Hoyt Prodigy")
+        assert OlympicBowSetup.objects.filter(bow=bow).exists()
 
     def test_invalid_post_rerenders_with_errors(self, client):
         response = client.post(reverse("equipment:mybows"), {
-            "name": "",
-            "type": "olympic_recurve",
+            "bow-name": "",
+            "bow-type": "olympic_recurve",
         })
         assert response.status_code == 200
-        assert response.context["form"].errors
+        assert response.context["bow_form"].errors
 
     def test_new_bow_appears_after_add(self, client):
         client.post(reverse("equipment:mybows"), {
-            "name": "Samick Sage",
-            "type": "olympic_recurve",
-            "draw_weight_lbs": "26",
-            "notes": "",
+            "bow-name": "Samick Sage",
+            "bow-type": "olympic_recurve",
+            "bow-draw_weight_lbs": "26",
+            "bow-notes": "",
         })
         response = client.get(reverse("equipment:mybows"))
         assert b"Samick Sage" in response.content
+
+    def test_component_fields_saved(self, client):
+        client.post(reverse("equipment:mybows"), {
+            "bow-name": "Test Bow",
+            "bow-type": "olympic_recurve",
+            "setup-riser": "Hoyt Formula XI",
+            "setup-sight": "Shibuya Ultima",
+        })
+        bow = Bow.objects.get(name="Test Bow")
+        assert bow.olympic_setup.riser == "Hoyt Formula XI"
+        assert bow.olympic_setup.sight == "Shibuya Ultima"

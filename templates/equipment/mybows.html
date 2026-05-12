@@ -17,7 +17,17 @@
             data-name="{{ bow.name }}"
             data-type="{{ bow.get_type_display }}"
             data-weight="{{ bow.draw_weight_lbs|default:'' }}"
-            data-notes="{{ bow.notes }}">
+            data-notes="{{ bow.notes }}"
+            data-riser="{{ bow.olympic_setup.riser }}"
+            data-limbs="{{ bow.olympic_setup.limbs }}"
+            data-arrow-rest="{{ bow.olympic_setup.arrow_rest }}"
+            data-sight="{{ bow.olympic_setup.sight }}"
+            data-main-stabilizer="{{ bow.olympic_setup.main_stabilizer }}"
+            data-extender="{{ bow.olympic_setup.extender }}"
+            data-side-stabilizers="{{ bow.olympic_setup.side_stabilizers }}"
+            data-v-bar="{{ bow.olympic_setup.v_bar }}"
+            data-clicker="{{ bow.olympic_setup.clicker }}"
+            data-button="{{ bow.olympic_setup.button }}">
             {{ bow.name }}
         </li>
         {% endfor %}
@@ -43,48 +53,62 @@
 
                 <div class="form-field">
                     <div class="form-field-label">
-                        <label for="{{ form.name.id_for_label }}">Name</label>
+                        <label for="{{ bow_form.name.id_for_label }}">Name</label>
                         <span class="badge-required">Required</span>
                     </div>
                     <p class="form-field-help">Your nickname for the bow, e.g. "Blue Hoyt"</p>
-                    {{ form.name }}
-                    {% if form.name.errors %}
-                    <div class="form-errors">{{ form.name.errors.as_text }}</div>
+                    {{ bow_form.name }}
+                    {% if bow_form.name.errors %}
+                    <div class="form-errors">{{ bow_form.name.errors.as_text }}</div>
                     {% endif %}
                 </div>
 
                 <div class="form-field">
                     <div class="form-field-label">
-                        <label for="{{ form.type.id_for_label }}">Type</label>
+                        <label for="{{ bow_form.type.id_for_label }}">Type</label>
                         <span class="badge-required">Required</span>
                     </div>
-                    {{ form.type }}
-                    {% if form.type.errors %}
-                    <div class="form-errors">{{ form.type.errors.as_text }}</div>
+                    {{ bow_form.type }}
+                    {% if bow_form.type.errors %}
+                    <div class="form-errors">{{ bow_form.type.errors.as_text }}</div>
                     {% endif %}
                 </div>
 
                 <div class="form-field">
                     <div class="form-field-label">
-                        <label for="{{ form.draw_weight_lbs.id_for_label }}">Draw weight (lbs)</label>
+                        <label for="{{ bow_form.draw_weight_lbs.id_for_label }}">Draw weight (lbs)</label>
                     </div>
-                    <p class="form-field-help">Optional — enter the poundage at your draw length.</p>
-                    {{ form.draw_weight_lbs }}
-                    {% if form.draw_weight_lbs.errors %}
-                    <div class="form-errors">{{ form.draw_weight_lbs.errors.as_text }}</div>
+                    <p class="form-field-help">Optional — poundage at your draw length. Steps in 0.5 lb increments.</p>
+                    {{ bow_form.draw_weight_lbs }}
+                    {% if bow_form.draw_weight_lbs.errors %}
+                    <div class="form-errors">{{ bow_form.draw_weight_lbs.errors.as_text }}</div>
                     {% endif %}
                 </div>
 
                 <div class="form-field">
                     <div class="form-field-label">
-                        <label for="{{ form.notes.id_for_label }}">Notes</label>
+                        <label for="{{ bow_form.notes.id_for_label }}">Notes</label>
                     </div>
                     <p class="form-field-help">Optional — any extra details you'd like to record.</p>
-                    {{ form.notes }}
-                    {% if form.notes.errors %}
-                    <div class="form-errors">{{ form.notes.errors.as_text }}</div>
+                    {{ bow_form.notes }}
+                    {% if bow_form.notes.errors %}
+                    <div class="form-errors">{{ bow_form.notes.errors.as_text }}</div>
                     {% endif %}
                 </div>
+
+                <div class="section-heading">Components</div>
+
+                {% for field in setup_form %}
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    </div>
+                    {{ field }}
+                    {% if field.errors %}
+                    <div class="form-errors">{{ field.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
 
             </div>
             <div class="modal-footer">
@@ -97,9 +121,9 @@
 
 <!-- ======================================================
      VIEW BOW MODAL
-     Bow data is injected via JS from data-* attributes on
-     each list item. The Modify button is a placeholder —
-     full edit functionality will be added in a future step.
+     Data injected via JS from data-* attributes on each list item.
+     Modify button is a placeholder — closes the modal until
+     edit functionality is implemented in a future step.
      ====================================================== -->
 <div class="modal-backdrop" id="view-bow-modal" hidden>
     <div class="modal">
@@ -109,6 +133,7 @@
         </div>
         <div class="modal-body">
             <div class="bow-detail-grid">
+
                 <div class="bow-detail-field">
                     <span class="field-label">Name</span>
                     <span class="field-value" id="vb-name"></span>
@@ -125,11 +150,54 @@
                     <span class="field-label">Notes</span>
                     <span class="field-value" id="vb-notes"></span>
                 </div>
+
+                <div class="section-heading">Components</div>
+
+                <div class="bow-detail-field">
+                    <span class="field-label">Riser</span>
+                    <span class="field-value" id="vb-riser"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Limbs</span>
+                    <span class="field-value" id="vb-limbs"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Arrow rest</span>
+                    <span class="field-value" id="vb-arrow-rest"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Sight</span>
+                    <span class="field-value" id="vb-sight"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Main stabilizer</span>
+                    <span class="field-value" id="vb-main-stabilizer"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Extender</span>
+                    <span class="field-value" id="vb-extender"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Side stabilizers</span>
+                    <span class="field-value" id="vb-side-stabilizers"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">V-bar</span>
+                    <span class="field-value" id="vb-v-bar"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Clicker</span>
+                    <span class="field-value" id="vb-clicker"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Button (plunger)</span>
+                    <span class="field-value" id="vb-button"></span>
+                </div>
+
             </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary modal-cancel">Close</button>
-            <!-- Modify is a placeholder — closes the modal until edit is implemented -->
             <button type="button" class="btn btn-primary" id="vb-modify">Modify</button>
         </div>
     </div>
@@ -143,25 +211,36 @@
 
     document.getElementById('open-add-bow').addEventListener('click', addModal.open);
 
-    // Modify is a placeholder — closes the modal for now
+    // Placeholder — closes the view modal until edit is implemented
     document.getElementById('vb-modify').addEventListener('click', viewModal.close);
 
     // Clicking a bow row populates and opens the view modal
     document.querySelectorAll('.bow-list-item').forEach(item => {
         item.addEventListener('click', () => {
-            const weight = item.dataset.weight;
-            const notes  = item.dataset.notes;
-            document.getElementById('vb-title').textContent  = item.dataset.name;
-            document.getElementById('vb-name').textContent   = item.dataset.name;
-            document.getElementById('vb-type').textContent   = item.dataset.type;
-            document.getElementById('vb-weight').textContent = weight ? weight + ' lbs' : '—';
-            document.getElementById('vb-notes').textContent  = notes  || '—';
+            const d = item.dataset;
+            const w = d.weight;
+
+            document.getElementById('vb-title').textContent            = d.name;
+            document.getElementById('vb-name').textContent             = d.name;
+            document.getElementById('vb-type').textContent             = d.type;
+            document.getElementById('vb-weight').textContent           = w ? w + ' lbs' : '—';
+            document.getElementById('vb-notes').textContent            = d.notes           || '—';
+            document.getElementById('vb-riser').textContent            = d.riser           || '—';
+            document.getElementById('vb-limbs').textContent            = d.limbs           || '—';
+            document.getElementById('vb-arrow-rest').textContent       = d.arrowRest       || '—';
+            document.getElementById('vb-sight').textContent            = d.sight           || '—';
+            document.getElementById('vb-main-stabilizer').textContent  = d.mainStabilizer  || '—';
+            document.getElementById('vb-extender').textContent         = d.extender        || '—';
+            document.getElementById('vb-side-stabilizers').textContent = d.sideStabilizers || '—';
+            document.getElementById('vb-v-bar').textContent            = d.vBar            || '—';
+            document.getElementById('vb-clicker').textContent          = d.clicker         || '—';
+            document.getElementById('vb-button').textContent           = d.button          || '—';
+
             viewModal.open();
         });
     });
 
-    {% if form.errors %}
-    // Form was submitted with errors — re-open the add modal so the user can see them
+    {% if bow_form.errors or setup_form.errors %}
     addModal.open();
     {% endif %}
 </script>
