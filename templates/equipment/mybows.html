@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}My Bows — MyShots{% endblock %}
+
+{% block content %}
+<div class="bows-page">
+
+    <div class="bows-page-header">
+        <h1>My Bows</h1>
+        <button type="button" class="btn btn-primary" id="open-add-bow">Add new bow</button>
+    </div>
+
+    {% if bows %}
+    <ul class="bow-list">
+        {% for bow in bows %}
+        <li class="bow-list-item"
+            data-name="{{ bow.name }}"
+            data-type="{{ bow.get_type_display }}"
+            data-weight="{{ bow.draw_weight_lbs|default:'' }}"
+            data-notes="{{ bow.notes }}">
+            {{ bow.name }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty-state">No bows added</p>
+    {% endif %}
+
+</div>
+
+<!-- ======================================================
+     ADD BOW MODAL
+     ====================================================== -->
+<div class="modal-backdrop" id="add-bow-modal" hidden>
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Add new bow</h2>
+            <button type="button" class="modal-close" aria-label="Close">&times;</button>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ form.name.id_for_label }}">Name</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    <p class="form-field-help">Your nickname for the bow, e.g. "Blue Hoyt"</p>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <div class="form-errors">{{ form.name.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ form.type.id_for_label }}">Type</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    {{ form.type }}
+                    {% if form.type.errors %}
+                    <div class="form-errors">{{ form.type.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ form.draw_weight_lbs.id_for_label }}">Draw weight (lbs)</label>
+                    </div>
+                    <p class="form-field-help">Optional — enter the poundage at your draw length.</p>
+                    {{ form.draw_weight_lbs }}
+                    {% if form.draw_weight_lbs.errors %}
+                    <div class="form-errors">{{ form.draw_weight_lbs.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ form.notes.id_for_label }}">Notes</label>
+                    </div>
+                    <p class="form-field-help">Optional — any extra details you'd like to record.</p>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                    <div class="form-errors">{{ form.notes.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ======================================================
+     VIEW BOW MODAL
+     Bow data is injected via JS from data-* attributes on
+     each list item. The Modify button is a placeholder —
+     full edit functionality will be added in a future step.
+     ====================================================== -->
+<div class="modal-backdrop" id="view-bow-modal" hidden>
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="vb-title">Bow Details</h2>
+            <button type="button" class="modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="bow-detail-grid">
+                <div class="bow-detail-field">
+                    <span class="field-label">Name</span>
+                    <span class="field-value" id="vb-name"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Type</span>
+                    <span class="field-value" id="vb-type"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Draw weight</span>
+                    <span class="field-value" id="vb-weight"></span>
+                </div>
+                <div class="bow-detail-field">
+                    <span class="field-label">Notes</span>
+                    <span class="field-value" id="vb-notes"></span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary modal-cancel">Close</button>
+            <!-- Modify is a placeholder — closes the modal until edit is implemented -->
+            <button type="button" class="btn btn-primary" id="vb-modify">Modify</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const addModal  = initModal('add-bow-modal');
+    const viewModal = initModal('view-bow-modal');
+
+    document.getElementById('open-add-bow').addEventListener('click', addModal.open);
+
+    // Modify is a placeholder — closes the modal for now
+    document.getElementById('vb-modify').addEventListener('click', viewModal.close);
+
+    // Clicking a bow row populates and opens the view modal
+    document.querySelectorAll('.bow-list-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const weight = item.dataset.weight;
+            const notes  = item.dataset.notes;
+            document.getElementById('vb-title').textContent  = item.dataset.name;
+            document.getElementById('vb-name').textContent   = item.dataset.name;
+            document.getElementById('vb-type').textContent   = item.dataset.type;
+            document.getElementById('vb-weight').textContent = weight ? weight + ' lbs' : '—';
+            document.getElementById('vb-notes').textContent  = notes  || '—';
+            viewModal.open();
+        });
+    });
+
+    {% if form.errors %}
+    // Form was submitted with errors — re-open the add modal so the user can see them
+    addModal.open();
+    {% endif %}
+</script>
+{% endblock %}
