@@ -13,6 +13,13 @@
         <img src="{% static 'img/myshots_page_header_wide.svg' %}" alt="MyShots">
     </header>
     <div class="page-wrap">
+        {% block nav %}
+        {% if request.resolver_match.url_name != 'home' %}
+        <nav class="page-nav">
+            <a href="{% url 'home' %}" class="btn btn-home">Home</a>
+        </nav>
+        {% endif %}
+        {% endblock %}
         {% block content %}{% endblock %}
     </div>
     <script src="{% static 'js/modals.js' %}"></script>

@@ -8,6 +8,10 @@
     --grad-start: #3b82f6;
     --grad-end:   #06b6d4;
 
+    /* Home/nav button gradient (medium forest green → lighter green) */
+    --home-grad-start: #3a7e47;
+    --home-grad-end:   #52a85e;
+
     /* Neutral palette */
     --color-text:         #111827;
     --color-text-muted:   #6b7280;
@@ -105,6 +109,23 @@ body {
     border: 1.5px solid var(--color-btn-sec-border);
 }
 .btn-secondary:hover { background: #f9fafb; }
+
+.btn-home {
+    background: linear-gradient(to right, var(--home-grad-start), var(--home-grad-end));
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+}
+.btn-home:hover {
+    box-shadow: 0 4px 14px rgba(58,126,71,0.35);
+    opacity: 1;
+}
+
+/* Default page-level nav (used by base template on pages that don't embed Home in their own header) */
+.page-nav {
+    padding: var(--sp-5) 0 0;
+    display: flex;
+    gap: var(--sp-3);
+}
 
 /* ---- Modal backdrop ---- */
 .modal-backdrop {
