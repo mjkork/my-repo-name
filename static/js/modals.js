@@ -5,7 +5,7 @@
  *   1. Give your backdrop <div> the class "modal-backdrop" and a unique id.
  *   2. Put a .modal-close button (X) inside the .modal-header.
  *   3. Put .modal-cancel on any Cancel/Close buttons inside the modal.
- *   4. Call initModal('your-modal-id') — it returns { open, close }.
+ *   4. Call initModal('your-modal-id') — it returns { open, close, reset }.
  *
  * Form-reset pattern (automatic):
  *   If the modal contains a <form>, every dismiss (Cancel, X, backdrop
@@ -52,6 +52,7 @@ function initModal(backdropId) {
 
     const close = () => { _restore(); backdrop.hidden = true; };
     const open  = () => { _capture(); backdrop.hidden = false; };
+    const reset = () => { _restore(); };  // restore fields without hiding
 
     // Stored on the element so the Esc handler can call close() (not just hide)
     backdrop._initModalClose = close;
@@ -69,7 +70,7 @@ function initModal(backdropId) {
         btn.addEventListener('click', close)
     );
 
-    return { open, close };
+    return { open, close, reset };
 }
 
 // (c) Esc closes only the top-most open modal (calls close() so form resets fire)
@@ -96,6 +97,7 @@ document.addEventListener('keydown', (e) => {
  *     onPrimary:    () => { document.getElementById('my-form').submit(); },
  *     secondary:    'Cancel',           // optional, defaults to 'Cancel'
  *     primaryClass: 'btn btn-danger',   // optional, defaults to 'btn btn-primary'
+ *     onCancel:     () => myModal.reset(),  // optional, called when secondary is clicked
  *   });
  *
  * Stacks on top of other open modals (z-index 300 via .modal-backdrop-top).
@@ -113,8 +115,9 @@ const confirmModal = (function () {
 
     const modal = initModal('confirm-modal');
     let _primaryHandler = null;
+    let _cancelHandler  = null;
 
-    function show({ title, body, primary, onPrimary, secondary = 'Cancel', primaryClass = 'btn btn-primary' }) {
+    function show({ title, body, primary, onPrimary, secondary = 'Cancel', primaryClass = 'btn btn-primary', onCancel = null }) {
         titleEl.textContent      = title;
         bodyEl.textContent       = body;
         primaryBtn.textContent   = primary;
@@ -124,6 +127,14 @@ const confirmModal = (function () {
         if (_primaryHandler) primaryBtn.removeEventListener('click', _primaryHandler);
         _primaryHandler = () => { modal.close(); onPrimary(); };
         primaryBtn.addEventListener('click', _primaryHandler);
+
+        if (_cancelHandler) secondaryBtn.removeEventListener('click', _cancelHandler);
+        if (onCancel) {
+            _cancelHandler = () => onCancel();
+            secondaryBtn.addEventListener('click', _cancelHandler);
+        } else {
+            _cancelHandler = null;
+        }
 
         modal.open();
     }

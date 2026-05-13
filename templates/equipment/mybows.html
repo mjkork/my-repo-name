@@ -405,6 +405,7 @@
             primary:      'Delete bow',
             primaryClass: 'btn btn-danger',
             onPrimary:    () => deleteForm.submit(),
+            onCancel:     () => modifyModal.reset(),
         });
     });
 
