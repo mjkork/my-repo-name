@@ -7,6 +7,19 @@
  *   3. Put .modal-cancel on any Cancel/Close buttons inside the modal.
  *   4. Call initModal('your-modal-id') — it returns { open, close }.
  *
+ * Form-reset pattern (automatic):
+ *   If the modal contains a <form>, every dismiss (Cancel, X, backdrop
+ *   click, Esc) resets the form to the state it had when open() was
+ *   called. This covers JS-populated forms too because the snapshot is
+ *   captured inside open(), after the caller has filled the fields.
+ *   Any "disabled-until-changed" buttons re-evaluate automatically
+ *   because a synthetic 'change' event is dispatched on the form after
+ *   restore — no extra code needed per modal.
+ *
+ *   Confirmation modals that stack on top of a form modal are NOT
+ *   affected — they contain no form, so their close() is a no-op for
+ *   reset purposes, leaving the form modal underneath untouched.
+ *
  * Example:
  *   const myModal = initModal('my-modal');
  *   document.getElementById('open-btn').addEventListener('click', myModal.open);
@@ -16,8 +29,32 @@ function initModal(backdropId) {
     const backdrop = document.getElementById(backdropId);
     if (!backdrop) return null;
 
-    const close = () => { backdrop.hidden = true; };
-    const open  = () => { backdrop.hidden = false; };
+    // ---- Form-reset state ----
+    const form = backdrop.querySelector('form');
+    let _snapshot = null;
+
+    function _capture() {
+        if (!form) return;
+        _snapshot = {};
+        form.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name) _snapshot[el.name] = el.value;
+        });
+    }
+
+    function _restore() {
+        if (!form || !_snapshot) return;
+        form.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name && _snapshot[el.name] !== undefined) el.value = _snapshot[el.name];
+        });
+        // Let change-detection listeners (e.g. "Accept changes") re-evaluate
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    const close = () => { _restore(); backdrop.hidden = true; };
+    const open  = () => { _capture(); backdrop.hidden = false; };
+
+    // Stored on the element so the Esc handler can call close() (not just hide)
+    backdrop._initModalClose = close;
 
     // (b) Click outside the modal card closes it
     backdrop.addEventListener('click', (e) => {
@@ -35,18 +72,17 @@ function initModal(backdropId) {
     return { open, close };
 }
 
-// (c) Esc key closes the top-most open modal only
+// (c) Esc closes only the top-most open modal (calls close() so form resets fire)
 document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     const open = [...document.querySelectorAll('.modal-backdrop:not([hidden])')];
     if (!open.length) return;
-    // Close the one with the highest z-index (last in DOM order wins ties)
     open.sort((a, b) => {
         const za = parseInt(getComputedStyle(a).zIndex) || 0;
         const zb = parseInt(getComputedStyle(b).zIndex) || 0;
         return zb - za;
     });
-    open[0].hidden = true;
+    (open[0]._initModalClose || (() => { open[0].hidden = true; }))();
 });
 
 /* ============================================================
@@ -62,15 +98,16 @@ document.addEventListener('keydown', (e) => {
  *   });
  *
  * Stacks on top of other open modals (z-index 300 via .modal-backdrop-top).
- * Cancelling leaves any modal underneath visible and intact.
+ * Cancelling leaves any modal underneath visible and intact — the confirm
+ * modal contains no form, so its close() does not reset the parent form.
  * ============================================================ */
 const confirmModal = (function () {
     const backdrop   = document.getElementById('confirm-modal');
     if (!backdrop) return null;
 
-    const titleEl    = document.getElementById('cm-title-text');
-    const bodyEl     = document.getElementById('cm-body');
-    const primaryBtn = document.getElementById('cm-primary');
+    const titleEl      = document.getElementById('cm-title-text');
+    const bodyEl       = document.getElementById('cm-body');
+    const primaryBtn   = document.getElementById('cm-primary');
     const secondaryBtn = document.getElementById('cm-secondary');
 
     const modal = initModal('confirm-modal');
