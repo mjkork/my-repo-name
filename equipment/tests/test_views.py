@@ -5,6 +5,10 @@ from equipment.models import Bow, OlympicBowSetup
 from equipment.tests.factories import BowFactory, OlympicBowSetupFactory
 
 
+def _modify_url(pk):
+    return reverse("equipment:modifybow", kwargs={"pk": pk})
+
+
 @pytest.mark.django_db
 class TestMyBowsView:
     def test_get_returns_200(self, client):
@@ -64,3 +68,94 @@ class TestMyBowsView:
         bow = Bow.objects.get(name="Test Bow")
         assert bow.olympic_setup.riser == "Hoyt Formula XI"
         assert bow.olympic_setup.sight == "Shibuya Ultima"
+
+
+@pytest.mark.django_db
+class TestModifyBowView:
+    def test_url_resolves(self):
+        url = reverse("equipment:modifybow", kwargs={"pk": 42})
+        assert url == "/mybows/42/modify/"
+
+    def test_get_returns_200(self, client):
+        bow = BowFactory()
+        OlympicBowSetupFactory(bow=bow)
+        response = client.get(_modify_url(bow.pk))
+        assert response.status_code == 200
+
+    def test_get_includes_bow_name(self, client):
+        bow = BowFactory(name="Blue Hoyt")
+        OlympicBowSetupFactory(bow=bow)
+        response = client.get(_modify_url(bow.pk))
+        assert b"Blue Hoyt" in response.content
+
+    def test_get_sets_modify_pk_in_context(self, client):
+        bow = BowFactory()
+        OlympicBowSetupFactory(bow=bow)
+        response = client.get(_modify_url(bow.pk))
+        assert response.context["modify_pk"] == bow.pk
+
+    def test_get_404_for_nonexistent_bow(self, client):
+        response = client.get(_modify_url(9999))
+        assert response.status_code == 404
+
+    def test_valid_post_updates_bow_name(self, client):
+        bow = BowFactory(name="Old Name")
+        OlympicBowSetupFactory(bow=bow)
+        client.post(_modify_url(bow.pk), {
+            "modify-name": "New Name",
+            "modify-type": "olympic_recurve",
+        })
+        bow.refresh_from_db()
+        assert bow.name == "New Name"
+
+    def test_valid_post_redirects_to_mybows(self, client):
+        bow = BowFactory()
+        OlympicBowSetupFactory(bow=bow)
+        response = client.post(_modify_url(bow.pk), {
+            "modify-name": bow.name,
+            "modify-type": bow.type,
+        })
+        assert response.status_code == 302
+        assert response["Location"] == reverse("equipment:mybows")
+
+    def test_valid_post_updates_component_fields(self, client):
+        bow = BowFactory()
+        OlympicBowSetupFactory(bow=bow, riser="Old Riser", sight="")
+        client.post(_modify_url(bow.pk), {
+            "modify-name": bow.name,
+            "modify-type": bow.type,
+            "modsetup-riser": "New Riser",
+            "modsetup-sight": "Shibuya Ultima",
+        })
+        bow.olympic_setup.refresh_from_db()
+        assert bow.olympic_setup.riser == "New Riser"
+        assert bow.olympic_setup.sight == "Shibuya Ultima"
+
+    def test_invalid_post_does_not_update(self, client):
+        bow = BowFactory(name="Blue Hoyt")
+        OlympicBowSetupFactory(bow=bow)
+        client.post(_modify_url(bow.pk), {
+            "modify-name": "",  # required — should fail validation
+            "modify-type": "olympic_recurve",
+        })
+        bow.refresh_from_db()
+        assert bow.name == "Blue Hoyt"
+
+    def test_invalid_post_rerenders_with_errors(self, client):
+        bow = BowFactory()
+        OlympicBowSetupFactory(bow=bow)
+        response = client.post(_modify_url(bow.pk), {
+            "modify-name": "",
+            "modify-type": "olympic_recurve",
+        })
+        assert response.status_code == 200
+        assert response.context["modify_bow_form"].errors
+
+    def test_invalid_post_sets_modify_pk_in_context(self, client):
+        bow = BowFactory()
+        OlympicBowSetupFactory(bow=bow)
+        response = client.post(_modify_url(bow.pk), {
+            "modify-name": "",
+            "modify-type": "olympic_recurve",
+        })
+        assert response.context["modify_pk"] == bow.pk

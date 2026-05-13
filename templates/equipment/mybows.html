@@ -17,8 +17,10 @@
     <ul class="bow-list">
         {% for bow in bows %}
         <li class="bow-list-item"
+            data-pk="{{ bow.pk }}"
             data-name="{{ bow.name }}"
             data-type="{{ bow.get_type_display }}"
+            data-type-raw="{{ bow.type }}"
             data-weight="{{ bow.draw_weight_lbs|default:'' }}"
             data-notes="{{ bow.notes }}"
             data-riser="{{ bow.olympic_setup.riser }}"
@@ -125,8 +127,6 @@
 <!-- ======================================================
      VIEW BOW MODAL
      Data injected via JS from data-* attributes on each list item.
-     Modify button is a placeholder — closes the modal until
-     edit functionality is implemented in a future step.
      ====================================================== -->
 <div class="modal-backdrop" id="view-bow-modal" hidden>
     <div class="modal">
@@ -205,22 +205,106 @@
         </div>
     </div>
 </div>
+
+<!-- ======================================================
+     MODIFY BOW MODAL
+     Form action and field values set by JS when the modal opens.
+     ====================================================== -->
+<div class="modal-backdrop" id="modify-bow-modal" hidden>
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Modify bow</h2>
+            <button type="button" class="modal-close" aria-label="Close">&times;</button>
+        </div>
+        <form id="modify-bow-form" method="post" action="">
+            {% csrf_token %}
+            <div class="modal-body">
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_bow_form.name.id_for_label }}">Name</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    <p class="form-field-help">Your nickname for the bow, e.g. "Blue Hoyt"</p>
+                    {{ modify_bow_form.name }}
+                    {% if modify_bow_form.name.errors %}
+                    <div class="form-errors">{{ modify_bow_form.name.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_bow_form.type.id_for_label }}">Type</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    {{ modify_bow_form.type }}
+                    {% if modify_bow_form.type.errors %}
+                    <div class="form-errors">{{ modify_bow_form.type.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_bow_form.draw_weight_lbs.id_for_label }}">Draw weight (lbs)</label>
+                    </div>
+                    <p class="form-field-help">Optional — poundage at your draw length. Steps in 0.5 lb increments.</p>
+                    {{ modify_bow_form.draw_weight_lbs }}
+                    {% if modify_bow_form.draw_weight_lbs.errors %}
+                    <div class="form-errors">{{ modify_bow_form.draw_weight_lbs.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_bow_form.notes.id_for_label }}">Notes</label>
+                    </div>
+                    <p class="form-field-help">Optional — any extra details you'd like to record.</p>
+                    {{ modify_bow_form.notes }}
+                    {% if modify_bow_form.notes.errors %}
+                    <div class="form-errors">{{ modify_bow_form.notes.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="section-heading">Components</div>
+
+                {% for field in modify_setup_form %}
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    </div>
+                    {{ field }}
+                    {% if field.errors %}
+                    <div class="form-errors">{{ field.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="mb-accept" disabled>Accept changes</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    const addModal  = initModal('add-bow-modal');
-    const viewModal = initModal('view-bow-modal');
+    const addModal    = initModal('add-bow-modal');
+    const viewModal   = initModal('view-bow-modal');
+    const modifyModal = initModal('modify-bow-modal');
 
     document.getElementById('open-add-bow').addEventListener('click', addModal.open);
 
-    // Placeholder — closes the view modal until edit is implemented
-    document.getElementById('vb-modify').addEventListener('click', viewModal.close);
+    // ---- View bow ----
 
-    // Clicking a bow row populates and opens the view modal
+    let _currentViewBow = null;
+
     document.querySelectorAll('.bow-list-item').forEach(item => {
         item.addEventListener('click', () => {
             const d = item.dataset;
+            _currentViewBow = d;
             const w = d.weight;
 
             document.getElementById('vb-title').textContent            = d.name;
@@ -242,6 +326,80 @@
             viewModal.open();
         });
     });
+
+    // ---- Modify bow ----
+
+    const modifyForm  = document.getElementById('modify-bow-form');
+    const mbAcceptBtn = document.getElementById('mb-accept');
+
+    let _modifySnapshot  = {};
+    let _modifyHasErrors = false;
+
+    function populateModifyForm(d) {
+        modifyForm.querySelector('[name="modify-name"]').value               = d.name;
+        modifyForm.querySelector('[name="modify-type"]').value               = d.typeRaw;
+        modifyForm.querySelector('[name="modify-draw_weight_lbs"]').value    = d.weight;
+        modifyForm.querySelector('[name="modify-notes"]').value              = d.notes;
+        modifyForm.querySelector('[name="modsetup-riser"]').value            = d.riser;
+        modifyForm.querySelector('[name="modsetup-limbs"]').value            = d.limbs;
+        modifyForm.querySelector('[name="modsetup-arrow_rest"]').value       = d.arrowRest;
+        modifyForm.querySelector('[name="modsetup-sight"]').value            = d.sight;
+        modifyForm.querySelector('[name="modsetup-main_stabilizer"]').value  = d.mainStabilizer;
+        modifyForm.querySelector('[name="modsetup-extender"]').value         = d.extender;
+        modifyForm.querySelector('[name="modsetup-side_stabilizers"]').value = d.sideStabilizers;
+        modifyForm.querySelector('[name="modsetup-v_bar"]').value            = d.vBar;
+        modifyForm.querySelector('[name="modsetup-clicker"]').value          = d.clicker;
+        modifyForm.querySelector('[name="modsetup-button"]').value           = d.button;
+    }
+
+    function takeModifySnapshot() {
+        _modifySnapshot = {};
+        modifyForm.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name) _modifySnapshot[el.name] = el.value;
+        });
+    }
+
+    function checkModifyChanged() {
+        if (_modifyHasErrors) return; // error state — keep button enabled
+        let changed = false;
+        modifyForm.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name && el.value !== (_modifySnapshot[el.name] ?? '')) changed = true;
+        });
+        mbAcceptBtn.disabled = !changed;
+    }
+
+    modifyForm.addEventListener('input',  checkModifyChanged);
+    modifyForm.addEventListener('change', checkModifyChanged);
+
+    // Modify button: close view modal, populate and open modify modal
+    document.getElementById('vb-modify').addEventListener('click', () => {
+        const d = _currentViewBow;
+        _modifyHasErrors = false;
+        modifyForm.action = `/mybows/${d.pk}/modify/`;
+        populateModifyForm(d);
+        viewModal.close();
+        takeModifySnapshot();
+        mbAcceptBtn.disabled = true;
+        modifyModal.open();
+    });
+
+    // Accept changes: open confirmation before submitting
+    mbAcceptBtn.addEventListener('click', () => {
+        confirmModal.show({
+            title:     'Confirm changes',
+            body:      "Are you sure you want to update this bow's information?",
+            primary:   'Update bow information',
+            onPrimary: () => modifyForm.submit(),
+        });
+    });
+
+    // Auto-open modify modal when Django returns a validation error
+    {% if modify_pk %}
+    _modifyHasErrors = true;
+    modifyForm.action = '{% url "equipment:modifybow" modify_pk %}';
+    mbAcceptBtn.disabled = false;
+    modifyModal.open();
+    {% endif %}
 
     {% if bow_form.errors or setup_form.errors %}
     addModal.open();

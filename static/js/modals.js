@@ -35,10 +35,59 @@ function initModal(backdropId) {
     return { open, close };
 }
 
-// (c) Esc key closes every open modal
+// (c) Esc key closes the top-most open modal only
 document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    document.querySelectorAll('.modal-backdrop:not([hidden])').forEach(m => {
-        m.hidden = true;
+    const open = [...document.querySelectorAll('.modal-backdrop:not([hidden])')];
+    if (!open.length) return;
+    // Close the one with the highest z-index (last in DOM order wins ties)
+    open.sort((a, b) => {
+        const za = parseInt(getComputedStyle(a).zIndex) || 0;
+        const zb = parseInt(getComputedStyle(b).zIndex) || 0;
+        return zb - za;
     });
+    open[0].hidden = true;
 });
+
+/* ============================================================
+ * confirmModal — reusable confirmation dialog
+ *
+ * Usage:
+ *   confirmModal.show({
+ *     title:     'Confirm changes',
+ *     body:      'Are you sure you want to update this bow?',
+ *     primary:   'Update bow information',
+ *     onPrimary: () => { document.getElementById('my-form').submit(); },
+ *     secondary: 'Cancel',  // optional, defaults to 'Cancel'
+ *   });
+ *
+ * Stacks on top of other open modals (z-index 300 via .modal-backdrop-top).
+ * Cancelling leaves any modal underneath visible and intact.
+ * ============================================================ */
+const confirmModal = (function () {
+    const backdrop   = document.getElementById('confirm-modal');
+    if (!backdrop) return null;
+
+    const titleEl    = document.getElementById('cm-title-text');
+    const bodyEl     = document.getElementById('cm-body');
+    const primaryBtn = document.getElementById('cm-primary');
+    const secondaryBtn = document.getElementById('cm-secondary');
+
+    const modal = initModal('confirm-modal');
+    let _primaryHandler = null;
+
+    function show({ title, body, primary, onPrimary, secondary = 'Cancel' }) {
+        titleEl.textContent      = title;
+        bodyEl.textContent       = body;
+        primaryBtn.textContent   = primary;
+        secondaryBtn.textContent = secondary;
+
+        if (_primaryHandler) primaryBtn.removeEventListener('click', _primaryHandler);
+        _primaryHandler = () => { modal.close(); onPrimary(); };
+        primaryBtn.addEventListener('click', _primaryHandler);
+
+        modal.open();
+    }
+
+    return { show, close: modal.close };
+}());

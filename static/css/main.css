@@ -93,6 +93,16 @@ body {
 .btn:hover  { opacity: 0.88; }
 .btn:active { opacity: 0.75; }
 
+.btn:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+.btn:disabled:hover,
+.btn:disabled:active {
+    opacity: 0.38;
+    box-shadow: var(--shadow-sm);
+}
+
 .btn-primary {
     background: linear-gradient(to right, var(--grad-start), var(--grad-end));
     color: #fff;
@@ -313,6 +323,17 @@ body {
 }
 .bow-detail-field .field-value { font-size: var(--text-base); }
 .field-value-empty { color: var(--color-text-muted); font-style: italic; }
+
+/* ---- Confirmation modal — stacks above other open modals ---- */
+.modal-backdrop-top { z-index: 300; }
+
+/* Icon + title text sit side by side */
+.modal-confirm .modal-header h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+}
+.confirm-icon { flex-shrink: 0; }
 
 /* ---- Section headings (used in modals to group fields) ---- */
 .section-heading {

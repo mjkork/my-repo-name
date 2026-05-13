@@ -22,6 +22,32 @@
         {% endblock %}
         {% block content %}{% endblock %}
     </div>
+    <!-- ======================================================
+         CONFIRMATION MODAL — reusable via confirmModal.show({...})
+         ====================================================== -->
+    <div class="modal-backdrop modal-backdrop-top" id="confirm-modal" hidden>
+        <div class="modal modal-confirm">
+            <div class="modal-header">
+                <h2>
+                    <svg class="confirm-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="10" cy="10" r="9" stroke="#F59E0B" stroke-width="1.5"/>
+                        <path d="M10 5.5v5.5" stroke="#F59E0B" stroke-width="1.75" stroke-linecap="round"/>
+                        <circle cx="10" cy="14.25" r="0.875" fill="#F59E0B"/>
+                    </svg>
+                    <span id="cm-title-text">Confirm</span>
+                </h2>
+                <button type="button" class="modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="cm-body"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-cancel" id="cm-secondary">Cancel</button>
+                <button type="button" class="btn btn-primary" id="cm-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <script src="{% static 'js/modals.js' %}"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
