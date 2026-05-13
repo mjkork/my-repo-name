@@ -151,7 +151,11 @@ const confirmModal = (function () {
  *   data-delete-name="Display name shown in the confirmation"
  *   data-delete-label="noun for title/button (e.g. 'bow', 'session')"
  *
- * stopPropagation prevents the row's own click handler from firing.
+ * Belt-and-suspenders propagation guard: this handler calls stopPropagation()
+ * as hygiene, but because it is attached to document (bubbling phase) it runs
+ * AFTER any direct listeners on parent elements. The real guard is the
+ * .closest('.list-row-action') check at the top of each row's click handler.
+ * See PROJECT_NOTES.md → "Event propagation: belt-and-suspenders".
  * ============================================================ */
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('.list-row-action--danger');

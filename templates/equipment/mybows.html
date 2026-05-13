@@ -322,7 +322,8 @@
     let _currentViewBow = null;
 
     document.querySelectorAll('.bow-list-item').forEach(item => {
-        item.addEventListener('click', () => {
+        item.addEventListener('click', (e) => {
+            if (e.target.closest('.list-row-action')) return;
             const d = item.dataset;
             _currentViewBow = d;
             const w = d.weight;

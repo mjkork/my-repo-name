@@ -72,6 +72,38 @@ When any form-containing modal is dismissed (Cancel/X/outside/Esc), the form res
 
 ---
 
+## List row pattern (.list-row)
+
+Any list in the app can have inline quick-action buttons (e.g., a quick-delete trash icon) using this reusable system.
+
+### HTML structure
+```html
+<li class="your-list-item list-row" data-...>
+    <span class="list-row-main">Item name</span>
+    <div class="list-row-actions">
+        <button type="button"
+                class="list-row-action list-row-action--danger"
+                aria-label="Delete session"
+                data-delete-url="/sessions/42/delete/"
+                data-delete-name="2024-05-12 outdoor session"
+                data-delete-label="session">
+            <!-- inline SVG trash icon, 16×16, stroke="currentColor" -->
+        </button>
+    </div>
+</li>
+```
+
+### How the JS handler works
+A single `document`-level click listener in `modals.js` catches all `.list-row-action--danger` clicks anywhere in the app. It reads the three `data-delete-*` attributes, opens the reusable confirmation modal with the correct label and name, and on confirm POSTs to the delete URL via a dynamically created form (CSRF token copied from any existing form on the page).
+
+### Adding quick-delete to a new list
+1. Add `list-row` to the `<li>` class.
+2. Wrap the main label in `<span class="list-row-main">`.
+3. Add `.list-row-actions` div with the button (three data attributes as above).
+4. The handler in `modals.js` picks it up automatically — no page-specific JS needed.
+
+---
+
 ## Form patterns
 
 - **Required fields** — small "Required" pill badge next to the label
@@ -127,12 +159,24 @@ List the exact manual flows you'll test, in the prompt itself. Claude Code uses 
 ### Treat reusable patterns as architecture, not features
 When something will recur (modal close behavior, form reset, confirmation dialogs, button styles), build it once into shared infrastructure rather than copying it per page. This has saved a lot of churn already.
 
+### Event propagation: belt-and-suspenders for parent + child click handlers
+When a parent element (e.g., a list row `<li>`) has a direct click listener AND it contains child action buttons (e.g., a delete icon) handled via event delegation on `document`, there is a subtle ordering trap:
+
+- The `<li>` listener fires **during DOM bubbling**, before the event reaches `document`.
+- By the time the `document` handler calls `e.stopPropagation()`, the `<li>` handler has already run.
+- Result: both the row action AND the row's main handler fire — in this case, both the delete confirmation AND the view modal open.
+
+The fix requires **both** defenses:
+1. `e.stopPropagation()` in the document-level handler — hygiene, and works correctly if the parent also uses delegation.
+2. `if (e.target.closest('.list-row-action')) return;` at the top of the parent's direct handler — the actual guard.
+
+Neither alone is bulletproof; together they cover all cases and survive future refactors.
+
 ---
 
 ## What's next (some natural follow-ups)
 
 - **Training sessions** — the actual "training journal" core feature: log shots, scores, notes
-- **Quick-delete from the bow list** — a small icon next to each row so you don't have to open Modify just to delete
 - **Other bow types** — barebow first, with the `NOTES.md` pattern and conditional fields
 - **Statistics & graphs** — once there's data to visualize
 - **Multi-user / auth** — if you ever decide to share the app
