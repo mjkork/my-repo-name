@@ -9,6 +9,10 @@ def _modify_url(pk):
     return reverse("equipment:modifybow", kwargs={"pk": pk})
 
 
+def _delete_url(pk):
+    return reverse("equipment:deletebow", kwargs={"pk": pk})
+
+
 @pytest.mark.django_db
 class TestMyBowsView:
     def test_get_returns_200(self, client):
@@ -159,3 +163,37 @@ class TestModifyBowView:
             "modify-type": "olympic_recurve",
         })
         assert response.context["modify_pk"] == bow.pk
+
+
+@pytest.mark.django_db
+class TestDeleteBowView:
+    def test_url_resolves(self):
+        url = reverse("equipment:deletebow", kwargs={"pk": 42})
+        assert url == "/mybows/42/delete/"
+
+    def test_post_deletes_bow(self, client):
+        bow = BowFactory()
+        client.post(_delete_url(bow.pk))
+        assert not Bow.objects.filter(pk=bow.pk).exists()
+
+    def test_post_redirects_to_mybows(self, client):
+        bow = BowFactory()
+        response = client.post(_delete_url(bow.pk))
+        assert response.status_code == 302
+        assert response["Location"] == reverse("equipment:mybows")
+
+    def test_get_returns_405(self, client):
+        bow = BowFactory()
+        response = client.get(_delete_url(bow.pk))
+        assert response.status_code == 405
+        assert Bow.objects.filter(pk=bow.pk).exists()
+
+    def test_post_404_for_nonexistent_bow(self, client):
+        response = client.post(_delete_url(9999))
+        assert response.status_code == 404
+
+    def test_deleted_bow_absent_from_list(self, client):
+        bow = BowFactory(name="Doomed Bow")
+        client.post(_delete_url(bow.pk))
+        response = client.get(reverse("equipment:mybows"))
+        assert b"Doomed Bow" not in response.content

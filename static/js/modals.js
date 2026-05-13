@@ -90,11 +90,12 @@ document.addEventListener('keydown', (e) => {
  *
  * Usage:
  *   confirmModal.show({
- *     title:     'Confirm changes',
- *     body:      'Are you sure you want to update this bow?',
- *     primary:   'Update bow information',
- *     onPrimary: () => { document.getElementById('my-form').submit(); },
- *     secondary: 'Cancel',  // optional, defaults to 'Cancel'
+ *     title:        'Confirm changes',
+ *     body:         'Are you sure you want to update this bow?',
+ *     primary:      'Update bow information',
+ *     onPrimary:    () => { document.getElementById('my-form').submit(); },
+ *     secondary:    'Cancel',           // optional, defaults to 'Cancel'
+ *     primaryClass: 'btn btn-danger',   // optional, defaults to 'btn btn-primary'
  *   });
  *
  * Stacks on top of other open modals (z-index 300 via .modal-backdrop-top).
@@ -113,10 +114,11 @@ const confirmModal = (function () {
     const modal = initModal('confirm-modal');
     let _primaryHandler = null;
 
-    function show({ title, body, primary, onPrimary, secondary = 'Cancel' }) {
+    function show({ title, body, primary, onPrimary, secondary = 'Cancel', primaryClass = 'btn btn-primary' }) {
         titleEl.textContent      = title;
         bodyEl.textContent       = body;
         primaryBtn.textContent   = primary;
+        primaryBtn.className     = primaryClass;
         secondaryBtn.textContent = secondary;
 
         if (_primaryHandler) primaryBtn.removeEventListener('click', _primaryHandler);

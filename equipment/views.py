@@ -1,4 +1,4 @@
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
@@ -85,3 +85,15 @@ class ModifyBowView(View):
             modify_bow_form=modify_bow_form,
             modify_setup_form=modify_setup_form,
         ))
+
+
+class DeleteBowView(View):
+    """Delete a bow. POST only — GET returns 405."""
+
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        bow = get_object_or_404(Bow, pk=pk)
+        bow.delete()
+        return redirect("equipment:mybows")
+
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
+        return HttpResponseNotAllowed(["POST"])

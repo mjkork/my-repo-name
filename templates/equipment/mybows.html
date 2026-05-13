@@ -281,12 +281,20 @@
 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" id="mb-accept" disabled>Accept changes</button>
+                <button type="button" class="btn btn-danger" id="mb-delete">Delete bow</button>
+                <div class="modal-footer-right">
+                    <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="mb-accept" disabled>Accept changes</button>
+                </div>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Hidden delete form — action set by JS; separate from modify form so they don't nest -->
+<form id="delete-bow-form" method="post" action="" hidden>
+    {% csrf_token %}
+</form>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -371,16 +379,33 @@
     modifyForm.addEventListener('input',  checkModifyChanged);
     modifyForm.addEventListener('change', checkModifyChanged);
 
+    // ---- Delete bow ----
+
+    const deleteForm  = document.getElementById('delete-bow-form');
+    const mbDeleteBtn = document.getElementById('mb-delete');
+
     // Modify button: close view modal, populate and open modify modal
     document.getElementById('vb-modify').addEventListener('click', () => {
         const d = _currentViewBow;
         _modifyHasErrors = false;
-        modifyForm.action = `/mybows/${d.pk}/modify/`;
+        modifyForm.action  = `/mybows/${d.pk}/modify/`;
+        deleteForm.action  = `/mybows/${d.pk}/delete/`;
         populateModifyForm(d);
         viewModal.close();
         takeModifySnapshot();
         mbAcceptBtn.disabled = true;
         modifyModal.open();
+    });
+
+    mbDeleteBtn.addEventListener('click', () => {
+        const name = modifyForm.querySelector('[name="modify-name"]').value;
+        confirmModal.show({
+            title:        'Delete bow',
+            body:         `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+            primary:      'Delete bow',
+            primaryClass: 'btn btn-danger',
+            onPrimary:    () => deleteForm.submit(),
+        });
     });
 
     // Accept changes: open confirmation before submitting

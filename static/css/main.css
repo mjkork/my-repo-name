@@ -12,6 +12,10 @@
     --home-grad-start: #3a7e47;
     --home-grad-end:   #52a85e;
 
+    /* Danger/destructive button gradient (medium red → deeper red) */
+    --danger-grad-start: #ef4444;
+    --danger-grad-end:   #dc2626;
+
     /* Neutral palette */
     --color-text:         #111827;
     --color-text-muted:   #6b7280;
@@ -127,6 +131,16 @@ body {
 }
 .btn-home:hover {
     box-shadow: 0 4px 14px rgba(58,126,71,0.35);
+    opacity: 1;
+}
+
+.btn-danger {
+    background: linear-gradient(to right, var(--danger-grad-start), var(--danger-grad-end));
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+}
+.btn-danger:hover {
+    box-shadow: 0 4px 14px rgba(239,68,68,0.35);
     opacity: 1;
 }
 
@@ -334,6 +348,13 @@ body {
     gap: var(--sp-2);
 }
 .confirm-icon { flex-shrink: 0; }
+
+/* Groups Cancel + primary-action buttons on the right of a split modal footer */
+.modal-footer-right {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+}
 
 /* ---- Section headings (used in modals to group fields) ---- */
 .section-heading {
