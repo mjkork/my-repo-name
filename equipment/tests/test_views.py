@@ -73,6 +73,28 @@ class TestMyBowsView:
         assert bow.olympic_setup.riser == "Hoyt Formula XI"
         assert bow.olympic_setup.sight == "Shibuya Ultima"
 
+    def test_bow_row_has_delete_button_with_url(self, client):
+        bow = BowFactory(name="Blue Hoyt")
+        response = client.get(reverse("equipment:mybows"))
+        expected = _delete_url(bow.pk).encode()
+        assert expected in response.content
+
+    def test_bow_row_has_delete_button_with_name(self, client):
+        BowFactory(name="Blue Hoyt")
+        response = client.get(reverse("equipment:mybows"))
+        assert b'data-delete-name="Blue Hoyt"' in response.content
+
+    def test_multiple_bows_each_have_delete_button(self, client):
+        bow1 = BowFactory(name="Bow One")
+        bow2 = BowFactory(name="Bow Two")
+        response = client.get(reverse("equipment:mybows"))
+        assert _delete_url(bow1.pk).encode() in response.content
+        assert _delete_url(bow2.pk).encode() in response.content
+
+    def test_empty_state_has_no_delete_buttons(self, client):
+        response = client.get(reverse("equipment:mybows"))
+        assert b"list-row-action--danger" not in response.content
+
 
 @pytest.mark.django_db
 class TestModifyBowView:

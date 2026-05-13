@@ -16,7 +16,7 @@
     {% if bows %}
     <ul class="bow-list">
         {% for bow in bows %}
-        <li class="bow-list-item"
+        <li class="bow-list-item list-row"
             data-pk="{{ bow.pk }}"
             data-name="{{ bow.name }}"
             data-type="{{ bow.get_type_display }}"
@@ -33,7 +33,19 @@
             data-v-bar="{{ bow.olympic_setup.v_bar }}"
             data-clicker="{{ bow.olympic_setup.clicker }}"
             data-button="{{ bow.olympic_setup.button }}">
-            {{ bow.name }}
+            <span class="list-row-main">{{ bow.name }}</span>
+            <div class="list-row-actions">
+                <button type="button"
+                        class="list-row-action list-row-action--danger"
+                        aria-label="Delete bow"
+                        data-delete-url="{% url 'equipment:deletebow' bow.pk %}"
+                        data-delete-name="{{ bow.name }}"
+                        data-delete-label="bow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M2 4h12M5 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4M6.5 7v5M9.5 7v5M3 4l1 9.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
         </li>
         {% endfor %}
     </ul>

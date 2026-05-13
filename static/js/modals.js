@@ -141,3 +141,42 @@ const confirmModal = (function () {
 
     return { show, close: modal.close };
 }());
+
+/* ============================================================
+ * Quick-delete row action — generic handler for any list page.
+ *
+ * To enable quick-delete on a list row, add a <button> with:
+ *   class="list-row-action list-row-action--danger"
+ *   data-delete-url="/path/to/<pk>/delete/"
+ *   data-delete-name="Display name shown in the confirmation"
+ *   data-delete-label="noun for title/button (e.g. 'bow', 'session')"
+ *
+ * stopPropagation prevents the row's own click handler from firing.
+ * ============================================================ */
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.list-row-action--danger');
+    if (!btn) return;
+    e.stopPropagation();
+
+    const { deleteUrl, deleteName, deleteLabel } = btn.dataset;
+    const label = deleteLabel || 'item';
+
+    confirmModal.show({
+        title:        `Delete ${label}`,
+        body:         `Are you sure you want to delete "${deleteName}"? This action cannot be undone.`,
+        primary:      `Delete ${label}`,
+        primaryClass: 'btn btn-danger',
+        onPrimary:    () => {
+            const form     = document.createElement('form');
+            form.method    = 'post';
+            form.action    = deleteUrl;
+            const csrf     = document.createElement('input');
+            csrf.type      = 'hidden';
+            csrf.name      = 'csrfmiddlewaretoken';
+            csrf.value     = document.querySelector('[name="csrfmiddlewaretoken"]')?.value ?? '';
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            form.submit();
+        },
+    });
+});

@@ -275,6 +275,48 @@ body {
     color: #dc2626;
 }
 
+/* ---- Reusable list row with quick actions ----
+ * Apply .list-row to the <li>. Put the main clickable content in
+ * .list-row-main and action buttons in .list-row-actions.
+ * Add .list-row-action--danger for destructive actions (hover turns red). */
+.list-row {
+    display: flex;
+    align-items: center;
+}
+.list-row-main {
+    flex: 1;
+    min-width: 0;
+}
+.list-row-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    flex-shrink: 0;
+    margin-left: var(--sp-3);
+}
+.list-row-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--color-text-muted);
+    transition: color 0.15s, background 0.15s;
+}
+.list-row-action:hover {
+    color: var(--color-text);
+    background: var(--color-border);
+}
+.list-row-action--danger:hover {
+    color: var(--danger-grad-end);
+    background: #fee2e2;
+}
+
 /* ---- My Bows page ---- */
 .bows-page { padding: var(--sp-8) 0; }
 
