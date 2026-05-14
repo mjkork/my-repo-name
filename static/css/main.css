@@ -325,19 +325,23 @@ body {
     background: #fee2e2;
 }
 
-/* ---- My Bows page ---- */
-.bows-page { padding: var(--sp-8) 0; }
-
-.bows-page-header {
+/* ---- Page heading row (heading + primary action button, LEFT-ALIGNED together) ----
+ * Use this class on any page that pairs a heading with an action button.
+ * NEVER use justify-content: space-between or margin-left: auto here —
+ * the heading and its action should feel paired, not pushed to opposite edges. */
+.page-heading-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: var(--sp-4);
     margin-bottom: var(--sp-6);
 }
-.bows-page-header h1 {
+.page-heading-row h1 {
     font-size: var(--text-2xl);
     font-weight: 700;
 }
+
+/* ---- My Bows page ---- */
+.bows-page { padding: var(--sp-8) 0; }
 
 .bow-list {
     list-style: none;
@@ -407,17 +411,6 @@ body {
 
 /* ---- My Sessions page ---- */
 .sessions-page { padding: var(--sp-8) 0; }
-
-.sessions-page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--sp-6);
-}
-.sessions-page-header h1 {
-    font-size: var(--text-2xl);
-    font-weight: 700;
-}
 
 .session-list {
     list-style: none;

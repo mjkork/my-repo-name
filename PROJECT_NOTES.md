@@ -31,6 +31,16 @@ The app intentionally blends two aesthetics: a **classical brand** (the header) 
 
 ---
 
+## Page heading rows
+
+When a page pairs a heading with a primary action button (e.g., "My Bows" + "Add new bow"), use the `.page-heading-row` class on the wrapper div.
+
+**Rule:** The heading and its action button MUST appear close together on the left, using `.page-heading-row`. Do NOT use `justify-content: space-between` or `margin-left: auto` to push the action to the opposite edge. The heading and its primary action should feel paired, not separated — this is a deliberate UX choice.
+
+When adding a new page with this shape, reuse `.page-heading-row` rather than reinventing the layout. The rule is also encoded as a comment directly in the CSS.
+
+---
+
 ## Button system
 
 All buttons share the same shape, height, padding, and rounded/pill corners. Only the color differs.
