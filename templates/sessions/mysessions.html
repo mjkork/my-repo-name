@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}My Sessions — MyShots{% endblock %}
+
+{% block content %}
+<div class="sessions-page">
+
+    <div class="sessions-page-header">
+        <h1>My Sessions</h1>
+        <button type="button" class="btn btn-primary" id="open-add-session">Add new session</button>
+    </div>
+
+    {% if sessions %}
+    <ul class="session-list">
+        {% for session in sessions %}
+        <li class="session-list-item list-row">
+            <span class="list-row-main">
+                <span class="session-name">{{ session.name }}</span>
+                <span class="session-meta">{{ session.date|date:"j F Y" }}</span>
+            </span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty-state">No sessions added</p>
+    {% endif %}
+
+</div>
+{% endblock %}

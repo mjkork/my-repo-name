@@ -159,6 +159,9 @@ List the exact manual flows you'll test, in the prompt itself. Claude Code uses 
 ### Treat reusable patterns as architecture, not features
 When something will recur (modal close behavior, form reset, confirmation dialogs, button styles), build it once into shared infrastructure rather than copying it per page. This has saved a lot of churn already.
 
+### Split large features into sequential prompts
+For complex features (model → CRUD → pagination → tests), breaking the work into 4–5 sequential prompts — each scoped to a specific layer — keeps token usage manageable and each prompt reviewable before continuing. A good split: (1) model + scaffold, (2) add flow, (3) edit/delete, (4) pagination + polish, (5) tests.
+
 ### Event propagation: belt-and-suspenders for parent + child click handlers
 When a parent element (e.g., a list row `<li>`) has a direct click listener AND it contains child action buttons (e.g., a delete icon) handled via event delegation on `document`, there is a subtle ordering trap:
 
@@ -174,9 +177,52 @@ Neither alone is bulletproof; together they cover all cases and survive future r
 
 ---
 
+## Navigation
+
+A site-wide nav bar lives in `base.html` and appears on every page except the homepage (detected via `request.resolver_match.url_name == 'home'`).
+
+- **Contents (left-aligned):** Home (green), My Bows (blue → `equipment:mybows`), My Sessions (blue → `practice_sessions:mysessions`)
+- **Active state:** the current page's button gets a colored ring via `.nav-active` class, assigned by checking `request.resolver_match.namespace` in the template
+- **Homepage:** suppresses the nav entirely; uses its own in-page entry-point buttons (My Bows, My Sessions)
+- **URL namespace:** the `sessions` app has `app_name = "practice_sessions"` (to avoid the Django session middleware clash); all its URL references use the `practice_sessions:` prefix
+
+---
+
+## Session model
+
+Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions`.
+
+### v1 fields (objective only — subjective fields deliberately deferred)
+
+| Field | Type | Notes |
+|---|---|---|
+| `name` | CharField(100) | user-friendly session name |
+| `date` | DateField | default today; backdating allowed |
+| `bow` | FK → Bow (PROTECT) | protects training history if bow is deleted |
+| `location` | CharField choices | `indoor` / `outdoor` |
+| `session_type` | CharField choices | `free_practice` only for now; structured for future expansion |
+| `distance_m` | PositiveSmallIntegerField | nullable |
+| `arrow_count` | PositiveIntegerField | nullable |
+| `notes` | TextField | blank=True |
+
+### Deferred (CLAUDE.md lists these; skipped in v1 by deliberate choice)
+`temperature`, `wind`, `energy_before`, `energy_after` — subjective ordinal fields. Will be added in a future iteration once the scale granularity decision is made.
+
+### Naming reconciliation vs CLAUDE.md
+- `distance_m` (not `distance`) — CLAUDE.md naming preferred
+- `arrow_count` (not `total_arrows`) — CLAUDE.md naming preferred
+- `date` (not `started_at`) — intentional v1 simplification; `started_at` (timezone datetime) may be added later
+
+**CLAUDE.md is the long-term spec.** The v1 Session model is a deliberate subset of it.
+
+---
+
 ## What's next (some natural follow-ups)
 
-- **Training sessions** — the actual "training journal" core feature: log shots, scores, notes
+- **Sessions CRUD** — add/edit/delete session modal and form (prompt 2)
+- **Sessions edit/delete** — modify and delete flow with confirmations (prompt 3)
+- **Sessions pagination and quick-delete** — pagination + trash icon on list rows (prompt 4)
+- **Sessions tests** — full test suite for the sessions app (prompt 5)
 - **Other bow types** — barebow first, with the `NOTES.md` pattern and conditional fields
 - **Statistics & graphs** — once there's data to visualize
 - **Multi-user / auth** — if you ever decide to share the app

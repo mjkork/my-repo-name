@@ -12,14 +12,18 @@
     <header class="page-header">
         <img src="{% static 'img/myshots_page_header_wide.svg' %}" alt="MyShots">
     </header>
+    {% if request.resolver_match.url_name != 'home' %}
+    <nav class="site-nav">
+        <div class="page-wrap site-nav-inner">
+            <a href="{% url 'practice_sessions:home' %}" class="btn btn-home">Home</a>
+            <a href="{% url 'equipment:mybows' %}"
+               class="btn btn-primary{% if request.resolver_match.namespace == 'equipment' %} nav-active{% endif %}">My Bows</a>
+            <a href="{% url 'practice_sessions:mysessions' %}"
+               class="btn btn-primary{% if request.resolver_match.namespace == 'practice_sessions' %} nav-active{% endif %}">My Sessions</a>
+        </div>
+    </nav>
+    {% endif %}
     <div class="page-wrap">
-        {% block nav %}
-        {% if request.resolver_match.url_name != 'home' %}
-        <nav class="page-nav">
-            <a href="{% url 'home' %}" class="btn btn-home">Home</a>
-        </nav>
-        {% endif %}
-        {% endblock %}
         {% block content %}{% endblock %}
     </div>
     <!-- ======================================================
