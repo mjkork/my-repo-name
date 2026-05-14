@@ -225,11 +225,31 @@ Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions
 
 **CLAUDE.md is the long-term spec.** The v1 Session model is a deliberate subset of it.
 
+### v1 form fields
+
+The Add session modal exposes these fields via `SessionForm` (prefix `"session"`):
+
+| Form field | Required | Notes |
+|---|---|---|
+| `name` | Yes | session name |
+| `date` | Yes | HTML5 date input; defaults to today |
+| `bow` | Yes | select, ordered by name |
+| `location` | Yes | select: Indoor / Outdoor |
+| `distance_m` | No | number input with datalist (see below) |
+| `arrow_count` | No | number input |
+| `notes` | No | textarea |
+
+`session_type` is excluded from the form and set programmatically to `free_practice` in the view.
+
+**Distance suggestions (datalist):** 10, 18, 30, 50, 70, 90 m. Users can type any custom value; the datalist only provides suggestions.
+
+**Empty-bows edge case:** if no bows exist, the Add session modal shows a friendly message with a link to `/mybows/` rather than rendering an unusable form with an empty required dropdown.
+
 ---
 
 ## What's next (some natural follow-ups)
 
-- **Sessions CRUD** — add/edit/delete session modal and form (prompt 2)
+- **Sessions edit/delete** — modify and delete flow with confirmations (prompt 3)
 - **Sessions edit/delete** — modify and delete flow with confirmations (prompt 3)
 - **Sessions pagination and quick-delete** — pagination + trash icon on list rows (prompt 4)
 - **Sessions tests** — full test suite for the sessions app (prompt 5)

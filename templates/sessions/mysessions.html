@@ -16,7 +16,7 @@
         <li class="session-list-item list-row">
             <span class="list-row-main">
                 <span class="session-name">{{ session.name }}</span>
-                <span class="session-meta">{{ session.date|date:"j F Y" }}</span>
+                <span class="session-meta">{{ session.date|date:"j F Y" }} · {{ session.bow.name }}</span>
             </span>
         </li>
         {% endfor %}
@@ -26,4 +26,138 @@
     {% endif %}
 
 </div>
+
+<!-- ======================================================
+     ADD SESSION MODAL
+     ====================================================== -->
+<div class="modal-backdrop" id="add-session-modal" hidden>
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Add new session</h2>
+            <button type="button" class="modal-close" aria-label="Close">&times;</button>
+        </div>
+
+        {% if bows_exist %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.name.id_for_label }}">Session name</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    <p class="form-field-help">E.g. "Morning practice" or "Range session"</p>
+                    {{ session_form.name }}
+                    {% if session_form.name.errors %}
+                    <div class="form-errors">{{ session_form.name.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.date.id_for_label }}">Date</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    <p class="form-field-help">Backdating allowed — log a session from any past date.</p>
+                    {{ session_form.date }}
+                    {% if session_form.date.errors %}
+                    <div class="form-errors">{{ session_form.date.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.bow.id_for_label }}">Bow</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    {{ session_form.bow }}
+                    {% if session_form.bow.errors %}
+                    <div class="form-errors">{{ session_form.bow.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.location.id_for_label }}">Location</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    {{ session_form.location }}
+                    {% if session_form.location.errors %}
+                    <div class="form-errors">{{ session_form.location.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.distance_m.id_for_label }}">Distance (m)</label>
+                    </div>
+                    <p class="form-field-help">Common values: 10, 18, 30, 50, 70, 90 m. Type any custom distance.</p>
+                    {{ session_form.distance_m }}
+                    <datalist id="distance-suggestions">
+                        <option value="10">
+                        <option value="18">
+                        <option value="30">
+                        <option value="50">
+                        <option value="70">
+                        <option value="90">
+                    </datalist>
+                    {% if session_form.distance_m.errors %}
+                    <div class="form-errors">{{ session_form.distance_m.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.arrow_count.id_for_label }}">Total arrows</label>
+                    </div>
+                    {{ session_form.arrow_count }}
+                    {% if session_form.arrow_count.errors %}
+                    <div class="form-errors">{{ session_form.arrow_count.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.notes.id_for_label }}">Notes</label>
+                    </div>
+                    <p class="form-field-help">Anything else you want to record about this session.</p>
+                    {{ session_form.notes }}
+                    {% if session_form.notes.errors %}
+                    <div class="form-errors">{{ session_form.notes.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add session</button>
+            </div>
+        </form>
+
+        {% else %}
+        <div class="modal-body">
+            <p class="modal-no-bows">
+                You need to add a bow before logging a session.
+                <a href="{% url 'equipment:mybows' %}">Add a bow →</a>
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary modal-cancel">Close</button>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const addSessionModal = initModal('add-session-modal');
+    document.getElementById('open-add-session').addEventListener('click', addSessionModal.open);
+
+    {% if session_form.errors %}
+    addSessionModal.open();
+    {% endif %}
+</script>
 {% endblock %}

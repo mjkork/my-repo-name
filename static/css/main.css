@@ -432,6 +432,18 @@ body {
     margin-left: var(--sp-3);
 }
 
+/* Friendly message shown in the Add session modal when no bows exist yet */
+.modal-no-bows {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+.modal-no-bows a {
+    color: var(--grad-start);
+    font-weight: 600;
+    text-decoration: none;
+}
+.modal-no-bows a:hover { text-decoration: underline; }
+
 /* ---- Section headings (used in modals to group fields) ---- */
 .section-heading {
     font-size: var(--text-xs);
