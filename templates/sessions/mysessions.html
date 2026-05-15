@@ -71,7 +71,7 @@
                     </div>
                     {{ session_form.bow }}
                     {% if not bows_exist %}
-                    <p class="form-field-help">No bows added yet. You can log this session without a bow, or <a href="{% url 'equipment:mybows' %}" class="modal-help-link">add one first in My Bows</a>.</p>
+                    <p class="form-field-help">No bows added yet. You can leave it empty, or <a href="{% url 'equipment:mybows' %}" class="modal-help-link">add one first in My Bows</a>.</p>
                     {% endif %}
                     {% if session_form.bow.errors %}
                     <div class="form-errors">{{ session_form.bow.errors.as_text }}</div>
