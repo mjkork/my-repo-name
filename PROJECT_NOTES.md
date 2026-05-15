@@ -241,7 +241,7 @@ The Add session modal exposes these fields via `SessionForm` (prefix `"session"`
 |---|---|---|
 | `name` | Yes | session name |
 | `date` | Yes | HTML5 date input; defaults to today |
-| `bow` | No | select with "— No bow —" blank option, ordered by name; pre-selects most recently used bow on fresh open |
+| `bow` | No | select with "— Leave empty —" blank option, ordered by name; pre-selects most recently used bow on fresh open |
 | `location` | Yes | select: Indoor / Outdoor |
 | `distance_m` | No | number input with datalist (see below) |
 | `arrow_count` | No | number input |
@@ -257,10 +257,33 @@ The Add session modal exposes these fields via `SessionForm` (prefix `"session"`
 
 ---
 
+## Session edit and delete flow
+
+Clicking a session row opens the **Modify session modal directly** — there is no intermediate view modal (deliberate departure from the bow flow, which goes row → view modal → modify modal). The bow flow has a view modal because bows have many read-only component fields worth browsing; sessions don't need that layer.
+
+### Modify session modal
+
+Mirrors the bow Modify modal mechanically:
+- Pre-populated from `data-*` attributes on the clicked row (JS fills fields, no round-trip).
+- **Accept changes** button is disabled on open; enables when any field changes (snapshot-based change detection).
+- **Delete session** button (destructive, left footer) — same footer layout as bow modify modal.
+- Cancel, X, backdrop click, Esc all close and reset the form (shared modal infrastructure).
+
+### Asymmetric cancel rule (same as bows)
+- **Accept changes → Cancel in confirmation** → edit modal stays open with user's edits intact.
+- **Delete → Cancel in confirmation** → edit modal stays open with form RESET to original values.
+
+### URLs and views
+- `ModifySessionView` at `/mysessions/<pk>/modify/` — GET (re-renders with instance data) and POST (validates and saves; on success adds Django messages success and redirects).
+- `DeleteSessionView` at `/mysessions/<pk>/delete/` — POST only (405 for GET); deletes and redirects with a success message.
+
+### Django messages success feedback
+`messages.success()` is now used for session updates and deletes, appearing as a green banner via the messages infrastructure wired in `base.html`. The same infrastructure handles bow deletion errors (red banner).
+
+---
+
 ## What's next (some natural follow-ups)
 
-- **Sessions edit/delete** — modify and delete flow with confirmations (prompt 3)
-- **Sessions edit/delete** — modify and delete flow with confirmations (prompt 3)
 - **Sessions pagination and quick-delete** — pagination + trash icon on list rows (prompt 4)
 - **Sessions tests** — full test suite for the sessions app (prompt 5)
 - **Other bow types** — barebow first, with the `NOTES.md` pattern and conditional fields

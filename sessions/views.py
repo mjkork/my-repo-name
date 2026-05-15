@@ -1,5 +1,6 @@
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
+from django.contrib import messages
+from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -17,11 +18,18 @@ class MySessionsView(View):
 
     template_name = "sessions/mysessions.html"
 
-    def _context(self, session_form: SessionForm) -> dict:
+    def _context(
+        self,
+        session_form: SessionForm,
+        modify_session_form: SessionForm | None = None,
+        modify_pk: int | None = None,
+    ) -> dict:
         return {
-            "sessions":     Session.objects.select_related("bow").all(),
-            "session_form": session_form,
-            "bows_exist":   Bow.objects.exists(),
+            "sessions":             Session.objects.select_related("bow").all(),
+            "session_form":         session_form,
+            "bows_exist":           Bow.objects.exists(),
+            "modify_session_form":  modify_session_form or SessionForm(prefix="modify"),
+            "modify_pk":            modify_pk,
         }
 
     def get(
@@ -52,3 +60,46 @@ class MySessionsView(View):
             session.save()
             return redirect("practice_sessions:mysessions")
         return render(request, self.template_name, self._context(session_form))
+
+
+class ModifySessionView(View):
+    """Edit an existing session."""
+
+    template_name = "sessions/mysessions.html"
+
+    def _full_context(self, pk: int, modify_session_form: SessionForm) -> dict:
+        return {
+            "sessions":             Session.objects.select_related("bow").all(),
+            "session_form":         SessionForm(prefix="session"),
+            "bows_exist":           Bow.objects.exists(),
+            "modify_session_form":  modify_session_form,
+            "modify_pk":            pk,
+        }
+
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
+        session = get_object_or_404(Session, pk=pk)
+        form = SessionForm(instance=session, prefix="modify")
+        return render(request, self.template_name, self._full_context(pk, form))
+
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        session = get_object_or_404(Session, pk=pk)
+        form = SessionForm(request.POST, instance=session, prefix="modify")
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Session updated.")
+            return redirect("practice_sessions:mysessions")
+        return render(request, self.template_name, self._full_context(pk, form))
+
+
+class DeleteSessionView(View):
+    """Delete a session. POST only — GET returns 405."""
+
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        session = get_object_or_404(Session, pk=pk)
+        session_name = session.name
+        session.delete()
+        messages.success(request, f"Session '{session_name}' deleted.")
+        return redirect("practice_sessions:mysessions")
+
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
+        return HttpResponseNotAllowed(["POST"])

@@ -13,7 +13,16 @@
     {% if sessions %}
     <ul class="session-list">
         {% for session in sessions %}
-        <li class="session-list-item list-row">
+        <li class="session-list-item list-row"
+            data-pk="{{ session.pk }}"
+            data-name="{{ session.name }}"
+            data-date="{{ session.date|date:'Y-m-d' }}"
+            data-date-display="{{ session.date|date:'j F Y' }}"
+            data-bow-id="{{ session.bow_id|default:'' }}"
+            data-location="{{ session.location }}"
+            data-distance="{{ session.distance_m|default:'' }}"
+            data-arrow-count="{{ session.arrow_count|default:'' }}"
+            data-notes="{{ session.notes }}">
             <span class="list-row-main">
                 <span class="session-name">{{ session.name }}</span>
                 <span class="session-meta">{{ session.date|date:"j F Y" }}{% if session.bow %} · {{ session.bow.name }}{% endif %}</span>
@@ -138,12 +147,228 @@
 
     </div>
 </div>
+
+<!-- ======================================================
+     MODIFY SESSION MODAL
+     Form action and field values set by JS when the modal opens.
+     ====================================================== -->
+<div class="modal-backdrop" id="modify-session-modal" hidden>
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Modify session</h2>
+            <button type="button" class="modal-close" aria-label="Close">&times;</button>
+        </div>
+
+        <form id="modify-session-form" method="post" action="">
+            {% csrf_token %}
+            <div class="modal-body">
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.name.id_for_label }}">Session name</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    <p class="form-field-help">E.g. "Morning practice" or "Range session"</p>
+                    {{ modify_session_form.name }}
+                    {% if modify_session_form.name.errors %}
+                    <div class="form-errors">{{ modify_session_form.name.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.date.id_for_label }}">Date</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    <p class="form-field-help">Backdating allowed — log a session from any past date.</p>
+                    {{ modify_session_form.date }}
+                    {% if modify_session_form.date.errors %}
+                    <div class="form-errors">{{ modify_session_form.date.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.bow.id_for_label }}">Bow</label>
+                    </div>
+                    {{ modify_session_form.bow }}
+                    {% if not bows_exist %}
+                    <p class="form-field-help">No bows added yet. You can leave it empty, or <a href="{% url 'equipment:mybows' %}" class="modal-help-link">add one first in My Bows</a>.</p>
+                    {% endif %}
+                    {% if modify_session_form.bow.errors %}
+                    <div class="form-errors">{{ modify_session_form.bow.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.location.id_for_label }}">Location</label>
+                        <span class="badge-required">Required</span>
+                    </div>
+                    {{ modify_session_form.location }}
+                    {% if modify_session_form.location.errors %}
+                    <div class="form-errors">{{ modify_session_form.location.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.distance_m.id_for_label }}">Distance (m)</label>
+                    </div>
+                    <p class="form-field-help">Common values: 10, 18, 30, 50, 70, 90 m. Type any custom distance.</p>
+                    {{ modify_session_form.distance_m }}
+                    {% if modify_session_form.distance_m.errors %}
+                    <div class="form-errors">{{ modify_session_form.distance_m.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.arrow_count.id_for_label }}">Total arrows</label>
+                    </div>
+                    {{ modify_session_form.arrow_count }}
+                    {% if modify_session_form.arrow_count.errors %}
+                    <div class="form-errors">{{ modify_session_form.arrow_count.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.notes.id_for_label }}">Notes</label>
+                    </div>
+                    <p class="form-field-help">Anything else you want to record about this session.</p>
+                    {{ modify_session_form.notes }}
+                    {% if modify_session_form.notes.errors %}
+                    <div class="form-errors">{{ modify_session_form.notes.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="ms-delete">Delete session</button>
+                <div class="modal-footer-right">
+                    <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="ms-accept" disabled>Accept changes</button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- Hidden delete form — action set by JS; separate from modify form so they don't nest -->
+<form id="delete-session-form" method="post" action="" hidden>
+    {% csrf_token %}
+</form>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    const addSessionModal = initModal('add-session-modal');
+    const addSessionModal    = initModal('add-session-modal');
+    const modifySessionModal = initModal('modify-session-modal');
+
     document.getElementById('open-add-session').addEventListener('click', addSessionModal.open);
+
+    // ---- Modify session ----
+
+    const modifySessionForm = document.getElementById('modify-session-form');
+    const deleteSessionForm = document.getElementById('delete-session-form');
+    const msAcceptBtn       = document.getElementById('ms-accept');
+    const msDeleteBtn       = document.getElementById('ms-delete');
+
+    let _currentModifySession = null;
+    let _msSnapshot           = {};
+    let _msHasErrors          = false;
+
+    function populateModifySessionForm(d) {
+        modifySessionForm.querySelector('[name="modify-name"]').value        = d.name;
+        modifySessionForm.querySelector('[name="modify-date"]').value        = d.date;
+        modifySessionForm.querySelector('[name="modify-bow"]').value         = d.bowId;
+        modifySessionForm.querySelector('[name="modify-location"]').value    = d.location;
+        modifySessionForm.querySelector('[name="modify-distance_m"]').value  = d.distance;
+        modifySessionForm.querySelector('[name="modify-arrow_count"]').value = d.arrowCount;
+        modifySessionForm.querySelector('[name="modify-notes"]').value       = d.notes;
+    }
+
+    function takeMsSnapshot() {
+        const snap = {};
+        modifySessionForm.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name) snap[el.name] = el.value;
+        });
+        return snap;
+    }
+
+    function checkMsChanged() {
+        if (_msHasErrors) return;
+        let changed = false;
+        modifySessionForm.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name && el.value !== (_msSnapshot[el.name] ?? '')) changed = true;
+        });
+        msAcceptBtn.disabled = !changed;
+    }
+
+    modifySessionForm.addEventListener('input',  checkMsChanged);
+    modifySessionForm.addEventListener('change', checkMsChanged);
+
+    // Row click → open modify modal directly (no intermediate view modal — deliberate session UX)
+    document.querySelectorAll('.session-list-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            // Belt-and-suspenders: bail if click came from a quick-action button (e.g. trash icon added in prompt 4).
+            // The document-level handler also calls stopPropagation(), but that fires after this direct listener.
+            if (e.target.closest('.list-row-action')) return;
+
+            const d = item.dataset;
+            _currentModifySession = d;
+            _msHasErrors          = false;
+
+            modifySessionForm.action = `/mysessions/${d.pk}/modify/`;
+            deleteSessionForm.action = `/mysessions/${d.pk}/delete/`;
+
+            populateModifySessionForm(d);
+            _msSnapshot          = takeMsSnapshot();
+            msAcceptBtn.disabled = true;
+
+            modifySessionModal.open();
+        });
+    });
+
+    // Delete — asymmetric cancel: Cancel in the confirmation RESETS the edit form to original values
+    msDeleteBtn.addEventListener('click', () => {
+        const name        = modifySessionForm.querySelector('[name="modify-name"]').value;
+        const dateDisplay = _currentModifySession?.dateDisplay ?? '';
+        const body        = dateDisplay
+            ? `Are you sure you want to delete "${name}" from ${dateDisplay}? This action cannot be undone.`
+            : `Are you sure you want to delete "${name}"? This action cannot be undone.`;
+
+        confirmModal.show({
+            title:        'Delete session',
+            body,
+            primary:      'Delete session',
+            primaryClass: 'btn btn-danger',
+            onPrimary:    () => deleteSessionForm.submit(),
+            onCancel:     () => modifySessionModal.reset(),
+        });
+    });
+
+    // Accept changes — onCancel not set, so Cancel in the confirmation simply closes it,
+    // leaving the edit modal underneath with the user's edits intact (asymmetric cancel rule)
+    msAcceptBtn.addEventListener('click', () => {
+        confirmModal.show({
+            title:     'Confirm changes',
+            body:      'Are you sure you want to update this session?',
+            primary:   'Update session',
+            onPrimary: () => modifySessionForm.submit(),
+        });
+    });
+
+    // Auto-open modify modal when Django returns a validation error from the modify POST
+    {% if modify_pk %}
+    _msHasErrors             = true;
+    modifySessionForm.action = '{% url "practice_sessions:modifysession" modify_pk %}';
+    deleteSessionForm.action = '{% url "practice_sessions:deletesession" modify_pk %}';
+    msAcceptBtn.disabled     = false;
+    modifySessionModal.open();
+    {% endif %}
 
     {% if session_form.errors %}
     addSessionModal.open();
