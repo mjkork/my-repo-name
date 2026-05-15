@@ -147,7 +147,21 @@ Planned: barebow, longbow, horsebow. When adding these:
 
 ## Testing
 
-Current tests cover models, views, form validation, and URL routing. JavaScript-driven UI flows (modal interactions, form-state behavior) are verified manually via documented scenarios in each feature prompt.
+**Framework:** pytest + pytest-django (configured in `[tool.pytest.ini_options]` in `pyproject.toml`).
+
+**Run all tests:**
+```
+uv run pytest
+```
+**Do NOT use `python manage.py test`** — it reports "Found 0 tests" because tests are written in pytest style (no `TestCase` parent class), not Django's built-in unittest style.
+
+**Test file locations:** `tests/` folder inside each Django app (`equipment/tests/`, `sessions/tests/`), files named `test_*.py`.
+
+**Database tests** must use the `@pytest.mark.django_db` marker.
+
+**Why pytest:** better failure output, modern Django ecosystem standard, cleaner syntax, and a rich plugin ecosystem (pytest-cov, pytest-mock, factory_boy, etc.).
+
+**JavaScript-driven UI flows** (modal interactions, form-state behavior) are verified manually via documented scenarios in each feature prompt — no JS test runner is configured.
 
 ---
 
