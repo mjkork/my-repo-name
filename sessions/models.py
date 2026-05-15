@@ -18,8 +18,10 @@ class Session(models.Model):
     date = models.DateField(default=timezone.localdate)
     bow = models.ForeignKey(
         Bow,
-        on_delete=models.PROTECT,  # prevents deleting a bow that has sessions referencing it; safer than SET_NULL for preserving training history
+        on_delete=models.PROTECT,  # prevents deleting a bow that has sessions referencing it
         related_name="sessions",
+        null=True,
+        blank=True,
     )
     location = models.CharField(max_length=20, choices=Location.choices)
     session_type = models.CharField(

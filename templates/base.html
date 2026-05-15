@@ -23,6 +23,15 @@
         </div>
     </nav>
     {% endif %}
+    {% if messages %}
+    <div class="page-wrap">
+        <div class="messages-list">
+            {% for message in messages %}
+            <div class="message message--{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
     <div class="page-wrap">
         {% block content %}{% endblock %}
     </div>

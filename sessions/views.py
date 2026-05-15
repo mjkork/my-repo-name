@@ -19,9 +19,9 @@ class MySessionsView(View):
 
     def _context(self, session_form: SessionForm) -> dict:
         return {
-            "sessions":    Session.objects.select_related("bow").all(),
+            "sessions":     Session.objects.select_related("bow").all(),
             "session_form": session_form,
-            "bows_exist":  Bow.objects.exists(),
+            "bows_exist":   Bow.objects.exists(),
         }
 
     def get(
@@ -29,11 +29,20 @@ class MySessionsView(View):
         request: HttpRequest,
         session_form: SessionForm | None = None,
     ) -> HttpResponse:
-        return render(
-            request,
-            self.template_name,
-            self._context(session_form or SessionForm(prefix="session")),
-        )
+        if session_form is None:
+            form = SessionForm(prefix="session")
+            # Pre-select the bow from the user's most recent session to save clicks.
+            recent_bow_id = (
+                Session.objects.filter(bow__isnull=False)
+                .order_by("-date", "-pk")
+                .values_list("bow_id", flat=True)
+                .first()
+            )
+            if recent_bow_id:
+                form.fields["bow"].initial = recent_bow_id
+        else:
+            form = session_form
+        return render(request, self.template_name, self._context(form))
 
     def post(self, request: HttpRequest) -> HttpResponse:
         session_form = SessionForm(request.POST, prefix="session")

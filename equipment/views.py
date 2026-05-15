@@ -1,3 +1,5 @@
+from django.contrib import messages
+from django.db.models.deletion import ProtectedError
 from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
@@ -92,7 +94,15 @@ class DeleteBowView(View):
 
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         bow = get_object_or_404(Bow, pk=pk)
-        bow.delete()
+        try:
+            bow.delete()
+        except ProtectedError:
+            session_count = bow.sessions.count()
+            messages.error(
+                request,
+                f"Cannot delete '{bow.name}' — it's used in {session_count} session(s). "
+                "To delete this bow, first delete or detach those sessions in My Sessions.",
+            )
         return redirect("equipment:mybows")
 
     def get(self, request: HttpRequest, pk: int) -> HttpResponse:

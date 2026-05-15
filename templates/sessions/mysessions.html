@@ -16,7 +16,7 @@
         <li class="session-list-item list-row">
             <span class="list-row-main">
                 <span class="session-name">{{ session.name }}</span>
-                <span class="session-meta">{{ session.date|date:"j F Y" }} · {{ session.bow.name }}</span>
+                <span class="session-meta">{{ session.date|date:"j F Y" }}{% if session.bow %} · {{ session.bow.name }}{% endif %}</span>
             </span>
         </li>
         {% endfor %}
@@ -37,7 +37,6 @@
             <button type="button" class="modal-close" aria-label="Close">&times;</button>
         </div>
 
-        {% if bows_exist %}
         <form method="post">
             {% csrf_token %}
             <div class="modal-body">
@@ -69,9 +68,11 @@
                 <div class="form-field">
                     <div class="form-field-label">
                         <label for="{{ session_form.bow.id_for_label }}">Bow</label>
-                        <span class="badge-required">Required</span>
                     </div>
                     {{ session_form.bow }}
+                    {% if not bows_exist %}
+                    <p class="form-field-help">No bows added yet. You can log this session without a bow, or <a href="{% url 'equipment:mybows' %}" class="modal-help-link">add one first in My Bows</a>.</p>
+                    {% endif %}
                     {% if session_form.bow.errors %}
                     <div class="form-errors">{{ session_form.bow.errors.as_text }}</div>
                     {% endif %}
@@ -134,18 +135,6 @@
                 <button type="submit" class="btn btn-primary">Add session</button>
             </div>
         </form>
-
-        {% else %}
-        <div class="modal-body">
-            <p class="modal-no-bows">
-                You need to add a bow before logging a session.
-                <a href="{% url 'equipment:mybows' %}">Add a bow →</a>
-            </p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary modal-cancel">Close</button>
-        </div>
-        {% endif %}
 
     </div>
 </div>

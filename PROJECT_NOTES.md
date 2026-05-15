@@ -129,6 +129,14 @@ Currently scoped to **Olympic Recurve only**. The Bow model includes these optio
 
 - Riser, Limbs, Arrow rest, Sight, Main stabilizer, Extender, Side stabilizers, V-bar, Clicker, Button (plunger)
 
+### Deletion semantics
+
+Bows with sessions referencing them **cannot be deleted** (`on_delete=PROTECT`). If the user attempts this, `DeleteBowView` catches the `ProtectedError`, adds a Django messages-framework error message ("Cannot delete '{name}' — it's used in N session(s)..."), and redirects back to `/mybows/`. No stack trace is shown.
+
+The error message via Django messages framework appears as a red banner at the top of the page content — the messages framework is wired into `base.html` and is available for use on any page (success, warning, error variants all have CSS).
+
+**User's path forward:** edit the sessions blocking the deletion and set their bow to "— No bow —", then try deleting the bow again.
+
 ### Future: other bow types
 Planned: barebow, longbow, horsebow. When adding these:
 - Some components are bow-type-specific (e.g., counter weight = barebow only; clicker = Olympic only; riser/limbs/button = shared across recurve-style bows)
@@ -208,7 +216,7 @@ Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions
 |---|---|---|
 | `name` | CharField(100) | user-friendly session name |
 | `date` | DateField | default today; backdating allowed |
-| `bow` | FK → Bow (PROTECT) | protects training history if bow is deleted |
+| `bow` | FK → Bow (PROTECT), nullable | optional — can log without a bow; PROTECT still blocks bow deletion when sessions reference it |
 | `location` | CharField choices | `indoor` / `outdoor` |
 | `session_type` | CharField choices | `free_practice` only for now; structured for future expansion |
 | `distance_m` | PositiveSmallIntegerField | nullable |
@@ -233,7 +241,7 @@ The Add session modal exposes these fields via `SessionForm` (prefix `"session"`
 |---|---|---|
 | `name` | Yes | session name |
 | `date` | Yes | HTML5 date input; defaults to today |
-| `bow` | Yes | select, ordered by name |
+| `bow` | No | select with "— No bow —" blank option, ordered by name; pre-selects most recently used bow on fresh open |
 | `location` | Yes | select: Indoor / Outdoor |
 | `distance_m` | No | number input with datalist (see below) |
 | `arrow_count` | No | number input |
@@ -243,7 +251,9 @@ The Add session modal exposes these fields via `SessionForm` (prefix `"session"`
 
 **Distance suggestions (datalist):** 10, 18, 30, 50, 70, 90 m. Users can type any custom value; the datalist only provides suggestions.
 
-**Empty-bows edge case:** if no bows exist, the Add session modal shows a friendly message with a link to `/mybows/` rather than rendering an unusable form with an empty required dropdown.
+**Zero-bows case:** if no bows exist, the bow dropdown shows only "— No bow —" and a small italic hint appears below it with a link to My Bows. The form is fully usable; submitting without a bow is allowed.
+
+**Smart default:** on fresh modal open, the bow field is pre-selected to the bow from the user's most recent session (by date). This saves clicks when logging consecutive sessions with the same bow. If no sessions exist yet, nothing is pre-selected.
 
 ---
 

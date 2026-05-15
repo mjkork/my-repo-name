@@ -3,6 +3,7 @@ from django.urls import reverse
 
 from equipment.models import Bow, OlympicBowSetup
 from equipment.tests.factories import BowFactory, OlympicBowSetupFactory
+from sessions.tests.factories import SessionFactory
 
 
 def _modify_url(pk):
@@ -219,3 +220,32 @@ class TestDeleteBowView:
         client.post(_delete_url(bow.pk))
         response = client.get(reverse("equipment:mybows"))
         assert b"Doomed Bow" not in response.content
+
+    def test_post_protected_redirects_to_mybows(self, client):
+        bow = BowFactory()
+        SessionFactory(bow=bow)
+        response = client.post(_delete_url(bow.pk))
+        assert response.status_code == 302
+        assert response["Location"] == reverse("equipment:mybows")
+
+    def test_post_protected_bow_still_exists(self, client):
+        bow = BowFactory()
+        SessionFactory(bow=bow)
+        client.post(_delete_url(bow.pk))
+        assert Bow.objects.filter(pk=bow.pk).exists()
+
+    def test_post_protected_session_still_exists(self, client):
+        from sessions.models import Session
+        bow = BowFactory()
+        session = SessionFactory(bow=bow)
+        client.post(_delete_url(bow.pk))
+        assert Session.objects.filter(pk=session.pk).exists()
+
+    def test_post_protected_adds_error_message(self, client):
+        bow = BowFactory(name="Protected Bow")
+        SessionFactory(bow=bow)
+        response = client.post(_delete_url(bow.pk), follow=True)
+        msg_list = list(response.context["messages"])
+        assert len(msg_list) == 1
+        assert "Cannot delete" in str(msg_list[0])
+        assert "Protected Bow" in str(msg_list[0])

@@ -28,5 +28,7 @@ class SessionForm(forms.ModelForm):
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
         self.fields["bow"].queryset = Bow.objects.order_by("name")
+        self.fields["bow"].required = False
+        self.fields["bow"].empty_label = "— No bow —"
         if not self.instance.pk:
             self.fields["date"].initial = timezone.localdate()
