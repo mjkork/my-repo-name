@@ -8,7 +8,26 @@ A working summary of design decisions, UX patterns, and useful habits for the My
 
 A personal Django web app for logging archery training. Runs locally as a single-user app (no auth flow). Multi-user support was refactored out for simplicity and can be added back later if the app is shared.
 
-**Stack**: Django (Python) · SQLite · Server-rendered templates · Vanilla JavaScript · Plain CSS with custom properties.
+**Stack**: Django 5.x (Python 3.12+) · SQLite · Server-rendered templates · Vanilla JavaScript · Plain CSS with custom properties.
+
+**Package manager**: `uv`. Key commands:
+```
+uv run python manage.py runserver   # dev server
+uv run pytest                       # run all tests
+uv run ruff check . && uv run ruff format --check .   # lint + format check
+uv run python manage.py makemigrations && uv run python manage.py migrate
+```
+
+### Django apps
+
+| App | Label | Purpose |
+|---|---|---|
+| `accounts` | `accounts` | Custom `User` model (extends `AbstractUser`, no extra fields yet). `AUTH_USER_MODEL` is set. |
+| `sessions` | `practice_sessions` | Training sessions CRUD. Label is **`practice_sessions`**, not `sessions`, to avoid clash with Django's built-in `django.contrib.sessions` middleware. All URL `{% url %}` calls and `reverse()` calls must use the `practice_sessions:` prefix. |
+| `equipment` | `equipment` | Bows and type-specific component setups (`OlympicBowSetup`). |
+| `plotting` | `plotting` | Arrow-plot photo detection — stub only, models empty, no functionality yet. |
+
+The `sessions` app must be registered in `INSTALLED_APPS` as `"sessions.apps.SessionsConfig"` (not bare `"sessions"`) so Django picks up the custom app label.
 
 ---
 
@@ -106,10 +125,22 @@ Any list in the app can have inline quick-action buttons (e.g., a quick-delete t
 ### How the JS handler works
 A single `document`-level click listener in `modals.js` catches all `.list-row-action--danger` clicks anywhere in the app. It reads the three `data-delete-*` attributes, opens the reusable confirmation modal with the correct label and name, and on confirm POSTs to the delete URL via a dynamically created form (CSRF token copied from any existing form on the page).
 
+### Optional secondary context in the confirmation message
+
+The JS handler also reads an optional `data-delete-context` attribute. When present, the confirmation body becomes:
+
+> Are you sure you want to delete "{name}" from {context}? This action cannot be undone.
+
+When absent, the simpler form is used (same as bows). Use this for any list where a second piece of context (e.g., a date) makes the confirmation clearer.
+
+```html
+data-delete-context="{{ session.date|date:'j F Y' }}"
+```
+
 ### Adding quick-delete to a new list
 1. Add `list-row` to the `<li>` class.
 2. Wrap the main label in `<span class="list-row-main">`.
-3. Add `.list-row-actions` div with the button (three data attributes as above).
+3. Add `.list-row-actions` div with the button (three or four data attributes as above).
 4. The handler in `modals.js` picks it up automatically — no page-specific JS needed.
 
 ---
@@ -125,9 +156,25 @@ A single `document`-level click listener in `modals.js` catches all `.list-row-a
 
 ## Bow model
 
-Currently scoped to **Olympic Recurve only**. The Bow model includes these optional text fields for component brand/model info:
+Currently scoped to **Olympic Recurve only**.
 
-- Riser, Limbs, Arrow rest, Sight, Main stabilizer, Extender, Side stabilizers, V-bar, Clicker, Button (plunger)
+### Base `Bow` fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `name` | CharField(200) | User's nickname, e.g. "Blue Hoyt" |
+| `type` | CharField choices | `olympic_recurve` only for now |
+| `draw_weight_lbs` | DecimalField(5,1), nullable | Optional; `step="0.5"` in the form UI |
+| `notes` | TextField | blank=True |
+
+Default ordering: by `name` ascending (`Meta.ordering = ["name"]`).
+
+### `OlympicBowSetup` — 1:1 with Bow
+
+All fields are optional free-text strings (user fills brand/model/details however they like):
+riser · limbs · arrow_rest · sight · main_stabilizer · extender · side_stabilizers · v_bar · clicker · button
+
+This model is the migration point if components ever become first-class `Equipment` entities (purchase date, retirement tracking, swapping between bows).
 
 ### Deletion semantics
 
@@ -135,7 +182,7 @@ Bows with sessions referencing them **cannot be deleted** (`on_delete=PROTECT`).
 
 The error message via Django messages framework appears as a red banner at the top of the page content — the messages framework is wired into `base.html` and is available for use on any page (success, warning, error variants all have CSS).
 
-**User's path forward:** edit the sessions blocking the deletion and set their bow to "— No bow —", then try deleting the bow again.
+**User's path forward:** edit the sessions blocking the deletion and set their bow to "— Leave empty —", then try deleting the bow again.
 
 ### Future: other bow types
 Planned: barebow, longbow, horsebow. When adding these:
@@ -155,13 +202,17 @@ uv run pytest
 ```
 **Do NOT use `python manage.py test`** — it reports "Found 0 tests" because tests are written in pytest style (no `TestCase` parent class), not Django's built-in unittest style.
 
-**Test file locations:** `tests/` folder inside each Django app (`equipment/tests/`, `sessions/tests/`), files named `test_*.py`.
-
-**Database tests** must use the `@pytest.mark.django_db` marker.
+**Test file locations:** `tests/` folder inside each Django app (`equipment/tests/`, `sessions/tests/`), files named `test_*.py`. Classes do not inherit from `TestCase`. Database tests use `@pytest.mark.django_db`.
 
 **Why pytest:** better failure output, modern Django ecosystem standard, cleaner syntax, and a rich plugin ecosystem (pytest-cov, pytest-mock, factory_boy, etc.).
 
 **JavaScript-driven UI flows** (modal interactions, form-state behavior) are verified manually via documented scenarios in each feature prompt — no JS test runner is configured.
+
+### Three-tier testing strategy
+
+- **Tier 1 — new functionality:** every prompt that adds a feature writes tests for that feature and runs the app's test subset. Token-efficient.
+- **Tier 2 — shared infrastructure:** any prompt that touches shared infrastructure (CSS variables, `modals.js`, `base.html`, anything documented in the Patterns sections of this file) runs the **full** `pytest` suite to catch regressions across apps.
+- **Tier 3 — milestone:** run `uv run pytest` manually at the end of each feature and before any push to GitHub. Free, catches anything the Claude Code summary glossed over.
 
 ---
 
@@ -246,6 +297,10 @@ Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions
 - `date` (not `started_at`) — intentional v1 simplification; `started_at` (timezone datetime) may be added later
 
 **CLAUDE.md is the long-term spec.** The v1 Session model is a deliberate subset of it.
+
+### List display and pagination
+
+Sessions are sorted **date descending, pk descending** (most recent first). The list paginates at **10 per page** with `?page=N` URL parameter (bookmarkable). Invalid/out-of-range page values fall back gracefully (string → page 1; number > max → last page). Pagination controls are hidden when there is only one page.
 
 ### v1 form fields
 

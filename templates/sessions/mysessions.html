@@ -27,9 +27,51 @@
                 <span class="session-name">{{ session.name }}</span>
                 <span class="session-meta">{{ session.date|date:"j F Y" }}{% if session.bow %} · {{ session.bow.name }}{% endif %}</span>
             </span>
+            <div class="list-row-actions">
+                <button type="button"
+                        class="list-row-action list-row-action--danger"
+                        aria-label="Delete session"
+                        data-delete-url="{% url 'practice_sessions:deletesession' session.pk %}"
+                        data-delete-name="{{ session.name }}"
+                        data-delete-label="session"
+                        data-delete-context="{{ session.date|date:'j F Y' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M2 4h12M5 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4M6.5 7v5M9.5 7v5M3 4l1 9.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
         </li>
         {% endfor %}
     </ul>
+
+    {% if sessions.has_other_pages %}
+    <nav class="pagination" aria-label="Sessions pages">
+        {% if sessions.has_previous %}
+        <a class="pagination-prev" href="?page={{ sessions.previous_page_number }}">&#8592; Previous</a>
+        {% else %}
+        <span class="pagination-prev pagination-prev--disabled">&#8592; Previous</span>
+        {% endif %}
+
+        <div class="pagination-pages">
+            {% for item in page_range %}
+            {% if item.ellipsis %}
+            <span class="pagination-ellipsis">…</span>
+            {% elif item.current %}
+            <span class="pagination-page pagination-page--current">{{ item.num }}</span>
+            {% else %}
+            <a class="pagination-page" href="?page={{ item.num }}">{{ item.num }}</a>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if sessions.has_next %}
+        <a class="pagination-next" href="?page={{ sessions.next_page_number }}">Next &#8594;</a>
+        {% else %}
+        <span class="pagination-next pagination-next--disabled">Next &#8594;</span>
+        {% endif %}
+    </nav>
+    {% endif %}
+
     {% else %}
     <p class="empty-state">No sessions added</p>
     {% endif %}

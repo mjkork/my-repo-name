@@ -481,6 +481,72 @@ body {
 }
 .modal-help-link:hover { text-decoration: underline; }
 
+/* ---- Pagination ---- */
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-top: var(--sp-5);
+    flex-wrap: wrap;
+}
+.pagination-prev,
+.pagination-next {
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--color-btn-sec-text);
+    border: 1.5px solid var(--color-btn-sec-border);
+    background: var(--color-bg-card);
+    transition: background 0.1s, border-color 0.1s;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+.pagination-prev:hover,
+.pagination-next:hover { background: #f9fafb; }
+.pagination-prev--disabled,
+.pagination-next--disabled {
+    color: var(--color-text-muted);
+    pointer-events: none;
+    opacity: 0.5;
+}
+.pagination-pages {
+    display: flex;
+    gap: var(--sp-1);
+    align-items: center;
+}
+.pagination-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 var(--sp-1);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--color-text);
+    transition: background 0.1s;
+}
+.pagination-page:hover:not(.pagination-page--current) { background: var(--color-border); }
+.pagination-page--current {
+    background: linear-gradient(to right, var(--grad-start), var(--grad-end));
+    color: #fff;
+    font-weight: 700;
+    pointer-events: none;
+}
+.pagination-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
 /* ---- Section headings (used in modals to group fields) ---- */
 .section-heading {
     font-size: var(--text-xs);

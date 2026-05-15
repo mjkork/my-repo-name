@@ -162,12 +162,15 @@ document.addEventListener('click', (e) => {
     if (!btn) return;
     e.stopPropagation();
 
-    const { deleteUrl, deleteName, deleteLabel } = btn.dataset;
+    const { deleteUrl, deleteName, deleteLabel, deleteContext } = btn.dataset;
     const label = deleteLabel || 'item';
+    const body  = deleteContext
+        ? `Are you sure you want to delete "${deleteName}" from ${deleteContext}? This action cannot be undone.`
+        : `Are you sure you want to delete "${deleteName}"? This action cannot be undone.`;
 
     confirmModal.show({
         title:        `Delete ${label}`,
-        body:         `Are you sure you want to delete "${deleteName}"? This action cannot be undone.`,
+        body,
         primary:      `Delete ${label}`,
         primaryClass: 'btn btn-danger',
         onPrimary:    () => {
