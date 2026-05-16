@@ -20,6 +20,36 @@ class TestBowForm:
         assert not form.is_valid()
         assert "type" in form.errors
 
+    def test_length_valid(self):
+        form = BowForm(
+            {"bow-name": "Test Bow", "bow-type": "olympic_recurve", "bow-length_inches": "70"},
+            prefix="bow",
+        )
+        assert form.is_valid()
+
+    def test_length_optional(self):
+        form = BowForm(
+            {"bow-name": "Test Bow", "bow-type": "olympic_recurve", "bow-length_inches": ""},
+            prefix="bow",
+        )
+        assert form.is_valid()
+
+    def test_length_below_min_rejected(self):
+        form = BowForm(
+            {"bow-name": "Test Bow", "bow-type": "olympic_recurve", "bow-length_inches": "39"},
+            prefix="bow",
+        )
+        assert not form.is_valid()
+        assert "length_inches" in form.errors
+
+    def test_length_above_max_rejected(self):
+        form = BowForm(
+            {"bow-name": "Test Bow", "bow-type": "olympic_recurve", "bow-length_inches": "81"},
+            prefix="bow",
+        )
+        assert not form.is_valid()
+        assert "length_inches" in form.errors
+
     def test_draw_weight_optional(self):
         form = BowForm(
             {"bow-name": "Test Bow", "bow-type": "olympic_recurve", "bow-draw_weight_lbs": ""},
@@ -38,12 +68,14 @@ class TestBowForm:
         form = BowForm({
             "bow-name": "Blue Hoyt",
             "bow-type": "olympic_recurve",
+            "bow-length_inches": "70",
             "bow-draw_weight_lbs": "28.5",
             "bow-notes": "Competition bow",
         }, prefix="bow")
         assert form.is_valid()
         bow = form.save()
         assert bow.pk is not None
+        assert bow.length_inches == 70
         assert float(bow.draw_weight_lbs) == 28.5
 
 

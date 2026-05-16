@@ -10,6 +10,38 @@ class TestBow:
         bow = BowFactory(name="Blue Hoyt", type=Bow.BowType.OLYMPIC_RECURVE)
         assert str(bow) == "Blue Hoyt (Olympic Recurve)"
 
+    def test_length_nullable(self):
+        bow = BowFactory(length_inches=None)
+        bow.refresh_from_db()
+        assert bow.length_inches is None
+
+    def test_length_stored(self):
+        bow = BowFactory(length_inches=70)
+        bow.refresh_from_db()
+        assert bow.length_inches == 70
+
+    def test_length_below_min_raises(self):
+        from django.core.exceptions import ValidationError
+        bow = BowFactory.build(length_inches=39)
+        with pytest.raises(ValidationError):
+            bow.full_clean()
+
+    def test_length_above_max_raises(self):
+        from django.core.exceptions import ValidationError
+        bow = BowFactory.build(length_inches=81)
+        with pytest.raises(ValidationError):
+            bow.full_clean()
+
+    def test_length_min_edge_valid(self):
+        bow = BowFactory(length_inches=40)
+        bow.refresh_from_db()
+        assert bow.length_inches == 40
+
+    def test_length_max_edge_valid(self):
+        bow = BowFactory(length_inches=80)
+        bow.refresh_from_db()
+        assert bow.length_inches == 80
+
     def test_draw_weight_nullable(self):
         bow = BowFactory(draw_weight_lbs=None)
         bow.refresh_from_db()

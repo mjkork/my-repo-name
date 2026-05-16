@@ -18,6 +18,7 @@
             data-name="{{ bow.name }}"
             data-type="{{ bow.get_type_display }}"
             data-type-raw="{{ bow.type }}"
+            data-length="{{ bow.length_inches|default:'' }}"
             data-weight="{{ bow.draw_weight_lbs|default:'' }}"
             data-notes="{{ bow.notes }}"
             data-riser="{{ bow.olympic_setup.riser }}"
@@ -90,6 +91,17 @@
 
                 <div class="form-field">
                     <div class="form-field-label">
+                        <label for="{{ bow_form.length_inches.id_for_label }}">Length (inches)</label>
+                    </div>
+                    <p class="form-field-help">Optional — bow length in inches. Typical Olympic recurve: 68 or 70.</p>
+                    {{ bow_form.length_inches }}
+                    {% if bow_form.length_inches.errors %}
+                    <div class="form-errors">{{ bow_form.length_inches.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
                         <label for="{{ bow_form.draw_weight_lbs.id_for_label }}">Draw weight (lbs)</label>
                     </div>
                     <p class="form-field-help">Optional — poundage at your draw length. Steps in 0.5 lb increments.</p>
@@ -153,6 +165,10 @@
                 <div class="bow-detail-field">
                     <span class="field-label">Type</span>
                     <span class="field-value" id="vb-type"></span>
+                </div>
+                <div class="bow-detail-field" id="vb-length-row" hidden>
+                    <span class="field-label">Length</span>
+                    <span class="field-value" id="vb-length"></span>
                 </div>
                 <div class="bow-detail-field">
                     <span class="field-label">Draw weight</span>
@@ -254,6 +270,17 @@
 
                 <div class="form-field">
                     <div class="form-field-label">
+                        <label for="{{ modify_bow_form.length_inches.id_for_label }}">Length (inches)</label>
+                    </div>
+                    <p class="form-field-help">Optional — bow length in inches. Typical Olympic recurve: 68 or 70.</p>
+                    {{ modify_bow_form.length_inches }}
+                    {% if modify_bow_form.length_inches.errors %}
+                    <div class="form-errors">{{ modify_bow_form.length_inches.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
                         <label for="{{ modify_bow_form.draw_weight_lbs.id_for_label }}">Draw weight (lbs)</label>
                     </div>
                     <p class="form-field-help">Optional — poundage at your draw length. Steps in 0.5 lb increments.</p>
@@ -304,6 +331,11 @@
 <form id="delete-bow-form" method="post" action="" hidden>
     {% csrf_token %}
 </form>
+
+<datalist id="length-datalist">
+    <option value="68">
+    <option value="70">
+</datalist>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -324,10 +356,18 @@
             const d = item.dataset;
             _currentViewBow = d;
             const w = d.weight;
+            const l = d.length;
 
             document.getElementById('vb-title').textContent            = d.name;
             document.getElementById('vb-name').textContent             = d.name;
             document.getElementById('vb-type').textContent             = d.type;
+            const lengthRow = document.getElementById('vb-length-row');
+            if (l) {
+                document.getElementById('vb-length').textContent = l + ' in';
+                lengthRow.hidden = false;
+            } else {
+                lengthRow.hidden = true;
+            }
             document.getElementById('vb-weight').textContent           = w ? w + ' lbs' : '—';
             document.getElementById('vb-notes').textContent            = d.notes           || '—';
             document.getElementById('vb-riser').textContent            = d.riser           || '—';
@@ -356,6 +396,7 @@
     function populateModifyForm(d) {
         modifyForm.querySelector('[name="modify-name"]').value               = d.name;
         modifyForm.querySelector('[name="modify-type"]').value               = d.typeRaw;
+        modifyForm.querySelector('[name="modify-length_inches"]').value      = d.length;
         modifyForm.querySelector('[name="modify-draw_weight_lbs"]').value    = d.weight;
         modifyForm.querySelector('[name="modify-notes"]').value              = d.notes;
         modifyForm.querySelector('[name="modsetup-riser"]').value            = d.riser;

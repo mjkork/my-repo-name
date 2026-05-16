@@ -4,12 +4,15 @@ from equipment.models import Bow, OlympicBowSetup
 
 
 class BowForm(forms.ModelForm):
-    """Base bow fields — name, type, draw weight, notes."""
+    """Base bow fields — name, type, length, draw weight, notes."""
 
     class Meta:
         model = Bow
-        fields = ["name", "type", "draw_weight_lbs", "notes"]
+        fields = ["name", "type", "length_inches", "draw_weight_lbs", "notes"]
         widgets = {
+            "length_inches": forms.NumberInput(
+                attrs={"min": "40", "max": "80", "step": "1", "list": "length-datalist"}
+            ),
             "draw_weight_lbs": forms.NumberInput(attrs={"step": "0.5"}),
             "notes": forms.Textarea(attrs={"rows": 3}),
         }

@@ -164,6 +164,7 @@ Currently scoped to **Olympic Recurve only**.
 |---|---|---|
 | `name` | CharField(200) | User's nickname, e.g. "Blue Hoyt" |
 | `type` | CharField choices | `olympic_recurve` only for now |
+| `length_inches` | PositiveSmallIntegerField, nullable | Optional; validated 40–80 inches (covers horsebow to longbow). Form datalist suggests 68, 70 (Olympic Recurve typical). Datalist suggestions will vary per bow type when other types are added. |
 | `draw_weight_lbs` | DecimalField(5,1), nullable | Optional; `step="0.5"` in the form UI |
 | `notes` | TextField | blank=True |
 
@@ -189,6 +190,7 @@ Planned: barebow, longbow, horsebow. When adding these:
 - Some components are bow-type-specific (e.g., counter weight = barebow only; clicker = Olympic only; riser/limbs/button = shared across recurve-style bows)
 - Maintain a `NOTES.md` listing which components belong to which bow types
 - A small amount of JavaScript will conditionally show/hide fields based on the selected bow type
+- The `length_inches` datalist suggestions should also vary by type: Olympic 68/70; longbow 60–72; traditional 58–62; horsebow 42–54
 
 ---
 

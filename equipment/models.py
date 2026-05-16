@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -9,6 +10,12 @@ class Bow(models.Model):
 
     name = models.CharField(max_length=200)
     type = models.CharField(max_length=50, choices=BowType.choices)
+    length_inches = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Bow length in inches",
+        validators=[MinValueValidator(40), MaxValueValidator(80)],
+    )
     draw_weight_lbs = models.DecimalField(
         max_digits=5, decimal_places=1, null=True, blank=True
     )
