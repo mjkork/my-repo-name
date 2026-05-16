@@ -353,10 +353,63 @@ Mirrors the bow Modify modal mechanically:
 
 ---
 
+## Stat card pattern
+
+The homepage displays two summary stat cards ("Archery sessions" and "Arrows shot") with hover/focus tooltips showing a per-bow breakdown. The `.stat-card` CSS pattern is designed for reuse on other pages (e.g., a future per-bow detail view).
+
+### HTML structure
+```html
+<div class="stat-card-row">
+    <div class="stat-card" tabindex="0">
+        <div class="stat-card-label">Card label</div>
+        <div class="stat-card-value">42</div>
+        <div class="stat-card-tooltip">
+            <div class="stat-card-tooltip-header">By bow</div>
+            <div class="stat-card-tooltip-row">Bow name: 3 sessions · 120 arrows</div>
+            <!-- or when empty: -->
+            <div class="stat-card-tooltip-row stat-card-tooltip-empty">No sessions logged yet</div>
+        </div>
+    </div>
+</div>
+```
+
+### CSS classes
+| Class | Purpose |
+|---|---|
+| `.stat-card-row` | Flex container for the cards (gap, padding) |
+| `.stat-card` | Card with beige background, 3px gold left border, `position: relative` |
+| `.stat-card-label` | Small uppercase gray label |
+| `.stat-card-value` | Large Georgia serif number in dark forest green (`--color-brand-dark`) |
+| `.stat-card-tooltip` | Absolutely-positioned tooltip; hidden by default (`opacity: 0; visibility: hidden`) |
+| `.stat-card-tooltip-header` | "By bow" uppercase header with bottom border |
+| `.stat-card-tooltip-row` | One row of breakdown text |
+| `.stat-card-tooltip-empty` | Italic muted variant for the zero-state message |
+
+### Behavior
+- Tooltip appears on `:hover` or `:focus-within` on the `.stat-card` (both covered by CSS).
+- Cards have `tabindex="0"` so keyboard users can Tab in and trigger `:focus-within`.
+- The fade is a one-liner CSS `transition: opacity 0.15s` — no JavaScript.
+- Desktop-only hover design; no mobile tap fallback (deliberate).
+
+### Stat computation (backend)
+`HomeView.get_context_data()` in `sessions/views.py` runs **two queries**:
+1. `Session.objects.aggregate(Count, Coalesce(Sum))` — overall totals.
+2. `Session.objects.values("bow__name").annotate(Count, Coalesce(Sum))` — per-bow breakdown.
+
+The breakdown groups by `bow__name`. Sessions with `bow=None` appear under `"(no bow recorded)"` and are always rendered last (named bows sorted by session count descending).
+
+### Architectural decision: individual bow breakdown (not bow type)
+The breakdown is grouped by **individual bow** (e.g., "Blue Hoyt: 12 sessions"). It is deliberately NOT grouped by bow type today. When multiple bow types exist, the breakdown may be refactored to a two-level view (type → bows nested). Until then, individual bow is the most useful grain.
+
+### CSS variables added
+- `--color-stat-card-bg: #f7f5ef` — warm beige card background
+- `--color-brand-dark: #2d4a2e` — dark forest green (from the SVG header palette); used for stat values and available for other brand-aligned elements
+
+---
+
 ## What's next (some natural follow-ups)
 
-- **Sessions pagination and quick-delete** — pagination + trash icon on list rows (prompt 4)
-- **Sessions tests** — full test suite for the sessions app (prompt 5)
+- **Sessions comprehensive tests** — full test suite for the sessions app (forms, add flow, modify/delete views, URL routing)
 - **Other bow types** — barebow first, with the `NOTES.md` pattern and conditional fields
-- **Statistics & graphs** — once there's data to visualize
+- **Statistics & graphs** — deeper analysis once 30+ sessions exist
 - **Multi-user / auth** — if you ever decide to share the app
