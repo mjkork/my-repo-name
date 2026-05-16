@@ -83,15 +83,25 @@ class TestMySessionsViewPagination:
         response = client.get(reverse("practice_sessions:mysessions"))
         assert not response.context["sessions"].has_other_pages()
 
-    def test_page_one_shows_ten_sessions(self, client):
+    def test_eight_sessions_no_pagination(self, client):
+        SessionFactory.create_batch(8)
+        response = client.get(reverse("practice_sessions:mysessions"))
+        assert not response.context["sessions"].has_other_pages()
+
+    def test_nine_sessions_triggers_pagination(self, client):
+        SessionFactory.create_batch(9)
+        response = client.get(reverse("practice_sessions:mysessions"))
+        assert response.context["sessions"].has_other_pages()
+
+    def test_page_one_shows_eight_sessions(self, client):
         SessionFactory.create_batch(15)
         response = client.get(reverse("practice_sessions:mysessions"))
-        assert len(response.context["sessions"]) == 10
+        assert len(response.context["sessions"]) == 8
 
     def test_page_two_shows_remaining_sessions(self, client):
         SessionFactory.create_batch(15)
         response = client.get(reverse("practice_sessions:mysessions") + "?page=2")
-        assert len(response.context["sessions"]) == 5
+        assert len(response.context["sessions"]) == 7
 
     def test_page_one_is_most_recent_by_date(self, client):
         base = datetime.date(2025, 1, 1)

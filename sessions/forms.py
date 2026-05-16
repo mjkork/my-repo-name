@@ -30,5 +30,13 @@ class SessionForm(forms.ModelForm):
         self.fields["bow"].queryset = Bow.objects.order_by("name")
         self.fields["bow"].required = False
         self.fields["bow"].empty_label = "— Leave empty —"
+        today = timezone.localdate()
+        self.fields["date"].widget.attrs["max"] = today.isoformat()
         if not self.instance.pk:
-            self.fields["date"].initial = timezone.localdate()
+            self.fields["date"].initial = today
+
+    def clean_date(self) -> object:
+        date = self.cleaned_data.get("date")
+        if date and date > timezone.localdate():
+            raise forms.ValidationError("Session date cannot be in the future.")
+        return date

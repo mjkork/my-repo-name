@@ -11,7 +11,7 @@ from equipment.models import Bow
 from sessions.forms import SessionForm
 from sessions.models import Session
 
-PAGE_SIZE = 10
+PAGE_SIZE = 8
 
 
 def _paginate_sessions(request: HttpRequest) -> tuple:

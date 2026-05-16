@@ -302,7 +302,7 @@ Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions
 
 ### List display and pagination
 
-Sessions are sorted **date descending, pk descending** (most recent first). The list paginates at **10 per page** with `?page=N` URL parameter (bookmarkable). Invalid/out-of-range page values fall back gracefully (string → page 1; number > max → last page). Pagination controls are hidden when there is only one page.
+Sessions are sorted **date descending, pk descending** (most recent first). The list paginates at **8 per page** with `?page=N` URL parameter (bookmarkable). Invalid/out-of-range page values fall back gracefully (string → page 1; number > max → last page). Pagination controls are hidden when there is only one page.
 
 ### v1 form fields
 
@@ -311,7 +311,7 @@ The Add session modal exposes these fields via `SessionForm` (prefix `"session"`
 | Form field | Required | Notes |
 |---|---|---|
 | `name` | Yes | session name |
-| `date` | Yes | HTML5 date input; defaults to today |
+| `date` | Yes | HTML5 date input; defaults to today; must be ≤ today (future dates rejected by `clean_date()` and capped by `max` attribute in the browser picker) |
 | `bow` | No | select with "— Leave empty —" blank option, ordered by name; pre-selects most recently used bow on fresh open |
 | `location` | Yes | select: Indoor / Outdoor |
 | `distance_m` | No | number input with datalist (see below) |
