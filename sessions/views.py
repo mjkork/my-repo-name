@@ -1,5 +1,7 @@
 from django.contrib import messages
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Count, Sum
+from django.db.models.functions import Coalesce
 from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
@@ -33,6 +35,44 @@ def _paginate_sessions(request: HttpRequest) -> tuple:
 
 class HomeView(TemplateView):
     template_name = "sessions/home.html"
+
+    def get_context_data(self, **kwargs: object) -> dict:
+        ctx = super().get_context_data(**kwargs)
+        totals = Session.objects.aggregate(
+            total_sessions=Count("pk"),
+            total_arrows=Coalesce(Sum("arrow_count"), 0),
+        )
+        raw_breakdown = list(
+            Session.objects.values("bow__name").annotate(
+                sessions_count=Count("pk"),
+                arrows_count=Coalesce(Sum("arrow_count"), 0),
+            )
+        )
+        named = sorted(
+            [
+                {
+                    "bow_name": r["bow__name"],
+                    "sessions_count": r["sessions_count"],
+                    "arrows_count": r["arrows_count"],
+                }
+                for r in raw_breakdown
+                if r["bow__name"] is not None
+            ],
+            key=lambda x: -x["sessions_count"],
+        )
+        bowless = [
+            {
+                "bow_name": "(no bow recorded)",
+                "sessions_count": r["sessions_count"],
+                "arrows_count": r["arrows_count"],
+            }
+            for r in raw_breakdown
+            if r["bow__name"] is None
+        ]
+        ctx["total_sessions"] = totals["total_sessions"]
+        ctx["total_arrows"] = totals["total_arrows"]
+        ctx["per_bow_breakdown"] = named + bowless
+        return ctx
 
 
 class MySessionsView(View):

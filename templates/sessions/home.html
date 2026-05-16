@@ -5,4 +5,36 @@
     <a href="{% url 'equipment:mybows' %}" class="btn btn-primary">My Bows</a>
     <a href="{% url 'practice_sessions:mysessions' %}" class="btn btn-primary">My Sessions</a>
 </div>
+
+<div class="stat-card-row">
+    <div class="stat-card" tabindex="0">
+        <div class="stat-card-label">Archery sessions</div>
+        <div class="stat-card-value">{{ total_sessions }}</div>
+        <div class="stat-card-tooltip">
+            <div class="stat-card-tooltip-header">By bow</div>
+            {% if per_bow_breakdown %}
+                {% for row in per_bow_breakdown %}
+                <div class="stat-card-tooltip-row">{{ row.bow_name }}: {{ row.sessions_count }} session{{ row.sessions_count|pluralize }} · {{ row.arrows_count }} arrows</div>
+                {% endfor %}
+            {% else %}
+                <div class="stat-card-tooltip-row stat-card-tooltip-empty">No sessions logged yet</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stat-card" tabindex="0">
+        <div class="stat-card-label">Arrows shot</div>
+        <div class="stat-card-value">{{ total_arrows }}</div>
+        <div class="stat-card-tooltip">
+            <div class="stat-card-tooltip-header">By bow</div>
+            {% if per_bow_breakdown %}
+                {% for row in per_bow_breakdown %}
+                <div class="stat-card-tooltip-row">{{ row.bow_name }}: {{ row.arrows_count }} arrows · {{ row.sessions_count }} session{{ row.sessions_count|pluralize }}</div>
+                {% endfor %}
+            {% else %}
+                <div class="stat-card-tooltip-row stat-card-tooltip-empty">No sessions logged yet</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

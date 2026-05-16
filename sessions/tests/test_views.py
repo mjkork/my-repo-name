@@ -3,9 +3,71 @@ import datetime
 import pytest
 from django.urls import reverse
 
+from equipment.tests.factories import BowFactory
 from sessions.tests.factories import SessionFactory
 
 URL = "/mysessions/"
+
+
+@pytest.mark.django_db
+class TestHomeViewStats:
+    def test_zero_state(self, client):
+        response = client.get(reverse("practice_sessions:home"))
+        assert response.status_code == 200
+        assert response.context["total_sessions"] == 0
+        assert response.context["total_arrows"] == 0
+        assert response.context["per_bow_breakdown"] == []
+
+    def test_single_bow_with_sessions(self, client):
+        bow = BowFactory()
+        SessionFactory(bow=bow, arrow_count=10)
+        SessionFactory(bow=bow, arrow_count=15)
+        SessionFactory(bow=bow, arrow_count=None)
+        response = client.get(reverse("practice_sessions:home"))
+        assert response.context["total_sessions"] == 3
+        assert response.context["total_arrows"] == 25
+        breakdown = response.context["per_bow_breakdown"]
+        assert len(breakdown) == 1
+        assert breakdown[0]["bow_name"] == bow.name
+        assert breakdown[0]["sessions_count"] == 3
+        assert breakdown[0]["arrows_count"] == 25
+
+    def test_multiple_bows_sorted_by_sessions_desc(self, client):
+        bow1 = BowFactory()
+        bow2 = BowFactory()
+        SessionFactory.create_batch(3, bow=bow1, arrow_count=10)
+        SessionFactory(bow=bow2, arrow_count=5)
+        response = client.get(reverse("practice_sessions:home"))
+        breakdown = response.context["per_bow_breakdown"]
+        assert len(breakdown) == 2
+        assert breakdown[0]["bow_name"] == bow1.name
+        assert breakdown[0]["sessions_count"] == 3
+        assert breakdown[1]["bow_name"] == bow2.name
+        assert breakdown[1]["sessions_count"] == 1
+
+    def test_no_bow_sessions(self, client):
+        SessionFactory(bow=None, arrow_count=20)
+        SessionFactory(bow=None, arrow_count=10)
+        response = client.get(reverse("practice_sessions:home"))
+        assert response.context["total_sessions"] == 2
+        assert response.context["total_arrows"] == 30
+        breakdown = response.context["per_bow_breakdown"]
+        assert len(breakdown) == 1
+        assert breakdown[0]["bow_name"] == "(no bow recorded)"
+        assert breakdown[0]["sessions_count"] == 2
+        assert breakdown[0]["arrows_count"] == 30
+
+    def test_mixed_bows_and_no_bow(self, client):
+        bow = BowFactory()
+        SessionFactory.create_batch(2, bow=bow, arrow_count=10)
+        SessionFactory(bow=None, arrow_count=5)
+        response = client.get(reverse("practice_sessions:home"))
+        assert response.context["total_sessions"] == 3
+        assert response.context["total_arrows"] == 25
+        breakdown = response.context["per_bow_breakdown"]
+        assert len(breakdown) == 2
+        assert breakdown[0]["bow_name"] == bow.name
+        assert breakdown[-1]["bow_name"] == "(no bow recorded)"
 
 
 @pytest.mark.django_db
