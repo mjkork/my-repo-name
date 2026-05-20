@@ -639,6 +639,35 @@ body {
     font-style: italic;
 }
 
+/* Focus card — BEM modifier on .stat-card; same beige/border family, text-content layout */
+.stat-card--focus {
+    flex: 1;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card-focus-text {
+    font-size: var(--text-base);
+    line-height: 1.65;
+    color: var(--color-text);
+    margin-top: var(--sp-2);
+    flex: 1;
+}
+
+.stat-card-focus-text--muted {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.stat-card-focus-attribution {
+    margin-top: var(--sp-3);
+    padding-top: var(--sp-2);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
 /* ---- Section headings (used in modals to group fields) ---- */
 .section-heading {
     font-size: var(--text-xs);

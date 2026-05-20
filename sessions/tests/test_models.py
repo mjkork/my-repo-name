@@ -18,3 +18,11 @@ class TestSessionModel:
     def test_session_default_type_is_free_practice(self):
         session = SessionFactory()
         assert session.session_type == Session.SessionType.FREE_PRACTICE
+
+    def test_next_focus_defaults_to_empty_string(self):
+        session = SessionFactory()
+        assert session.next_focus == ""
+
+    def test_next_focus_can_store_text(self):
+        session = SessionFactory(next_focus="Work on follow-through")
+        assert session.next_focus == "Work on follow-through"

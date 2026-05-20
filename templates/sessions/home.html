@@ -36,5 +36,17 @@
             {% endif %}
         </div>
     </div>
+
+    <div class="stat-card stat-card--focus">
+        <div class="stat-card-label">Focus for next session</div>
+        {% if next_focus_state == "has_focus" %}
+            <p class="stat-card-focus-text">{{ next_focus_text }}</p>
+            <p class="stat-card-focus-attribution">From your session on {{ next_focus_session_date|date:"j F Y" }}</p>
+        {% elif next_focus_state == "no_focus" %}
+            <p class="stat-card-focus-text stat-card-focus-text--muted">Your last session didn't have a focus set. Add one next time to give your next session direction.</p>
+        {% else %}
+            <p class="stat-card-focus-text stat-card-focus-text--muted">Log your first session and set a focus for next time.</p>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

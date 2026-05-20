@@ -13,16 +13,18 @@ class SessionForm(forms.ModelForm):
 
     class Meta:
         model = Session
-        fields = ["name", "date", "bow", "location", "distance_m", "arrow_count", "notes"]
+        fields = ["name", "date", "bow", "location", "distance_m", "arrow_count", "notes", "next_focus"]
         widgets = {
             "date":       forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "distance_m": forms.NumberInput(attrs={"list": "distance-suggestions", "min": "1"}),
             "arrow_count": forms.NumberInput(attrs={"min": "1"}),
             "notes":      forms.Textarea(attrs={"rows": 3}),
+            "next_focus": forms.Textarea(attrs={"rows": 3}),
         }
         labels = {
             "distance_m":  "Distance (m)",
             "arrow_count": "Total arrows",
+            "next_focus":  "Focus for next session",
         }
 
     def __init__(self, *args: object, **kwargs: object) -> None:

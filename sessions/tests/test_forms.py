@@ -36,3 +36,31 @@ class TestSessionFormDateValidation:
         form = _form(timezone.localdate() + datetime.timedelta(days=365 * 5))
         assert not form.is_valid()
         assert "date" in form.errors
+
+
+@pytest.mark.django_db
+class TestSessionFormNextFocus:
+    def test_blank_next_focus_is_valid(self):
+        form = SessionForm(
+            {
+                "session-name": "Test Session",
+                "session-date": timezone.localdate().isoformat(),
+                "session-location": "indoor",
+                "session-next_focus": "",
+            },
+            prefix="session",
+        )
+        assert form.is_valid()
+
+    def test_text_next_focus_is_valid(self):
+        form = SessionForm(
+            {
+                "session-name": "Test Session",
+                "session-date": timezone.localdate().isoformat(),
+                "session-location": "indoor",
+                "session-next_focus": "Work on follow-through",
+            },
+            prefix="session",
+        )
+        assert form.is_valid()
+        assert form.cleaned_data["next_focus"] == "Work on follow-through"

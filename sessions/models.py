@@ -32,6 +32,7 @@ class Session(models.Model):
     distance_m = models.PositiveSmallIntegerField(null=True, blank=True)
     arrow_count = models.PositiveIntegerField(null=True, blank=True)
     notes = models.TextField(blank=True)
+    next_focus = models.TextField(blank=True)
 
     class Meta:
         ordering = ["-date"]

@@ -72,6 +72,17 @@ class HomeView(TemplateView):
         ctx["total_sessions"] = totals["total_sessions"]
         ctx["total_arrows"] = totals["total_arrows"]
         ctx["per_bow_breakdown"] = named + bowless
+
+        most_recent = Session.objects.order_by("-date", "-pk").first()
+        if most_recent is None:
+            ctx["next_focus_state"] = "empty"
+        elif not most_recent.next_focus:
+            ctx["next_focus_state"] = "no_focus"
+        else:
+            ctx["next_focus_state"] = "has_focus"
+            ctx["next_focus_text"] = most_recent.next_focus
+            ctx["next_focus_session_date"] = most_recent.date
+
         return ctx
 
 

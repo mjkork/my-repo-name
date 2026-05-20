@@ -289,6 +289,7 @@ Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions
 | `distance_m` | PositiveSmallIntegerField | nullable |
 | `arrow_count` | PositiveIntegerField | nullable |
 | `notes` | TextField | blank=True |
+| `next_focus` | TextField | blank=True; post-session reflection — "what to work on next time"; surfaces on the homepage Focus card as the archer's next-session intent |
 
 ### Deferred (CLAUDE.md lists these; skipped in v1 by deliberate choice)
 `temperature`, `wind`, `energy_before`, `energy_after` — subjective ordinal fields. Will be added in a future iteration once the scale granularity decision is made.
@@ -317,6 +318,7 @@ The Add session modal exposes these fields via `SessionForm` (prefix `"session"`
 | `distance_m` | No | number input with datalist (see below) |
 | `arrow_count` | No | number input |
 | `notes` | No | textarea |
+| `next_focus` | No | textarea; label "Focus for next session"; appears last in both Add and Modify modals |
 
 `session_type` is excluded from the form and set programmatically to `free_practice` in the view.
 
@@ -398,6 +400,22 @@ The homepage displays two summary stat cards ("Archery sessions" and "Arrows sho
 
 The breakdown groups by `bow__name`. Sessions with `bow=None` appear under `"(no bow recorded)"` and are always rendered last (named bows sorted by session count descending).
 
+### Focus card (right side)
+
+The homepage also shows a Focus card to the right of the two stat cards. It surfaces the `next_focus` value from the archer's most recent session — the first thing they see when opening the app.
+
+**Three states** (driven by `next_focus_state` context var from `HomeView`):
+
+| State | Condition | Display |
+|---|---|---|
+| `has_focus` | Most recent session has non-empty `next_focus` | The text in readable size + subtle attribution line ("From your session on {date}") |
+| `no_focus` | Sessions exist but most recent has empty `next_focus` | Italic nudge: "Your last session didn't have a focus set…" |
+| `empty` | No sessions in the DB | Italic prompt: "Log your first session and set a focus for next time." |
+
+**Backend**: one ORM query — `Session.objects.order_by("-date", "-pk").first()`.
+
+**Design note**: `next_focus` is the first piece of the subjective-variables feature, shipped early because it creates a direct feedback loop between sessions. The rest (sleep, nutrition, stress, fatigue, physical discomfort) remain deferred pending real-usage feedback.
+
 ### Architectural decision: individual bow breakdown (not bow type)
 The breakdown is grouped by **individual bow** (e.g., "Blue Hoyt: 12 sessions"). It is deliberately NOT grouped by bow type today. When multiple bow types exist, the breakdown may be refactored to a two-level view (type → bows nested). Until then, individual bow is the most useful grain.
 
@@ -411,5 +429,6 @@ The breakdown is grouped by **individual bow** (e.g., "Blue Hoyt: 12 sessions").
 
 - **Sessions comprehensive tests** — full test suite for the sessions app (forms, add flow, modify/delete views, URL routing)
 - **Other bow types** — barebow first, with the `NOTES.md` pattern and conditional fields
+- **Subjective variables (deferred)** — `next_focus` has shipped; the remaining subjective fields (sleep, nutrition, stress, fatigue, physical discomfort) are still deferred pending 10–20 sessions of real logging to inform the design
 - **Statistics & graphs** — deeper analysis once 30+ sessions exist
 - **Multi-user / auth** — if you ever decide to share the app

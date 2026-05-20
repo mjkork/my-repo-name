@@ -146,3 +146,30 @@ class TestSessionQuickDeleteRendering:
         SessionFactory(date=datetime.date(2025, 5, 15))
         response = client.get(reverse("practice_sessions:mysessions"))
         assert b'data-delete-context="15 May 2025"' in response.content
+
+
+@pytest.mark.django_db
+class TestHomeViewNextFocus:
+    def test_no_sessions_empty_state(self, client):
+        response = client.get(reverse("practice_sessions:home"))
+        assert response.context["next_focus_state"] == "empty"
+        assert "next_focus_text" not in response.context
+
+    def test_sessions_but_no_focus_set(self, client):
+        SessionFactory(next_focus="")
+        response = client.get(reverse("practice_sessions:home"))
+        assert response.context["next_focus_state"] == "no_focus"
+        assert "next_focus_text" not in response.context
+
+    def test_most_recent_has_focus(self, client):
+        session = SessionFactory(next_focus="Work on follow-through")
+        response = client.get(reverse("practice_sessions:home"))
+        assert response.context["next_focus_state"] == "has_focus"
+        assert response.context["next_focus_text"] == "Work on follow-through"
+        assert response.context["next_focus_session_date"] == session.date
+
+    def test_only_most_recent_session_used(self, client):
+        SessionFactory(date=datetime.date(2025, 1, 1), next_focus="Work on stance")
+        SessionFactory(date=datetime.date(2025, 1, 2), next_focus="Work on anchor")
+        response = client.get(reverse("practice_sessions:home"))
+        assert response.context["next_focus_text"] == "Work on anchor"

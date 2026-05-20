@@ -22,7 +22,8 @@
             data-location="{{ session.location }}"
             data-distance="{{ session.distance_m|default:'' }}"
             data-arrow-count="{{ session.arrow_count|default:'' }}"
-            data-notes="{{ session.notes }}">
+            data-notes="{{ session.notes }}"
+            data-next-focus="{{ session.next_focus }}">
             <span class="list-row-main">
                 <span class="session-name">{{ session.name }}</span>
                 <span class="session-meta">{{ session.date|date:"j F Y" }}{% if session.bow %} · {{ session.bow.name }}{% endif %}</span>
@@ -180,6 +181,17 @@
                     {% endif %}
                 </div>
 
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.next_focus.id_for_label }}">Focus for next session</label>
+                    </div>
+                    <p class="form-field-help">Optional. What do you want to work on in your next training session? This will appear on the homepage as a reminder.</p>
+                    {{ session_form.next_focus }}
+                    {% if session_form.next_focus.errors %}
+                    <div class="form-errors">{{ session_form.next_focus.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
@@ -285,6 +297,17 @@
                     {% endif %}
                 </div>
 
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.next_focus.id_for_label }}">Focus for next session</label>
+                    </div>
+                    <p class="form-field-help">Optional. What do you want to work on in your next training session? This will appear on the homepage as a reminder.</p>
+                    {{ modify_session_form.next_focus }}
+                    {% if modify_session_form.next_focus.errors %}
+                    <div class="form-errors">{{ modify_session_form.next_focus.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" id="ms-delete">Delete session</button>
@@ -330,6 +353,7 @@
         modifySessionForm.querySelector('[name="modify-distance_m"]').value  = d.distance;
         modifySessionForm.querySelector('[name="modify-arrow_count"]').value = d.arrowCount;
         modifySessionForm.querySelector('[name="modify-notes"]').value       = d.notes;
+        modifySessionForm.querySelector('[name="modify-next_focus"]').value  = d.nextFocus ?? '';
     }
 
     function takeMsSnapshot() {
