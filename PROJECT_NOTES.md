@@ -26,6 +26,7 @@ uv run python manage.py makemigrations && uv run python manage.py migrate
 | `sessions` | `practice_sessions` | Training sessions CRUD. Label is **`practice_sessions`**, not `sessions`, to avoid clash with Django's built-in `django.contrib.sessions` middleware. All URL `{% url %}` calls and `reverse()` calls must use the `practice_sessions:` prefix. |
 | `equipment` | `equipment` | Bows and type-specific component setups (`OlympicBowSetup`). |
 | `plotting` | `plotting` | Arrow-plot photo detection — stub only, models empty, no functionality yet. |
+| `preferences` | `preferences` | User-configurable settings. Minimal skeleton page now; planned to host backup management, theme switching, and UI preferences (e.g., pagination size) as those features are added. |
 
 The `sessions` app must be registered in `INSTALLED_APPS` as `"sessions.apps.SessionsConfig"` (not bare `"sessions"`) so Django picks up the custom app label.
 
@@ -266,9 +267,10 @@ Neither alone is bulletproof; together they cover all cases and survive future r
 
 A site-wide nav bar lives in `base.html` and appears on every page except the homepage (detected via `request.resolver_match.url_name == 'home'`).
 
-- **Contents (left-aligned):** Home (green), My Bows (blue → `equipment:mybows`), My Sessions (blue → `practice_sessions:mysessions`)
+- **Left group:** Home (green), My Bows (blue → `equipment:mybows`), My Sessions (blue → `practice_sessions:mysessions`) — the main navigation items
+- **Right group:** Settings (blue → `preferences:mysettings`) — a utility link, visually separated from the main nav by `justify-content: space-between` on `.site-nav-inner`. This mirrors common professional app patterns (Gmail, GitHub, VS Code) where settings/account actions live in the opposite corner from the main nav.
 - **Active state:** the current page's button gets a colored ring via `.nav-active` class, assigned by checking `request.resolver_match.namespace` in the template
-- **Homepage:** suppresses the nav entirely; uses its own in-page entry-point buttons (My Bows, My Sessions)
+- **Homepage:** suppresses the nav entirely; uses its own in-page entry-point buttons (My Bows, My Sessions, Settings)
 - **URL namespace:** the `sessions` app has `app_name = "practice_sessions"` (to avoid the Django session middleware clash); all its URL references use the `practice_sessions:` prefix
 
 ---
@@ -425,10 +427,32 @@ The breakdown is grouped by **individual bow** (e.g., "Blue Hoyt: 12 sessions").
 
 ---
 
+## Settings (preferences app)
+
+Lives at `/mysettings/` (URL namespace `preferences:mysettings`). The page is a deliberate skeleton — a `.page-heading-row` with "Settings" and an italic placeholder line. No models yet; future features will add them as needed.
+
+**Planned content** (build each when the need is clear, not all at once):
+- **Backup management** — export/import `db.sqlite3` + Django `dumpdata` (useful for local solo use before any cloud hosting)
+- **Theme switcher** — if a dark mode or alternate palette is added
+- **UI preferences** — e.g., sessions per page (currently hardcoded to 8), default location, default distance
+
+**Adding new settings features:** add the view logic, a form if needed, and wire it in. No models are required unless the setting needs to persist across sessions; simple settings can live in a `UserPreferences` model (1:1 with User) added when the first persistent setting is needed.
+
+---
+
 ## What's next (some natural follow-ups)
 
 - **Sessions comprehensive tests** — full test suite for the sessions app (forms, add flow, modify/delete views, URL routing)
 - **Other bow types** — barebow first, with the `NOTES.md` pattern and conditional fields
 - **Subjective variables (deferred)** — `next_focus` has shipped; the remaining subjective fields (sleep, nutrition, stress, fatigue, physical discomfort) are still deferred pending 10–20 sessions of real logging to inform the design
 - **Statistics & graphs** — deeper analysis once 30+ sessions exist
+- **Settings features** — backup management (export/import), UI preferences (pagination size), theme switcher — each individually scoped when needed
 - **Multi-user / auth** — if you ever decide to share the app
+
+### URL and namespace convention (new top-level pages)
+
+When adding new top-level pages, follow the established pattern:
+- **URL:** `/myX/` (e.g., `/mybows/`, `/mysessions/`, `/mysettings/`)
+- **URL namespace:** `app_name = "<appname>"` in the app's `urls.py`; the `sessions` app uses `practice_sessions` as an exception for clash-avoidance — document any deviation
+- **Template location:** `templates/<appname>/<pagename>.html`
+- **Nav bar:** add to the left group (main pages) or right group (utility/settings); update `base.html`, the active-state check, and the Navigation section of this file

@@ -2,8 +2,13 @@
 
 {% block content %}
 <div class="home-actions">
-    <a href="{% url 'equipment:mybows' %}" class="btn btn-primary">My Bows</a>
-    <a href="{% url 'practice_sessions:mysessions' %}" class="btn btn-primary">My Sessions</a>
+    <div class="home-actions-left">
+        <a href="{% url 'equipment:mybows' %}" class="btn btn-primary">My Bows</a>
+        <a href="{% url 'practice_sessions:mysessions' %}" class="btn btn-primary">My Sessions</a>
+    </div>
+    <div class="home-actions-right">
+        <a href="{% url 'preferences:mysettings' %}" class="btn btn-primary">Settings</a>
+    </div>
 </div>
 
 <div class="stat-card-row">

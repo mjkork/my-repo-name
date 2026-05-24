@@ -155,8 +155,20 @@ body {
 }
 .site-nav-inner {
     display: flex;
-    gap: var(--sp-3);
+    justify-content: space-between;
+    align-items: center;
     padding: var(--sp-3) 0;
+}
+/* Left group: Home / My Bows / My Sessions */
+.site-nav-left {
+    display: flex;
+    gap: var(--sp-3);
+}
+/* Right group: Settings — margin-left: auto pushes it to the far right */
+.site-nav-right {
+    display: flex;
+    gap: var(--sp-3);
+    margin-left: auto;
 }
 
 /* Active nav button gets a colored ring; non-active buttons are at normal opacity */
@@ -373,10 +385,26 @@ body {
 }
 
 /* ---- Home page actions ---- */
+/* justify-content: space-between splits My Bows/My Sessions (left group) from
+   Settings (right group) — this is a left/right groups layout, not a heading+action pair. */
 .home-actions {
     padding: var(--sp-8) 0;
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.home-actions-left {
+    display: flex;
     gap: var(--sp-4);
+}
+.home-actions-right {
+    display: flex;
+}
+
+/* ---- Settings page ---- */
+.settings-page { padding: var(--sp-8) 0; }
+.settings-placeholder {
+    color: var(--color-text-muted);
 }
 
 /* ---- Bow detail (view modal) ---- */

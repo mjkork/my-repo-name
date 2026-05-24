@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "sessions.apps.SessionsConfig",
     "equipment",
     "plotting",
+    "preferences",
 ]
 
 MIDDLEWARE = [
