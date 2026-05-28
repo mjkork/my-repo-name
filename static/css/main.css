@@ -403,8 +403,31 @@ body {
 
 /* ---- Settings page ---- */
 .settings-page { padding: var(--sp-8) 0; }
-.settings-placeholder {
-    color: var(--color-text-muted);
+
+/* Settings feature cards — vertical list; add more <li class="settings-card list-row"> for future options */
+.settings-card-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+}
+
+/* Individual card — same visual treatment as session/bow list rows but standalone.
+ * Uses .list-row (flex, align-items:center) for layout; this class adds the card shell. */
+.settings-card {
+    background: var(--color-bg-card);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--sp-4) var(--sp-6);
+}
+
+/* Title centered in the flex space to the left of the action button */
+.settings-card-title {
+    flex: 1;
+    text-align: center;
+    font-style: italic;
+    font-weight: normal;
 }
 
 /* ---- Bow detail (view modal) ---- */

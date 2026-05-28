@@ -7,6 +7,11 @@
     <div class="page-heading-row">
         <h1>Settings</h1>
     </div>
-    <p class="settings-placeholder"><em>Settings options will appear here as features are added.</em></p>
+    <ul class="settings-card-list">
+        <li class="settings-card list-row">
+            <span class="settings-card-title">Manage Backups</span>
+            <a href="{% url 'preferences:backup_download' %}" class="btn btn-primary">Download backup</a>
+        </li>
+    </ul>
 </div>
 {% endblock %}

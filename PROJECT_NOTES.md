@@ -429,10 +429,28 @@ The breakdown is grouped by **individual bow** (e.g., "Blue Hoyt: 12 sessions").
 
 ## Settings (preferences app)
 
-Lives at `/mysettings/` (URL namespace `preferences:mysettings`). The page is a deliberate skeleton — a `.page-heading-row` with "Settings" and an italic placeholder line. No models yet; future features will add them as needed.
+Lives at `/mysettings/` (URL namespace `preferences:mysettings`). The page holds feature cards for user-configurable settings, starting with backup management.
+
+### Page structure
+
+Settings features appear as a vertical list of `.settings-card` cards (`.settings-card-list`). Each card reuses the `.list-row` flex layout and has the same visual treatment as session/bow list items (white background, `var(--color-border)` border, `var(--radius-lg)` corners, `var(--shadow-sm)` shadow). Add additional `<li class="settings-card list-row">` elements for future settings features.
+
+### Manage Backups card
+
+The first card on the Settings page. Contains:
+- Title "Manage Backups" — italic, normal weight, centered in the card via `flex: 1; text-align: center`
+- "Download backup" button — primary button at the right edge, links to `preferences:backup_download`
+
+**Download backup feature** (`/mysettings/backup/download/`, `preferences:backup_download`):
+- GET endpoint; Django's `dumpdata` is called programmatically via `call_command` with output captured to a `StringIO` buffer
+- Options: `natural_foreign=True`, `natural_primary=True`, `indent=2` (human-readable, portable JSON)
+- **Included:** all user data — `equipment` (bows, OlympicBowSetup), `practice_sessions` (training sessions), `auth.user` (user accounts, included for smooth restore)
+- **Excluded:** `contenttypes` (auto-generated, causes pk conflicts on reload), `auth.permission` (auto-generated), `sessions` (Django's contrib sessions — ephemeral login data, not user training data). Note: `sessions` here is `django.contrib.sessions`, not our training sessions app (which is labeled `practice_sessions`).
+- Response: `Content-Type: application/json`, `Content-Disposition: attachment; filename="myshots-backup-YYYY-MM-DD.json"` (date from `timezone.localdate()`)
+- The file downloads to the browser's configured download location (Desktop, Downloads folder, or prompted — user controls this in their browser settings). The app cannot and does not write to a specific file system path.
 
 **Planned content** (build each when the need is clear, not all at once):
-- **Backup management** — export/import `db.sqlite3` + Django `dumpdata` (useful for local solo use before any cloud hosting)
+- **Backup import/restore** — deliberately deferred; more delicate than export (overwrites data, needs careful confirmation UX)
 - **Theme switcher** — if a dark mode or alternate palette is added
 - **UI preferences** — e.g., sessions per page (currently hardcoded to 8), default location, default distance
 
@@ -446,7 +464,9 @@ Lives at `/mysettings/` (URL namespace `preferences:mysettings`). The page is a 
 - **Other bow types** — barebow first, with the `NOTES.md` pattern and conditional fields
 - **Subjective variables (deferred)** — `next_focus` has shipped; the remaining subjective fields (sleep, nutrition, stress, fatigue, physical discomfort) are still deferred pending 10–20 sessions of real logging to inform the design
 - **Statistics & graphs** — deeper analysis once 30+ sessions exist
-- **Settings features** — backup management (export/import), UI preferences (pagination size), theme switcher — each individually scoped when needed
+- **Backup import/restore** — deliberately deferred; more delicate than export (overwrites existing data, needs a careful confirmation UX and possibly a "dry run" check). Export is done; restore is the natural follow-on.
+- **Scheduled/automatic backups** — future option; could write a dated JSON to a configurable path on a schedule, or sync to cloud storage (Google Drive, S3). No timeline.
+- **Settings features** — UI preferences (pagination size), theme switcher — each individually scoped when needed
 - **Multi-user / auth** — if you ever decide to share the app
 
 ### URL and namespace convention (new top-level pages)
