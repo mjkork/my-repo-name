@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from equipment.tests.factories import BowFactory
+from preferences.models import UserPreferences
 from sessions.tests.factories import SessionFactory
 
 
@@ -30,6 +31,16 @@ class TestMySettingsView:
         assert b"Download backup" in response.content
         assert b"/mysettings/backup/download/" in response.content
 
+    def test_manage_page_properties_card_present(self, client):
+        response = client.get(reverse("preferences:mysettings"))
+        assert b"Manage page properties" in response.content
+
+    def test_sessions_per_page_dropdown_present(self, client):
+        response = client.get(reverse("preferences:mysettings"))
+        content = response.content.decode()
+        for value in range(5, 11):
+            assert f'value="{value}"' in content
+
 
 @pytest.mark.django_db
 class TestNavBarIntegration:
@@ -40,14 +51,73 @@ class TestNavBarIntegration:
     def test_mysettings_nav_marks_settings_active(self, client):
         response = client.get(reverse("preferences:mysettings"))
         content = response.content.decode()
-        # The Settings nav link should have the nav-active class applied
         assert "nav-active" in content
-        # Verify the active class appears on the Settings link specifically
         assert 'href="/mysettings/"' in content
 
     def test_homepage_has_no_nav_bar(self, client):
         response = client.get(reverse("practice_sessions:home"))
         assert b"site-nav" not in response.content
+
+
+@pytest.mark.django_db
+class TestUserPreferencesModel:
+    def test_load_creates_row_with_default_on_first_call(self):
+        assert UserPreferences.objects.count() == 0
+        prefs = UserPreferences.load()
+        assert prefs.sessions_per_page == 8
+        assert UserPreferences.objects.count() == 1
+
+    def test_load_returns_existing_row(self):
+        UserPreferences.objects.create(pk=1, sessions_per_page=7)
+        prefs = UserPreferences.load()
+        assert prefs.sessions_per_page == 7
+        assert UserPreferences.objects.count() == 1
+
+    def test_save_with_different_pk_still_results_in_pk_1(self):
+        prefs = UserPreferences(pk=2, sessions_per_page=6)
+        prefs.save()
+        assert UserPreferences.objects.count() == 1
+        assert UserPreferences.objects.get().pk == 1
+
+    def test_validator_rejects_value_below_5(self):
+        from django.core.exceptions import ValidationError
+
+        prefs = UserPreferences(sessions_per_page=4)
+        with pytest.raises(ValidationError):
+            prefs.full_clean()
+
+    def test_validator_rejects_value_above_10(self):
+        from django.core.exceptions import ValidationError
+
+        prefs = UserPreferences(sessions_per_page=11)
+        with pytest.raises(ValidationError):
+            prefs.full_clean()
+
+
+@pytest.mark.django_db
+class TestUpdatePreferencesView:
+    def test_post_valid_value_updates_and_redirects(self, client):
+        response = client.post(
+            reverse("preferences:update"), {"sessions_per_page": "5"}
+        )
+        assert response.status_code == 302
+        assert response["Location"] == "/mysettings/"
+        assert UserPreferences.load().sessions_per_page == 5
+
+    def test_post_invalid_value_does_not_update(self, client):
+        UserPreferences.objects.create(pk=1, sessions_per_page=8)
+        response = client.post(
+            reverse("preferences:update"), {"sessions_per_page": "100"}
+        )
+        assert response.status_code == 302
+        assert UserPreferences.load().sessions_per_page == 8
+
+    def test_get_returns_405(self, client):
+        response = client.get(reverse("preferences:update"))
+        assert response.status_code == 405
+
+    def test_url_reversible(self):
+        assert reverse("preferences:update") == "/mysettings/preferences/update/"
 
 
 @pytest.mark.django_db

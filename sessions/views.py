@@ -8,16 +8,15 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from equipment.models import Bow
+from preferences.models import UserPreferences
 from sessions.forms import SessionForm
 from sessions.models import Session
-
-PAGE_SIZE = 8
 
 
 def _paginate_sessions(request: HttpRequest) -> tuple:
     """Return (page_obj, page_range) for the session list."""
     qs = Session.objects.select_related("bow").order_by("-date", "-pk")
-    paginator = Paginator(qs, PAGE_SIZE)
+    paginator = Paginator(qs, UserPreferences.load().sessions_per_page)
     page_num = request.GET.get("page", 1)
     try:
         page = paginator.page(page_num)

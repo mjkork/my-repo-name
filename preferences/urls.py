@@ -1,11 +1,20 @@
 from django.urls import path
 
-from preferences.views import BackupDownloadView, MySettingsView
+from preferences.views import (
+    BackupDownloadView,
+    MySettingsView,
+    UpdatePreferencesView,
+)
 
 app_name = "preferences"
 
 urlpatterns = [
     path("mysettings/", MySettingsView.as_view(), name="mysettings"),
+    path(
+        "mysettings/preferences/update/",
+        UpdatePreferencesView.as_view(),
+        name="update",
+    ),
     path(
         "mysettings/backup/download/",
         BackupDownloadView.as_view(),

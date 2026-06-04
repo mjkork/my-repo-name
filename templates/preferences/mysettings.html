@@ -12,6 +12,29 @@
             <span class="settings-card-title">Manage Backups</span>
             <a href="{% url 'preferences:backup_download' %}" class="btn btn-primary">Download backup</a>
         </li>
+
+        {# Expandable card — add new preference rows inside .settings-card-body for future prefs (e.g. bows_per_page) #}
+        <li>
+            <details class="settings-card settings-card--expandable">
+                <summary class="settings-card-summary">
+                    <span class="settings-card-title">Manage page properties</span>
+                    <span class="settings-card-chevron" aria-hidden="true">▸</span>
+                </summary>
+                <div class="settings-card-body">
+                    <form method="post" action="{% url 'preferences:update' %}">
+                        {% csrf_token %}
+                        {# Each preference is one .settings-pref-row; add more rows here for bows_per_page, etc. #}
+                        <div class="settings-pref-row">
+                            <label for="{{ preferences_form.sessions_per_page.id_for_label }}" class="settings-pref-label">
+                                {{ preferences_form.sessions_per_page.label }}
+                            </label>
+                            {{ preferences_form.sessions_per_page }}
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </details>
+        </li>
     </ul>
 </div>
 {% endblock %}

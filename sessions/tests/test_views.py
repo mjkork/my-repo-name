@@ -4,6 +4,7 @@ import pytest
 from django.urls import reverse
 
 from equipment.tests.factories import BowFactory
+from preferences.models import UserPreferences
 from sessions.tests.factories import SessionFactory
 
 URL = "/mysessions/"
@@ -173,3 +174,23 @@ class TestHomeViewNextFocus:
         SessionFactory(date=datetime.date(2025, 1, 2), next_focus="Work on anchor")
         response = client.get(reverse("practice_sessions:home"))
         assert response.context["next_focus_text"] == "Work on anchor"
+
+
+@pytest.mark.django_db
+class TestSessionListPaginationRespectsPreference:
+    def test_default_page_size_is_8(self, client):
+        SessionFactory.create_batch(10)
+        response = client.get(reverse("practice_sessions:mysessions"))
+        assert len(response.context["sessions"]) == 8
+
+    def test_page_size_5_limits_to_5_per_page(self, client):
+        UserPreferences.objects.create(pk=1, sessions_per_page=5)
+        SessionFactory.create_batch(7)
+        response = client.get(reverse("practice_sessions:mysessions"))
+        assert len(response.context["sessions"]) == 5
+
+    def test_page_size_10_shows_10_on_page_one(self, client):
+        UserPreferences.objects.create(pk=1, sessions_per_page=10)
+        SessionFactory.create_batch(12)
+        response = client.get(reverse("practice_sessions:mysessions"))
+        assert len(response.context["sessions"]) == 10

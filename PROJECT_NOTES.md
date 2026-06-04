@@ -305,7 +305,7 @@ Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions
 
 ### List display and pagination
 
-Sessions are sorted **date descending, pk descending** (most recent first). The list paginates at **8 per page** with `?page=N` URL parameter (bookmarkable). Invalid/out-of-range page values fall back gracefully (string → page 1; number > max → last page). Pagination controls are hidden when there is only one page.
+Sessions are sorted **date descending, pk descending** (most recent first). The list paginates with `?page=N` URL parameter (bookmarkable). Page size is read from `UserPreferences.load().sessions_per_page` (default 8, user-configurable in Settings → "Manage page properties", range 5–10). On a fresh DB the default of 8 applies with no visible change. Invalid/out-of-range page values fall back gracefully (string → page 1; number > max → last page). Pagination controls are hidden when there is only one page.
 
 ### v1 form fields
 
@@ -429,11 +429,42 @@ The breakdown is grouped by **individual bow** (e.g., "Blue Hoyt: 12 sessions").
 
 ## Settings (preferences app)
 
-Lives at `/mysettings/` (URL namespace `preferences:mysettings`). The page holds feature cards for user-configurable settings, starting with backup management.
+Lives at `/mysettings/` (URL namespace `preferences:mysettings`). The page holds feature cards for user-configurable settings.
+
+### UserPreferences singleton model
+
+`preferences.models.UserPreferences` — one row in the database that holds all persistent user-configurable preferences.
+
+**Singleton pattern:**
+- Always access via `UserPreferences.load()` — never instantiate directly. `load()` does a `get_or_create(pk=1)` so the row is created with defaults on first access (no separate data migration needed).
+- `save()` forces `self.pk = 1` before calling super, ensuring only one row can ever exist.
+- `__str__` returns `"User Preferences"`.
+
+**Adding a new preference:** add a field with a sensible default, run `makemigrations` + `migrate`, and expose it in `UserPreferencesForm` and `MySettingsView`. No architectural change needed. Future candidates: `bows_per_page`, `default_location`, `theme`.
+
+**Current fields:**
+
+| Field | Type | Default | Range | Purpose |
+|---|---|---|---|---|
+| `sessions_per_page` | PositiveSmallIntegerField | 8 | 5–10 | Sessions shown per page on /mysessions/ |
 
 ### Page structure
 
-Settings features appear as a vertical list of `.settings-card` cards (`.settings-card-list`). Each card reuses the `.list-row` flex layout and has the same visual treatment as session/bow list items (white background, `var(--color-border)` border, `var(--radius-lg)` corners, `var(--shadow-sm)` shadow). Add additional `<li class="settings-card list-row">` elements for future settings features.
+Settings features appear as a vertical list of `.settings-card` cards (`.settings-card-list`). Each card reuses the `.list-row` flex layout and has the same visual treatment as session/bow list items (white background, `var(--color-border)` border, `var(--radius-lg)` corners, `var(--shadow-sm)` shadow).
+
+**Two types of card:**
+- **Static card** — `<li class="settings-card list-row">` — always visible content (e.g., Manage Backups).
+- **Expandable card** — `<li><details class="settings-card settings-card--expandable">` — collapsed by default, expands via native `<details>`/`<summary>`. No JavaScript. See *Expandable card pattern* below.
+
+### Expandable card pattern (`<details>`/`<summary>`)
+
+Used for the "Manage page properties" card and reusable for any future expandable settings card.
+
+- `<details class="settings-card settings-card--expandable">` — the card shell; `.settings-card--expandable` removes the base card padding so `<summary>` and `.settings-card-body` carry their own.
+- `<summary class="settings-card-summary">` — always-visible header with the title (`.settings-card-title`) and a chevron (`.settings-card-chevron`). The chevron rotates 90° when `details[open]` via CSS.
+- `.settings-card-body` — expanded content area, separated from the summary by a `1px border-top`. Contains the form.
+- **Inside the body:** each preference is one `.settings-pref-row` flex row — `[label] [select/input] [button]`, wrapping on narrow viewports. Add more rows here for future preferences.
+- Keyboard-accessible: Tab to summary → Enter/Space toggles; Tab into form when open.
 
 ### Manage Backups card
 
@@ -449,12 +480,18 @@ The first card on the Settings page. Contains:
 - Response: `Content-Type: application/json`, `Content-Disposition: attachment; filename="myshots-backup-YYYY-MM-DD.json"` (date from `timezone.localdate()`)
 - The file downloads to the browser's configured download location (Desktop, Downloads folder, or prompted — user controls this in their browser settings). The app cannot and does not write to a specific file system path.
 
+### Manage page properties card (expandable)
+
+The second card on the Settings page. Collapsed by default. Expands via native `<details>`.
+
+**Update flow:** POST to `/mysettings/preferences/update/` (`preferences:update`) → saves `UserPreferences` singleton → Django messages success banner → redirects to `/mysettings/`. GET returns 405.
+
 **Planned content** (build each when the need is clear, not all at once):
 - **Backup import/restore** — deliberately deferred; more delicate than export (overwrites data, needs careful confirmation UX)
 - **Theme switcher** — if a dark mode or alternate palette is added
-- **UI preferences** — e.g., sessions per page (currently hardcoded to 8), default location, default distance
+- **`bows_per_page`** — one new field on `UserPreferences` + one new `.settings-pref-row` in the expandable card; model and UI pattern already accommodate it
 
-**Adding new settings features:** add the view logic, a form if needed, and wire it in. No models are required unless the setting needs to persist across sessions; simple settings can live in a `UserPreferences` model (1:1 with User) added when the first persistent setting is needed.
+**Adding new settings features:** add the view logic, a form field in `UserPreferencesForm`, a new `.settings-pref-row` inside the `.settings-card-body` in `mysettings.html`, and a field to `UserPreferences` with migration.
 
 ---
 
@@ -466,7 +503,8 @@ The first card on the Settings page. Contains:
 - **Statistics & graphs** — deeper analysis once 30+ sessions exist
 - **Backup import/restore** — deliberately deferred; more delicate than export (overwrites existing data, needs a careful confirmation UX and possibly a "dry run" check). Export is done; restore is the natural follow-on.
 - **Scheduled/automatic backups** — future option; could write a dated JSON to a configurable path on a schedule, or sync to cloud storage (Google Drive, S3). No timeline.
-- **Settings features** — UI preferences (pagination size), theme switcher — each individually scoped when needed
+- **`bows_per_page` preference** — easy follow-on: one new `PositiveSmallIntegerField` on `UserPreferences`, one new `.settings-pref-row` in the expandable card, bow list view reads it. Model and UI pattern already in place.
+- **Theme switcher** — if a dark mode or alternate palette is added
 - **Multi-user / auth** — if you ever decide to share the app
 
 ### URL and namespace convention (new top-level pages)
