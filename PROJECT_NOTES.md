@@ -4,6 +4,12 @@ A working summary of design decisions, UX patterns, and useful habits for the My
 
 ---
 
+## The intent of this app
+The app's job is to make the archer's own thinking better and more visible
+to themselves — not to add an external coach or motivator.
+
+---
+
 ## Project at a glance
 
 A personal Django web app for logging archery training. Runs locally as a single-user app (no auth flow). Multi-user support was refactored out for simplicity and can be added back later if the app is shared.
@@ -26,7 +32,6 @@ uv run python manage.py makemigrations && uv run python manage.py migrate
 | `sessions` | `practice_sessions` | Training sessions CRUD. Label is **`practice_sessions`**, not `sessions`, to avoid clash with Django's built-in `django.contrib.sessions` middleware. All URL `{% url %}` calls and `reverse()` calls must use the `practice_sessions:` prefix. |
 | `equipment` | `equipment` | Bows and type-specific component setups (`OlympicBowSetup`). |
 | `plotting` | `plotting` | Arrow-plot photo detection — stub only, models empty, no functionality yet. |
-| `preferences` | `preferences` | User-configurable settings. Minimal skeleton page now; planned to host backup management, theme switching, and UI preferences (e.g., pagination size) as those features are added. |
 
 The `sessions` app must be registered in `INSTALLED_APPS` as `"sessions.apps.SessionsConfig"` (not bare `"sessions"`) so Django picks up the custom app label.
 
@@ -165,7 +170,6 @@ Currently scoped to **Olympic Recurve only**.
 |---|---|---|
 | `name` | CharField(200) | User's nickname, e.g. "Blue Hoyt" |
 | `type` | CharField choices | `olympic_recurve` only for now |
-| `length_inches` | PositiveSmallIntegerField, nullable | Optional; validated 40–80 inches (covers horsebow to longbow). Form datalist suggests 68, 70 (Olympic Recurve typical). Datalist suggestions will vary per bow type when other types are added. |
 | `draw_weight_lbs` | DecimalField(5,1), nullable | Optional; `step="0.5"` in the form UI |
 | `notes` | TextField | blank=True |
 
@@ -191,7 +195,6 @@ Planned: barebow, longbow, horsebow. When adding these:
 - Some components are bow-type-specific (e.g., counter weight = barebow only; clicker = Olympic only; riser/limbs/button = shared across recurve-style bows)
 - Maintain a `NOTES.md` listing which components belong to which bow types
 - A small amount of JavaScript will conditionally show/hide fields based on the selected bow type
-- The `length_inches` datalist suggestions should also vary by type: Olympic 68/70; longbow 60–72; traditional 58–62; horsebow 42–54
 
 ---
 
@@ -267,10 +270,9 @@ Neither alone is bulletproof; together they cover all cases and survive future r
 
 A site-wide nav bar lives in `base.html` and appears on every page except the homepage (detected via `request.resolver_match.url_name == 'home'`).
 
-- **Left group:** Home (green), My Bows (blue → `equipment:mybows`), My Sessions (blue → `practice_sessions:mysessions`) — the main navigation items
-- **Right group:** Settings (blue → `preferences:mysettings`) — a utility link, visually separated from the main nav by `justify-content: space-between` on `.site-nav-inner`. This mirrors common professional app patterns (Gmail, GitHub, VS Code) where settings/account actions live in the opposite corner from the main nav.
+- **Contents (left-aligned):** Home (green), My Bows (blue → `equipment:mybows`), My Sessions (blue → `practice_sessions:mysessions`)
 - **Active state:** the current page's button gets a colored ring via `.nav-active` class, assigned by checking `request.resolver_match.namespace` in the template
-- **Homepage:** suppresses the nav entirely; uses its own in-page entry-point buttons (My Bows, My Sessions, Settings)
+- **Homepage:** suppresses the nav entirely; uses its own in-page entry-point buttons (My Bows, My Sessions)
 - **URL namespace:** the `sessions` app has `app_name = "practice_sessions"` (to avoid the Django session middleware clash); all its URL references use the `practice_sessions:` prefix
 
 ---
@@ -291,7 +293,6 @@ Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions
 | `distance_m` | PositiveSmallIntegerField | nullable |
 | `arrow_count` | PositiveIntegerField | nullable |
 | `notes` | TextField | blank=True |
-| `next_focus` | TextField | blank=True; post-session reflection — "what to work on next time"; surfaces on the homepage Focus card as the archer's next-session intent |
 
 ### Deferred (CLAUDE.md lists these; skipped in v1 by deliberate choice)
 `temperature`, `wind`, `energy_before`, `energy_after` — subjective ordinal fields. Will be added in a future iteration once the scale granularity decision is made.
@@ -305,7 +306,7 @@ Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions
 
 ### List display and pagination
 
-Sessions are sorted **date descending, pk descending** (most recent first). The list paginates with `?page=N` URL parameter (bookmarkable). Page size is read from `UserPreferences.load().sessions_per_page` (default 8, user-configurable in Settings → "Manage page properties", range 5–10). On a fresh DB the default of 8 applies with no visible change. Invalid/out-of-range page values fall back gracefully (string → page 1; number > max → last page). Pagination controls are hidden when there is only one page.
+Sessions are sorted **date descending, pk descending** (most recent first). The list paginates at **10 per page** with `?page=N` URL parameter (bookmarkable). Invalid/out-of-range page values fall back gracefully (string → page 1; number > max → last page). Pagination controls are hidden when there is only one page.
 
 ### v1 form fields
 
@@ -314,21 +315,20 @@ The Add session modal exposes these fields via `SessionForm` (prefix `"session"`
 | Form field | Required | Notes |
 |---|---|---|
 | `name` | Yes | session name |
-| `date` | Yes | HTML5 date input; defaults to today; must be ≤ today (future dates rejected by `clean_date()` and capped by `max` attribute in the browser picker) |
+| `date` | Yes | HTML5 date input; defaults to today |
 | `bow` | No | select with "— Leave empty —" blank option, ordered by name; pre-selects most recently used bow on fresh open |
 | `location` | Yes | select: Indoor / Outdoor |
 | `distance_m` | No | number input with datalist (see below) |
 | `arrow_count` | No | number input |
 | `notes` | No | textarea |
-| `next_focus` | No | textarea; label "Focus for next session"; appears last in both Add and Modify modals |
 
 `session_type` is excluded from the form and set programmatically to `free_practice` in the view.
 
 **Distance suggestions (datalist):** 10, 18, 30, 50, 70, 90 m. Users can type any custom value; the datalist only provides suggestions.
 
-**Zero-bows case:** if no bows exist, the bow dropdown shows only "— No bow —" and a small italic hint appears below it with a link to My Bows. The form is fully usable; submitting without a bow is allowed.
+**Zero-bows case:** if no bows exist, the bow dropdown shows only "— Leave empty —" and a small italic hint appears below it: "No bows added yet. You can leave it empty, or add one first in My Bows." (with "My Bows" linking to /mybows/.) The form is fully usable; submitting without a bow is allowed.
 
-**Smart default:** on fresh modal open, the bow field is pre-selected to the bow from the user's most recent session (by date). This saves clicks when logging consecutive sessions with the same bow. If no sessions exist yet, nothing is pre-selected.
+**Smart default:** on fresh modal open, the bow field is pre-selected to the bow from the user's most recent session (by date). Saves clicks when logging consecutive sessions with the same bow. If no sessions exist yet, or if the most recent session had no bow, nothing is pre-selected.
 
 ---
 
@@ -356,161 +356,180 @@ Mirrors the bow Modify modal mechanically:
 `messages.success()` is now used for session updates and deletes, appearing as a green banner via the messages infrastructure wired in `base.html`. The same infrastructure handles bow deletion errors (red banner).
 
 ---
+### Homepage right-side area — deliberately reserved
 
-## Stat card pattern
+The right side of the homepage is intentionally empty pending the subjective variables feature. Two ideas parked for future work:
 
-The homepage displays two summary stat cards ("Archery sessions" and "Arrows shot") with hover/focus tooltips showing a per-bow breakdown. The `.stat-card` CSS pattern is designed for reuse on other pages (e.g., a future per-bow detail view).
+- **Next session focus card** — pulls the "key takeaway" from the most recent session and displays it as the focus/goal for the next training session. Depends on the subjective variables feature shipping first (specifically the `key_takeaway` field).
+- **Achievement badges** — milestone recognition (e.g., "100 sessions", "first windy outdoor session"). Deferred until enough usage data exists to know which milestones actually feel meaningful. Requires deliberate design around trigger criteria, visual treatment, and avoiding hollow rewards.
 
-### HTML structure
-```html
-<div class="stat-card-row">
-    <div class="stat-card" tabindex="0">
-        <div class="stat-card-label">Card label</div>
-        <div class="stat-card-value">42</div>
-        <div class="stat-card-tooltip">
-            <div class="stat-card-tooltip-header">By bow</div>
-            <div class="stat-card-tooltip-row">Bow name: 3 sessions · 120 arrows</div>
-            <!-- or when empty: -->
-            <div class="stat-card-tooltip-row stat-card-tooltip-empty">No sessions logged yet</div>
-        </div>
-    </div>
-</div>
+A "recent sessions mini-list" was considered and rejected — the totals + per-bow tooltip already serve the "what have I done lately" need; a recent list would duplicate that less elegantly.
+
+---
+### Scored sessions architecture (design decided, not yet built)
+
+Reached through deliberate design conversation. Recorded here because the
+reasoning matters as much as the decisions — future-you should know *why*
+we chose simplicity over more elaborate alternatives.
+
+**Core decision: one unified Session model, not multiple session types.**
+
+Rejected alternatives:
+- Inheritance (BlankBaleSession / StructuredSession / CompetitionSession) —
+  unnecessary complexity for a single-user app at this scale.
+- Separate Scoring model in 1:1 relationship with Session — over-engineered;
+  optional fields on Session itself are simpler to query, display, and reason
+  about.
+- Three-phase modeling (warmup_arrows / scored_arrows / cooldown_arrows) —
+  most archers don't formally separate phases. Forcing structure creates
+  friction for the most common use case.
+
+**The simplification: two arrow counts.**
+
+- `total_arrows` — every arrow shot in the session (target + non-target).
+- `scoring_arrows` — the subset shot at a target face (what the score
+  is based on).
+- The difference (`total_arrows - scoring_arrows`) implicitly captures
+  warmup + cooldown + blank-bale arrows, without forcing the archer to
+  break it down.
+- Pure blank-bale sessions: `scoring_arrows = 0` or null.
+- Pure scored sessions: `scoring_arrows = total_arrows`.
+- Mixed sessions (warmup + scored + cooldown): the most common case; user
+  enters the two numbers naturally.
+
+**No `session_type` field.**
+
+The data shape reveals the session's nature:
+- `scoring_arrows > 0` → a scored session.
+- `scoring_arrows null or 0` → a blank-bale session.
+
+No need for an enum the user has to pick. Filtering and display logic
+queries the data itself. If a casual user-facing tag is wanted later
+("competition prep day", "technique session"), it can be added as free-text
+metadata — but it's not architecture.
+
+**Fields to add to Session (when the build prompt happens):**
+
+- `total_arrows` — currently `arrow_count`; either rename or keep.
+- `scoring_arrows` — PositiveIntegerField, optional (null/blank=True).
+- `target_face` — choice field, constrained by distance via a static dict
+  in the view.
+- `total_score` — PositiveIntegerField, optional.
+- (Possible future: `is_competition` flag + `competition_name` free text.)
+
+**Target face by distance — static dict, not a model:**
+
+```python
+TARGET_FACES_BY_DISTANCE = {
+    18: ['40cm', '40cm 3-spot vertical'],
+    30: ['60cm', '60cm 3-spot'],
+    40: ['80cm', '122cm'],
+    50: ['80cm', '122cm'],
+    60: ['80cm', '122cm'],
+    70: ['122cm'],
+}
 ```
 
-### CSS classes
-| Class | Purpose |
-|---|---|
-| `.stat-card-row` | Flex container for the cards (gap, padding) |
-| `.stat-card` | Card with beige background, 3px gold left border, `position: relative` |
-| `.stat-card-label` | Small uppercase gray label |
-| `.stat-card-value` | Large Georgia serif number in dark forest green (`--color-brand-dark`) |
-| `.stat-card-tooltip` | Absolutely-positioned tooltip; hidden by default (`opacity: 0; visibility: hidden`) |
-| `.stat-card-tooltip-header` | "By bow" uppercase header with bottom border |
-| `.stat-card-tooltip-row` | One row of breakdown text |
-| `.stat-card-tooltip-empty` | Italic muted variant for the zero-state message |
+Custom distances get the full list. JavaScript repopulates the target face
+dropdown when distance changes. Don't over-design — it's a dict.
 
-### Behavior
-- Tooltip appears on `:hover` or `:focus-within` on the `.stat-card` (both covered by CSS).
-- Cards have `tabindex="0"` so keyboard users can Tab in and trigger `:focus-within`.
-- The fade is a one-liner CSS `transition: opacity 0.15s` — no JavaScript.
-- Desktop-only hover design; no mobile tap fallback (deliberate).
+**Scoring granularity: total score only, for now.**
 
-### Stat computation (backend)
-`HomeView.get_context_data()` in `sessions/views.py` runs **two queries**:
-1. `Session.objects.aggregate(Count, Coalesce(Sum))` — overall totals.
-2. `Session.objects.values("bow__name").annotate(Count, Coalesce(Sum))` — per-bow breakdown.
+- Total score: easy to enter (one number). Sufficient for most mirror
+  correlations.
+- Per-end and per-arrow scoring: rejected for v1. Per-end could be added
+  later if needed (would enable "fatigue across the round" analysis).
+  Per-arrow is probably overkill forever.
 
-The breakdown groups by `bow__name`. Sessions with `bow=None` appear under `"(no bow recorded)"` and are always rendered last (named bows sorted by session count descending).
+**Competition: just a scored session with optional context.**
 
-### Focus card (right side)
+- Not a separate model.
+- Possibly a flag (`is_competition: bool`) + optional `competition_name`
+  free-text field on the Session.
+- Deliberately deferred until actual competition logging is happening.
 
-The homepage also shows a Focus card to the right of the two stat cards. It surfaces the `next_focus` value from the archer's most recent session — the first thing they see when opening the app.
+**Possible rename: `Session` → `ArcherySession`**
 
-**Three states** (driven by `next_focus_state` context var from `HomeView`):
+The current model name conflicts conceptually with `django.contrib.sessions`
+(the framework that handles login state) and is generic. `ArcherySession`
+is more descriptive and accurate. The rename would cascade to:
+- Model name, app label, URL namespace, all template references, all tests.
+- Should be its own focused prompt, not bundled with the scoring fields
+  addition. Cosmetic but real work.
 
-| State | Condition | Display |
-|---|---|---|
-| `has_focus` | Most recent session has non-empty `next_focus` | The text in readable size + subtle attribution line ("From your session on {date}") |
-| `no_focus` | Sessions exist but most recent has empty `next_focus` | Italic nudge: "Your last session didn't have a focus set…" |
-| `empty` | No sessions in the DB | Italic prompt: "Log your first session and set a focus for next time." |
+**Build sequencing:**
 
-**Backend**: one ORM query — `Session.objects.order_by("-date", "-pk").first()`.
+1. **First prompt** — add scoring fields to the existing Session model.
+   Keep model name `Session` for now.
+2. **Second prompt (optional)** — rename `Session` → `ArcherySession` if
+   still wanted.
+3. **Third prompt** — subjective variables, once the list is settled.
+4. **Eventually** — the Mirror feature (analysis / correlations).
+   Minimum 30+ scored sessions before this is meaningful.
 
-**Design note**: `next_focus` is the first piece of the subjective-variables feature, shipped early because it creates a direct feedback loop between sessions. The rest (sleep, nutrition, stress, fatigue, physical discomfort) remain deferred pending real-usage feedback.
-
-### Architectural decision: individual bow breakdown (not bow type)
-The breakdown is grouped by **individual bow** (e.g., "Blue Hoyt: 12 sessions"). It is deliberately NOT grouped by bow type today. When multiple bow types exist, the breakdown may be refactored to a two-level view (type → bows nested). Until then, individual bow is the most useful grain.
-
-### CSS variables added
-- `--color-stat-card-bg: #f7f5ef` — warm beige card background
-- `--color-brand-dark: #2d4a2e` — dark forest green (from the SVG header palette); used for stat values and available for other brand-aligned elements
+Each phase is shippable on its own. No phase requires future ones to be
+useful.
 
 ---
 
-## Settings (preferences app)
+### Subjective variables (still in design)
 
-Lives at `/mysettings/` (URL namespace `preferences:mysettings`). The page holds feature cards for user-configurable settings.
+Initial list captured but pending further design work:
 
-### UserPreferences singleton model
+- sleep (hours), nutrition, stress, weather, temperature, wind force, wind
+  direction, time of day
 
-`preferences.models.UserPreferences` — one row in the database that holds all persistent user-configurable preferences.
+Open questions:
 
-**Singleton pattern:**
-- Always access via `UserPreferences.load()` — never instantiate directly. `load()` does a `get_or_create(pk=1)` so the row is created with defaults on first access (no separate data migration needed).
-- `save()` forces `self.pk = 1` before calling super, ensuring only one row can ever exist.
-- `__str__` returns `"User Preferences"`.
+- **Polarity convention** — need to settle whether scales mean "5 = best
+  for archery" or "5 = highest intensity." Currently inconsistent across
+  proposed variables (nutrition uses quality direction; wind/stress use
+  intensity direction). Suggested: intensity convention (5 = highest)
+  because some variables (wind, stress) aren't unambiguously good or bad;
+  the mirror is supposed to *discover* their effect.
+- **Fatigue and physical sensations** — flagged earlier as diagnostic
+  (fatigue can reveal equipment mismatch separate from sleep/nutrition).
+  Worth reconsidering for inclusion in v1.
+- **Variable overlap** — weather / wind / time of day may partially
+  double-count each other; expect weather to be the weakest signal.
+- **Session context** — target face, distance, indoor/outdoor matter
+  for valid score comparisons (already captured on Session model).
 
-**Adding a new preference:** add a field with a sensible default, run `makemigrations` + `migrate`, and expose it in `UserPreferencesForm` and `MySettingsView`. No architectural change needed. Future candidates: `bows_per_page`, `default_location`, `theme`.
-
-**Current fields:**
-
-| Field | Type | Default | Range | Purpose |
-|---|---|---|---|---|
-| `sessions_per_page` | PositiveSmallIntegerField | 8 | 5–10 | Sessions shown per page on /mysessions/ |
-
-### Page structure
-
-Settings features appear as a vertical list of `.settings-card` cards (`.settings-card-list`). Each card reuses the `.list-row` flex layout and has the same visual treatment as session/bow list items (white background, `var(--color-border)` border, `var(--radius-lg)` corners, `var(--shadow-sm)` shadow).
-
-**Two types of card:**
-- **Static card** — `<li class="settings-card list-row">` — always visible content (e.g., Manage Backups).
-- **Expandable card** — `<li><details class="settings-card settings-card--expandable">` — collapsed by default, expands via native `<details>`/`<summary>`. No JavaScript. See *Expandable card pattern* below.
-
-### Expandable card pattern (`<details>`/`<summary>`)
-
-Used for the "Manage page properties" card and reusable for any future expandable settings card.
-
-- `<details class="settings-card settings-card--expandable">` — the card shell; `.settings-card--expandable` removes the base card padding so `<summary>` and `.settings-card-body` carry their own.
-- `<summary class="settings-card-summary">` — always-visible header with the title (`.settings-card-title`) and a chevron (`.settings-card-chevron`). The chevron rotates 90° when `details[open]` via CSS.
-- `.settings-card-body` — expanded content area, separated from the summary by a `1px border-top`. Contains the form.
-- **Inside the body:** each preference is one `.settings-pref-row` flex row — `[label] [select/input] [button]`, wrapping on narrow viewports. Add more rows here for future preferences.
-- Keyboard-accessible: Tab to summary → Enter/Space toggles; Tab into form when open.
-
-### Manage Backups card
-
-The first card on the Settings page. Contains:
-- Title "Manage Backups" — italic, normal weight, centered in the card via `flex: 1; text-align: center`
-- "Download backup" button — primary button at the right edge, links to `preferences:backup_download`
-
-**Download backup feature** (`/mysettings/backup/download/`, `preferences:backup_download`):
-- GET endpoint; Django's `dumpdata` is called programmatically via `call_command` with output captured to a `StringIO` buffer
-- Options: `natural_foreign=True`, `natural_primary=True`, `indent=2` (human-readable, portable JSON)
-- **Included:** all user data — `equipment` (bows, OlympicBowSetup), `practice_sessions` (training sessions), `auth.user` (user accounts, included for smooth restore)
-- **Excluded:** `contenttypes` (auto-generated, causes pk conflicts on reload), `auth.permission` (auto-generated), `sessions` (Django's contrib sessions — ephemeral login data, not user training data). Note: `sessions` here is `django.contrib.sessions`, not our training sessions app (which is labeled `practice_sessions`).
-- Response: `Content-Type: application/json`, `Content-Disposition: attachment; filename="myshots-backup-YYYY-MM-DD.json"` (date from `timezone.localdate()`)
-- The file downloads to the browser's configured download location (Desktop, Downloads folder, or prompted — user controls this in their browser settings). The app cannot and does not write to a specific file system path.
-
-### Manage page properties card (expandable)
-
-The second card on the Settings page. Collapsed by default. Expands via native `<details>`.
-
-**Update flow:** POST to `/mysettings/preferences/update/` (`preferences:update`) → saves `UserPreferences` singleton → Django messages success banner → redirects to `/mysettings/`. GET returns 405.
-
-**Planned content** (build each when the need is clear, not all at once):
-- **Backup import/restore** — deliberately deferred; more delicate than export (overwrites data, needs careful confirmation UX)
-- **Theme switcher** — if a dark mode or alternate palette is added
-- **`bows_per_page`** — one new field on `UserPreferences` + one new `.settings-pref-row` in the expandable card; model and UI pattern already accommodate it
-
-**Adding new settings features:** add the view logic, a form field in `UserPreferencesForm`, a new `.settings-pref-row` inside the `.settings-card-body` in `mysettings.html`, and a field to `UserPreferences` with migration.
-
+The mirror's most powerful displays will pair **subjective inputs**
+(sleep, stress, etc.) with **objective outputs (total_score)** — which is
+why scored sessions must come first.
 ---
 
-## What's next (some natural follow-ups)
+## What's next
 
-- **Sessions comprehensive tests** — full test suite for the sessions app (forms, add flow, modify/delete views, URL routing)
-- **Other bow types** — barebow first, with the `NOTES.md` pattern and conditional fields
-- **Subjective variables (deferred)** — `next_focus` has shipped; the remaining subjective fields (sleep, nutrition, stress, fatigue, physical discomfort) are still deferred pending 10–20 sessions of real logging to inform the design
-- **Statistics & graphs** — deeper analysis once 30+ sessions exist
-- **Backup import/restore** — deliberately deferred; more delicate than export (overwrites existing data, needs a careful confirmation UX and possibly a "dry run" check). Export is done; restore is the natural follow-on.
-- **Scheduled/automatic backups** — future option; could write a dated JSON to a configurable path on a schedule, or sync to cloud storage (Google Drive, S3). No timeline.
-- **`bows_per_page` preference** — easy follow-on: one new `PositiveSmallIntegerField` on `UserPreferences`, one new `.settings-pref-row` in the expandable card, bow list view reads it. Model and UI pattern already in place.
-- **Theme switcher** — if a dark mode or alternate palette is added
-- **Multi-user / auth** — if you ever decide to share the app
+### Next major feature
+- **Subjective session variables** — sleep, nutrition, stress, time of day, wind, self-rating, key takeaway. Deliberately deferred from v1. Design notes for the eventual build:
+  - Standardize on **1–5 integer scales** (5 = best), with labels shown only in the UI.
+  - Make subjective fields **optional but prompted** — don't require them, don't bury them either.
+  - Show the user **their own historical distribution** when rating (anchors ratings to their personal scale over time, mitigates drift).
+  - Wind v2 idea worth revisiting: track **wind direction relative to shooting line** (head/tail/cross), not just strength.
 
-### URL and namespace convention (new top-level pages)
+### Polish phase (when nearing feature completion)
+- **Language consistency pass** — review wording across all UI strings, modal labels, button text, hints. Avoid confusing phrasing like the earlier "No bow" example.
+- **Full pytest sweep** — run `uv run pytest` manually before any significant push or milestone.
 
-When adding new top-level pages, follow the established pattern:
-- **URL:** `/myX/` (e.g., `/mybows/`, `/mysessions/`, `/mysettings/`)
-- **URL namespace:** `app_name = "<appname>"` in the app's `urls.py`; the `sessions` app uses `practice_sessions` as an exception for clash-avoidance — document any deviation
-- **Template location:** `templates/<appname>/<pagename>.html`
-- **Nav bar:** add to the left group (main pages) or right group (utility/settings); update `base.html`, the active-state check, and the Navigation section of this file
+### Deferred until enough data exists
+- **Analysis feature** — explicitly DO NOT build until ~30+ real sessions are logged. Correlations on <50 sessions are statistical noise. Implementation must:
+  - Enforce minimum-N thresholds (refuse to compute statistics on tiny samples).
+  - Frame findings as **associations, not causation** ("sessions with high sleep ratings tend to have higher self-rating" — never "sleep causes better performance").
+  - Eventually consider showing the user their own historical distribution when rating (see subjective variables above).
+
+### Future model expansion
+- **Other bow types** — barebow first, then longbow and horsebow. When adding these:
+  - Create/update `NOTES.md` (separate from this file) tracking which components belong to which bow types.
+  - Some components are bow-type-specific (counter weight = barebow only; clicker = Olympic only; riser/limbs/button = shared across recurve-style bows).
+  - Conditional field display in the form based on selected bow type.
+- **Other session types** — Structured Training, Competition. When adding these, refactor `Session` to multi-table inheritance.
+- **v2 session fields to consider** — `duration_minutes`, `warmup_minutes`, `equipment_changes` (separate from notes), `physical_condition` / soreness / pain.
+
+### Eventually (no rush)
+- **Statistics & visualizations** — once analysis exists and there's enough data.
+- **Multi-user / auth** — if you ever share the app. Models that would need an `owner` FK if multi-user is reintroduced should be flagged in code comments.
+- **Equipment as first-class entities** — purchase date, retirement tracking, swapping between bows. Migration point: the current `OlympicBowSetup` text fields would become FKs to `Equipment` records.
+
+
