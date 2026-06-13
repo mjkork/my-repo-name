@@ -415,7 +415,50 @@ queries the data itself. If a casual user-facing tag is wanted later
 metadata — but it's not architecture.
 
 **Target face by distance — static dict, not a model (STILL PENDING — Prompt 2):**
+### Target face — deliberate non-constraint by distance
 
+**Decision: target face is fully archer's choice at any distance. No
+JavaScript filtering, no validation, no per-distance constraint.**
+
+Reasoning (this came up after Prompt 1 shipped, when a constraint feature
+was on the radar for Prompt 2):
+
+- "Official" WA target-face-by-distance pairings (e.g., 60 cm at 30 m,
+  122 cm at 70 m) do NOT match how real archers actually train.
+- Beginners frequently use larger faces than their distance "should"
+  warrant — 80 cm at 30 m is common.
+- Age, ability, recovery from injury, kids' training, club-specific
+  rules, and personal training goals all drive face choices the app
+  cannot anticipate.
+- Constraining choice would be patronizing AND wrong for real-world use.
+
+**The mirror handles comparability, not the form:**
+
+The form trusts the archer's choice. The eventual mirror feature MUST
+handle face-aware comparisons correctly:
+
+- Group/filter scores by `(distance, target_face)` together — never by
+  distance alone.
+- Refuse to compare or average scores across different faces at the same
+  distance (e.g., 287 on 80 cm at 50 m is NOT comparable to 287 on
+  122 cm at 50 m).
+- Display the target face prominently in any score view so the user
+  always knows what they're looking at.
+
+This is the right division of responsibility: **the form captures
+reality, the mirror is careful about apples-to-apples**.
+
+**What was considered and rejected:**
+
+- Per-distance dropdown filtering (JavaScript repopulates target_face
+  options when distance changes): rejected — too restrictive.
+- "Smart default" (suggest the official face for the chosen distance,
+  user can override): rejected as over-engineering for marginal benefit.
+  An archer who uses 80 cm at 30 m already knows to pick 80 cm; the
+  default saves nothing.
+
+**Status:** No further work needed. The current implementation (free
+choice from the full set of target faces, optional field) is correct.
 ```python
 TARGET_FACES_BY_DISTANCE = {
     18: ['40cm', '40cm 3-spot vertical'],
