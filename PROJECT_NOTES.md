@@ -598,33 +598,41 @@ Polarity differs by variable, but that's invisible to the user. The mirror
 knows per-variable polarity for correlation logic. Form rendering should
 never expose numeric values.
 
-**Conditional display (UX rule):**
+**Conditional display (shipped in Prompt 2B):**
 
 Outdoor-only fields (`weather`, `temperature_celsius`, `wind_force`,
-`wind_direction`) are HIDDEN when `location = indoor`. JavaScript shows
-them when the user selects outdoor. Reduces form clutter for indoor
-sessions and signals which variables matter when.
+`wind_direction`) are hidden visually when `location = indoor`. Implemented
+in `static/js/session-form.js` via a `change` listener on the location
+select; on load and on every change, `.field-hidden` (`display:none`) is
+toggled on `[data-outdoor-only]` wrappers within the same form.
 
-`time_of_day` applies to both indoor and outdoor sessions (some archers
-shoot better at certain times regardless of light).
+`time_of_day` is always visible (indoor archers also care about time of day).
 
-**Form layout (UX rule):**
+**Important non-constraint:** hiding is purely visual — field values are
+NOT cleared when switching to indoor. If the user fills wind data, switches
+to indoor, then back to outdoor, the wind data is still there. The mirror,
+when built, must filter/group by `(location, distance, target_face)` and
+ignore outdoor-condition data on indoor sessions rather than relying on the
+form to prevent it.
 
-The session form will be long (~20 fields total). Group into logical
-sections:
+**Form layout (shipped in Prompt 2B):**
 
-1. **Session basics** — name, date, bow, location, session type indicators.
+The session form is grouped into five collapsible `<details>`/`<summary>`
+sections — the same native pattern used by the Settings page's expandable
+cards (`.settings-card--expandable`). This is now an established reusable
+pattern across the app.
+
+1. **Session basics** — name, date, bow, location — `open` by default
 2. **Shooting details** — distance, total_arrows, scoring_arrows,
-   target_face, total_score.
-3. **Conditions** — environmental variables (collapsible, hidden when
-   indoor).
-4. **How you felt** — personal state + session experience (collapsible).
-5. **Reflection** — notes, next_focus.
+   target_face, total_score — `open` by default
+3. **Conditions** — environmental variables — **collapsed** by default
+4. **How you felt** — personal state + session experience — **collapsed** by default
+5. **Reflection** — notes, next_focus — `open` by default
 
-Use native `<details>`/`<summary>` for collapsible sections (already an
-established pattern from the Settings page). Less-common groups default to
-COLLAPSED so the form looks manageable on first glance and expands as the
-user wants to fill in more.
+Sections 1, 2, 5 are always visible (filled for every session). Sections
+3 and 4 start collapsed — the form looks manageable at a glance and the
+user expands them when they want to fill in richer data. Any section can
+be collapsed by the user including the open-by-default ones.
 
 **Form scope philosophy:**
 
@@ -645,11 +653,10 @@ for.
    Target-face-by-distance constraint was evaluated and deliberately NOT built —
    see "Target face — deliberate non-constraint" section.
 2. **Subjective variables data layer** — ✅ SHIPPED (Prompt 2A). All 11 fields
-   added to Session model and SessionForm. Flat layout, no sections, no
-   indoor/outdoor conditional display. Data layer only.
-3. **Subjective variables UX** — Prompt 2B (NEXT). Form restructured into
-   logical `<details>/<summary>` sections. JavaScript hides outdoor-only fields
-   when location = indoor.
+   added to Session model and SessionForm. Flat layout.
+3. **Subjective variables UX** — ✅ SHIPPED (Prompt 2B). Form restructured into
+   five `<details>/<summary>` sections; JavaScript hides outdoor-only fields
+   when location = indoor. Subjective variables feature is now complete.
 4. **Mirror / analysis** — deferred until 30+ scored sessions exist with rich
    subjective data. Frame findings as associations, not causation. Enforce
    minimum-N thresholds.
@@ -658,8 +665,13 @@ for.
 ---
 ## What's next
 
-### Next prompt (Prompt 2B)
-- **Subjective variables UX** — Restructure the session form into logical collapsible sections using `<details>`/`<summary>`. Add JavaScript to hide outdoor-only fields (`weather`, `temperature_celsius`, `wind_force`, `wind_direction`) when `location = indoor`. The data layer (all 11 fields on the model and form) is already in place from Prompt 2A.
+### Next: Mirror / analysis
+- Deferred until 30+ scored sessions exist with rich subjective data.
+- Subjective variables (Prompt 2A data layer + Prompt 2B UX) are **complete**. Log sessions.
+- Analysis must enforce minimum-N thresholds and frame findings as associations,
+  not causation. Group scores by `(distance, target_face)` together — never
+  distance alone. Ignore outdoor-condition fields on indoor sessions (filter in
+  the mirror, not the form).
 
 ### Polish phase (when nearing feature completion)
 - **Language consistency pass** — review wording across all UI strings, modal labels, button text, hints. Avoid confusing phrasing like the earlier "No bow" example.

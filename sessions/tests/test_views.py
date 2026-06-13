@@ -194,3 +194,60 @@ class TestSessionListPaginationRespectsPreference:
         SessionFactory.create_batch(12)
         response = client.get(reverse("practice_sessions:mysessions"))
         assert len(response.context["sessions"]) == 10
+
+
+@pytest.mark.django_db
+class TestSessionFormSections:
+    """Template renders five section headings; all fields present in HTML."""
+
+    def _html(self, client: object) -> str:
+        return client.get(reverse("practice_sessions:mysessions")).content.decode()
+
+    def test_all_five_section_headings_are_rendered(self, client):
+        html = self._html(client)
+        for heading in ("Session basics", "Shooting details", "Conditions", "How you felt", "Reflection"):
+            assert heading in html, f"Section heading '{heading}' not found in rendered page"
+
+    def test_outdoor_only_fields_present_in_dom_when_indoor(self, client):
+        """Outdoor fields are hidden via JS/CSS, not removed — they must be in the DOM."""
+        html = self._html(client)
+        for field_name in ("weather", "temperature_celsius", "wind_force", "wind_direction"):
+            assert f'name="session-{field_name}"' in html, (
+                f"Field '{field_name}' missing from DOM — it should be hidden visually, not absent"
+            )
+
+    def test_data_outdoor_only_attribute_present_on_four_fields(self, client):
+        """The four outdoor-only wrappers must carry data-outdoor-only for JS to find them."""
+        html = self._html(client)
+        assert html.count("data-outdoor-only") == 8  # 4 in Add modal + 4 in Modify modal
+
+    def test_form_accepts_all_subjective_fields_filled(self, client):
+        """Regression: section wrappers don't break submission of subjective fields."""
+        today = datetime.date.today().isoformat()
+        data = {
+            "session-name": "Section test",
+            "session-date": today,
+            "session-location": "outdoor",
+            "session-time_of_day": "morning",
+            "session-weather": "sunny",
+            "session-temperature_celsius": "20",
+            "session-wind_force": "2",
+            "session-wind_direction": "from_front",
+            "session-nutrition": "4",
+            "session-sleep_hours": "7.5",
+            "session-stress": "2",
+            "session-fatigue": "3",
+        }
+        response = client.post(reverse("practice_sessions:mysessions"), data)
+        assert response.status_code == 302, f"Expected redirect, got {response.status_code}"
+
+    def test_form_accepts_all_subjective_fields_blank(self, client):
+        """Regression: blank subjective fields still produce a valid session."""
+        today = datetime.date.today().isoformat()
+        data = {
+            "session-name": "Minimal section test",
+            "session-date": today,
+            "session-location": "indoor",
+        }
+        response = client.post(reverse("practice_sessions:mysessions"), data)
+        assert response.status_code == 302, f"Expected redirect, got {response.status_code}"

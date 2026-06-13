@@ -107,249 +107,304 @@
             {% csrf_token %}
             <div class="modal-body">
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.name.id_for_label }}">Session name</label>
-                        <span class="badge-required">Required</span>
-                    </div>
-                    <p class="form-field-help">E.g. "Morning practice" or "Range session"</p>
-                    {{ session_form.name }}
-                    {% if session_form.name.errors %}
-                    <div class="form-errors">{{ session_form.name.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                <!-- 1. Session basics -->
+                <details class="form-section" open>
+                    <summary class="form-section-heading">
+                        Session basics
+                        <span class="form-section-chevron" aria-hidden="true">&#9658;</span>
+                    </summary>
+                    <div class="form-section-body">
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.date.id_for_label }}">Date</label>
-                        <span class="badge-required">Required</span>
-                    </div>
-                    <p class="form-field-help">Backdating allowed — log a session from any past date.</p>
-                    {{ session_form.date }}
-                    {% if session_form.date.errors %}
-                    <div class="form-errors">{{ session_form.date.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.name.id_for_label }}">Session name</label>
+                                <span class="badge-required">Required</span>
+                            </div>
+                            <p class="form-field-help">E.g. "Morning practice" or "Range session"</p>
+                            {{ session_form.name }}
+                            {% if session_form.name.errors %}
+                            <div class="form-errors">{{ session_form.name.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.bow.id_for_label }}">Bow</label>
-                    </div>
-                    {{ session_form.bow }}
-                    {% if not bows_exist %}
-                    <p class="form-field-help">No bows added yet. You can leave it empty, or <a href="{% url 'equipment:mybows' %}" class="modal-help-link">add one first in My Bows</a>.</p>
-                    {% endif %}
-                    {% if session_form.bow.errors %}
-                    <div class="form-errors">{{ session_form.bow.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.date.id_for_label }}">Date</label>
+                                <span class="badge-required">Required</span>
+                            </div>
+                            <p class="form-field-help">Backdating allowed — log a session from any past date.</p>
+                            {{ session_form.date }}
+                            {% if session_form.date.errors %}
+                            <div class="form-errors">{{ session_form.date.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.location.id_for_label }}">Location</label>
-                        <span class="badge-required">Required</span>
-                    </div>
-                    {{ session_form.location }}
-                    {% if session_form.location.errors %}
-                    <div class="form-errors">{{ session_form.location.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.bow.id_for_label }}">Bow</label>
+                            </div>
+                            {{ session_form.bow }}
+                            {% if not bows_exist %}
+                            <p class="form-field-help">No bows added yet. You can leave it empty, or <a href="{% url 'equipment:mybows' %}" class="modal-help-link">add one first in My Bows</a>.</p>
+                            {% endif %}
+                            {% if session_form.bow.errors %}
+                            <div class="form-errors">{{ session_form.bow.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.distance_m.id_for_label }}">Distance (m)</label>
-                    </div>
-                    <p class="form-field-help">Common values: 10, 18, 30, 50, 70, 90 m. Type any custom distance.</p>
-                    {{ session_form.distance_m }}
-                    <datalist id="distance-suggestions">
-                        <option value="10">
-                        <option value="18">
-                        <option value="30">
-                        <option value="50">
-                        <option value="70">
-                        <option value="90">
-                    </datalist>
-                    {% if session_form.distance_m.errors %}
-                    <div class="form-errors">{{ session_form.distance_m.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.location.id_for_label }}">Location</label>
+                                <span class="badge-required">Required</span>
+                            </div>
+                            {{ session_form.location }}
+                            {% if session_form.location.errors %}
+                            <div class="form-errors">{{ session_form.location.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.total_arrows.id_for_label }}">Total arrows</label>
                     </div>
-                    <p class="form-field-help">{{ session_form.total_arrows.help_text }}</p>
-                    {{ session_form.total_arrows }}
-                    {% if session_form.total_arrows.errors %}
-                    <div class="form-errors">{{ session_form.total_arrows.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                </details>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.scoring_arrows.id_for_label }}">Scoring arrows</label>
-                    </div>
-                    <p class="form-field-help">{{ session_form.scoring_arrows.help_text }}</p>
-                    {{ session_form.scoring_arrows }}
-                    {% if session_form.scoring_arrows.errors %}
-                    <div class="form-errors">{{ session_form.scoring_arrows.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                <!-- 2. Shooting details -->
+                <details class="form-section" open>
+                    <summary class="form-section-heading">
+                        Shooting details
+                        <span class="form-section-chevron" aria-hidden="true">&#9658;</span>
+                    </summary>
+                    <div class="form-section-body">
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.target_face.id_for_label }}">Target face</label>
-                    </div>
-                    {{ session_form.target_face }}
-                    {% if session_form.target_face.errors %}
-                    <div class="form-errors">{{ session_form.target_face.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.distance_m.id_for_label }}">Distance (m)</label>
+                            </div>
+                            <p class="form-field-help">Common values: 10, 18, 30, 50, 70, 90 m. Type any custom distance.</p>
+                            {{ session_form.distance_m }}
+                            <datalist id="distance-suggestions">
+                                <option value="10">
+                                <option value="18">
+                                <option value="30">
+                                <option value="50">
+                                <option value="70">
+                                <option value="90">
+                            </datalist>
+                            {% if session_form.distance_m.errors %}
+                            <div class="form-errors">{{ session_form.distance_m.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.total_score.id_for_label }}">Total score</label>
-                    </div>
-                    <p class="form-field-help">{{ session_form.total_score.help_text }}</p>
-                    {{ session_form.total_score }}
-                    {% if session_form.total_score.errors %}
-                    <div class="form-errors">{{ session_form.total_score.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.total_arrows.id_for_label }}">Total arrows</label>
+                            </div>
+                            <p class="form-field-help">{{ session_form.total_arrows.help_text }}</p>
+                            {{ session_form.total_arrows }}
+                            {% if session_form.total_arrows.errors %}
+                            <div class="form-errors">{{ session_form.total_arrows.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.time_of_day.id_for_label }}">Time of day</label>
-                    </div>
-                    {{ session_form.time_of_day }}
-                    {% if session_form.time_of_day.errors %}
-                    <div class="form-errors">{{ session_form.time_of_day.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.scoring_arrows.id_for_label }}">Scoring arrows</label>
+                            </div>
+                            <p class="form-field-help">{{ session_form.scoring_arrows.help_text }}</p>
+                            {{ session_form.scoring_arrows }}
+                            {% if session_form.scoring_arrows.errors %}
+                            <div class="form-errors">{{ session_form.scoring_arrows.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.weather.id_for_label }}">Weather</label>
-                    </div>
-                    {{ session_form.weather }}
-                    {% if session_form.weather.errors %}
-                    <div class="form-errors">{{ session_form.weather.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.target_face.id_for_label }}">Target face</label>
+                            </div>
+                            {{ session_form.target_face }}
+                            {% if session_form.target_face.errors %}
+                            <div class="form-errors">{{ session_form.target_face.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.temperature_celsius.id_for_label }}">Temperature (°C)</label>
-                    </div>
-                    {{ session_form.temperature_celsius }}
-                    {% if session_form.temperature_celsius.errors %}
-                    <div class="form-errors">{{ session_form.temperature_celsius.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.total_score.id_for_label }}">Total score</label>
+                            </div>
+                            <p class="form-field-help">{{ session_form.total_score.help_text }}</p>
+                            {{ session_form.total_score }}
+                            {% if session_form.total_score.errors %}
+                            <div class="form-errors">{{ session_form.total_score.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.wind_force.id_for_label }}">Wind force</label>
                     </div>
-                    {{ session_form.wind_force }}
-                    {% if session_form.wind_force.errors %}
-                    <div class="form-errors">{{ session_form.wind_force.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                </details>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.wind_direction.id_for_label }}">Wind direction</label>
-                    </div>
-                    {{ session_form.wind_direction }}
-                    {% if session_form.wind_direction.errors %}
-                    <div class="form-errors">{{ session_form.wind_direction.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                <!-- 3. Conditions (collapsed by default) -->
+                <details class="form-section">
+                    <summary class="form-section-heading">
+                        Conditions
+                        <span class="form-section-chevron" aria-hidden="true">&#9658;</span>
+                    </summary>
+                    <div class="form-section-body">
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.nutrition.id_for_label }}">Nutrition before session</label>
-                    </div>
-                    {{ session_form.nutrition }}
-                    {% if session_form.nutrition.errors %}
-                    <div class="form-errors">{{ session_form.nutrition.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.time_of_day.id_for_label }}">Time of day</label>
+                            </div>
+                            {{ session_form.time_of_day }}
+                            {% if session_form.time_of_day.errors %}
+                            <div class="form-errors">{{ session_form.time_of_day.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.sleep_hours.id_for_label }}">Hours of sleep last night</label>
-                    </div>
-                    {{ session_form.sleep_hours }}
-                    {% if session_form.sleep_hours.errors %}
-                    <div class="form-errors">{{ session_form.sleep_hours.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field" data-outdoor-only>
+                            <div class="form-field-label">
+                                <label for="{{ session_form.weather.id_for_label }}">Weather</label>
+                            </div>
+                            {{ session_form.weather }}
+                            {% if session_form.weather.errors %}
+                            <div class="form-errors">{{ session_form.weather.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.sleep_notes.id_for_label }}">Sleep notes</label>
-                    </div>
-                    <p class="form-field-help">{{ session_form.sleep_notes.help_text }}</p>
-                    {{ session_form.sleep_notes }}
-                    {% if session_form.sleep_notes.errors %}
-                    <div class="form-errors">{{ session_form.sleep_notes.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field" data-outdoor-only>
+                            <div class="form-field-label">
+                                <label for="{{ session_form.temperature_celsius.id_for_label }}">Temperature (°C)</label>
+                            </div>
+                            {{ session_form.temperature_celsius }}
+                            {% if session_form.temperature_celsius.errors %}
+                            <div class="form-errors">{{ session_form.temperature_celsius.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.stress.id_for_label }}">Stress level during session</label>
-                    </div>
-                    {{ session_form.stress }}
-                    {% if session_form.stress.errors %}
-                    <div class="form-errors">{{ session_form.stress.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field" data-outdoor-only>
+                            <div class="form-field-label">
+                                <label for="{{ session_form.wind_force.id_for_label }}">Wind force</label>
+                            </div>
+                            {{ session_form.wind_force }}
+                            {% if session_form.wind_force.errors %}
+                            <div class="form-errors">{{ session_form.wind_force.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.fatigue.id_for_label }}">Fatigue at end of session</label>
-                    </div>
-                    {{ session_form.fatigue }}
-                    {% if session_form.fatigue.errors %}
-                    <div class="form-errors">{{ session_form.fatigue.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field" data-outdoor-only>
+                            <div class="form-field-label">
+                                <label for="{{ session_form.wind_direction.id_for_label }}">Wind direction</label>
+                            </div>
+                            {{ session_form.wind_direction }}
+                            {% if session_form.wind_direction.errors %}
+                            <div class="form-errors">{{ session_form.wind_direction.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.physical_sensations.id_for_label }}">Physical sensations</label>
                     </div>
-                    <p class="form-field-help">{{ session_form.physical_sensations.help_text }}</p>
-                    {{ session_form.physical_sensations }}
-                    {% if session_form.physical_sensations.errors %}
-                    <div class="form-errors">{{ session_form.physical_sensations.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                </details>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.notes.id_for_label }}">Notes</label>
-                    </div>
-                    <p class="form-field-help">Anything else you want to record about this session.</p>
-                    {{ session_form.notes }}
-                    {% if session_form.notes.errors %}
-                    <div class="form-errors">{{ session_form.notes.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                <!-- 4. How you felt (collapsed by default) -->
+                <details class="form-section">
+                    <summary class="form-section-heading">
+                        How you felt
+                        <span class="form-section-chevron" aria-hidden="true">&#9658;</span>
+                    </summary>
+                    <div class="form-section-body">
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ session_form.next_focus.id_for_label }}">Focus for next session</label>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.nutrition.id_for_label }}">Nutrition before session</label>
+                            </div>
+                            {{ session_form.nutrition }}
+                            {% if session_form.nutrition.errors %}
+                            <div class="form-errors">{{ session_form.nutrition.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.sleep_hours.id_for_label }}">Hours of sleep last night</label>
+                            </div>
+                            {{ session_form.sleep_hours }}
+                            {% if session_form.sleep_hours.errors %}
+                            <div class="form-errors">{{ session_form.sleep_hours.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.sleep_notes.id_for_label }}">Sleep notes</label>
+                            </div>
+                            <p class="form-field-help">{{ session_form.sleep_notes.help_text }}</p>
+                            {{ session_form.sleep_notes }}
+                            {% if session_form.sleep_notes.errors %}
+                            <div class="form-errors">{{ session_form.sleep_notes.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.stress.id_for_label }}">Stress level during session</label>
+                            </div>
+                            {{ session_form.stress }}
+                            {% if session_form.stress.errors %}
+                            <div class="form-errors">{{ session_form.stress.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.fatigue.id_for_label }}">Fatigue at end of session</label>
+                            </div>
+                            {{ session_form.fatigue }}
+                            {% if session_form.fatigue.errors %}
+                            <div class="form-errors">{{ session_form.fatigue.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.physical_sensations.id_for_label }}">Physical sensations</label>
+                            </div>
+                            <p class="form-field-help">{{ session_form.physical_sensations.help_text }}</p>
+                            {{ session_form.physical_sensations }}
+                            {% if session_form.physical_sensations.errors %}
+                            <div class="form-errors">{{ session_form.physical_sensations.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
                     </div>
-                    <p class="form-field-help">Optional. What do you want to work on in your next training session? This will appear on the homepage as a reminder.</p>
-                    {{ session_form.next_focus }}
-                    {% if session_form.next_focus.errors %}
-                    <div class="form-errors">{{ session_form.next_focus.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                </details>
+
+                <!-- 5. Reflection -->
+                <details class="form-section" open>
+                    <summary class="form-section-heading">
+                        Reflection
+                        <span class="form-section-chevron" aria-hidden="true">&#9658;</span>
+                    </summary>
+                    <div class="form-section-body">
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.notes.id_for_label }}">Notes</label>
+                            </div>
+                            <p class="form-field-help">Anything else you want to record about this session.</p>
+                            {{ session_form.notes }}
+                            {% if session_form.notes.errors %}
+                            <div class="form-errors">{{ session_form.notes.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ session_form.next_focus.id_for_label }}">Focus for next session</label>
+                            </div>
+                            <p class="form-field-help">Optional. What do you want to work on in your next training session? This will appear on the homepage as a reminder.</p>
+                            {{ session_form.next_focus }}
+                            {% if session_form.next_focus.errors %}
+                            <div class="form-errors">{{ session_form.next_focus.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </details>
 
             </div>
             <div class="modal-footer">
@@ -376,241 +431,296 @@
             {% csrf_token %}
             <div class="modal-body">
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.name.id_for_label }}">Session name</label>
-                        <span class="badge-required">Required</span>
-                    </div>
-                    <p class="form-field-help">E.g. "Morning practice" or "Range session"</p>
-                    {{ modify_session_form.name }}
-                    {% if modify_session_form.name.errors %}
-                    <div class="form-errors">{{ modify_session_form.name.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                <!-- 1. Session basics -->
+                <details class="form-section" open>
+                    <summary class="form-section-heading">
+                        Session basics
+                        <span class="form-section-chevron" aria-hidden="true">&#9658;</span>
+                    </summary>
+                    <div class="form-section-body">
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.date.id_for_label }}">Date</label>
-                        <span class="badge-required">Required</span>
-                    </div>
-                    <p class="form-field-help">Backdating allowed — log a session from any past date.</p>
-                    {{ modify_session_form.date }}
-                    {% if modify_session_form.date.errors %}
-                    <div class="form-errors">{{ modify_session_form.date.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.name.id_for_label }}">Session name</label>
+                                <span class="badge-required">Required</span>
+                            </div>
+                            <p class="form-field-help">E.g. "Morning practice" or "Range session"</p>
+                            {{ modify_session_form.name }}
+                            {% if modify_session_form.name.errors %}
+                            <div class="form-errors">{{ modify_session_form.name.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.bow.id_for_label }}">Bow</label>
-                    </div>
-                    {{ modify_session_form.bow }}
-                    {% if not bows_exist %}
-                    <p class="form-field-help">No bows added yet. You can leave it empty, or <a href="{% url 'equipment:mybows' %}" class="modal-help-link">add one first in My Bows</a>.</p>
-                    {% endif %}
-                    {% if modify_session_form.bow.errors %}
-                    <div class="form-errors">{{ modify_session_form.bow.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.date.id_for_label }}">Date</label>
+                                <span class="badge-required">Required</span>
+                            </div>
+                            <p class="form-field-help">Backdating allowed — log a session from any past date.</p>
+                            {{ modify_session_form.date }}
+                            {% if modify_session_form.date.errors %}
+                            <div class="form-errors">{{ modify_session_form.date.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.location.id_for_label }}">Location</label>
-                        <span class="badge-required">Required</span>
-                    </div>
-                    {{ modify_session_form.location }}
-                    {% if modify_session_form.location.errors %}
-                    <div class="form-errors">{{ modify_session_form.location.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.bow.id_for_label }}">Bow</label>
+                            </div>
+                            {{ modify_session_form.bow }}
+                            {% if not bows_exist %}
+                            <p class="form-field-help">No bows added yet. You can leave it empty, or <a href="{% url 'equipment:mybows' %}" class="modal-help-link">add one first in My Bows</a>.</p>
+                            {% endif %}
+                            {% if modify_session_form.bow.errors %}
+                            <div class="form-errors">{{ modify_session_form.bow.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.distance_m.id_for_label }}">Distance (m)</label>
-                    </div>
-                    <p class="form-field-help">Common values: 10, 18, 30, 50, 70, 90 m. Type any custom distance.</p>
-                    {{ modify_session_form.distance_m }}
-                    {% if modify_session_form.distance_m.errors %}
-                    <div class="form-errors">{{ modify_session_form.distance_m.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.location.id_for_label }}">Location</label>
+                                <span class="badge-required">Required</span>
+                            </div>
+                            {{ modify_session_form.location }}
+                            {% if modify_session_form.location.errors %}
+                            <div class="form-errors">{{ modify_session_form.location.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.total_arrows.id_for_label }}">Total arrows</label>
                     </div>
-                    <p class="form-field-help">{{ modify_session_form.total_arrows.help_text }}</p>
-                    {{ modify_session_form.total_arrows }}
-                    {% if modify_session_form.total_arrows.errors %}
-                    <div class="form-errors">{{ modify_session_form.total_arrows.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                </details>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.scoring_arrows.id_for_label }}">Scoring arrows</label>
-                    </div>
-                    <p class="form-field-help">{{ modify_session_form.scoring_arrows.help_text }}</p>
-                    {{ modify_session_form.scoring_arrows }}
-                    {% if modify_session_form.scoring_arrows.errors %}
-                    <div class="form-errors">{{ modify_session_form.scoring_arrows.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                <!-- 2. Shooting details -->
+                <details class="form-section" open>
+                    <summary class="form-section-heading">
+                        Shooting details
+                        <span class="form-section-chevron" aria-hidden="true">&#9658;</span>
+                    </summary>
+                    <div class="form-section-body">
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.target_face.id_for_label }}">Target face</label>
-                    </div>
-                    {{ modify_session_form.target_face }}
-                    {% if modify_session_form.target_face.errors %}
-                    <div class="form-errors">{{ modify_session_form.target_face.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.distance_m.id_for_label }}">Distance (m)</label>
+                            </div>
+                            <p class="form-field-help">Common values: 10, 18, 30, 50, 70, 90 m. Type any custom distance.</p>
+                            {{ modify_session_form.distance_m }}
+                            {% if modify_session_form.distance_m.errors %}
+                            <div class="form-errors">{{ modify_session_form.distance_m.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.total_score.id_for_label }}">Total score</label>
-                    </div>
-                    <p class="form-field-help">{{ modify_session_form.total_score.help_text }}</p>
-                    {{ modify_session_form.total_score }}
-                    {% if modify_session_form.total_score.errors %}
-                    <div class="form-errors">{{ modify_session_form.total_score.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.total_arrows.id_for_label }}">Total arrows</label>
+                            </div>
+                            <p class="form-field-help">{{ modify_session_form.total_arrows.help_text }}</p>
+                            {{ modify_session_form.total_arrows }}
+                            {% if modify_session_form.total_arrows.errors %}
+                            <div class="form-errors">{{ modify_session_form.total_arrows.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.time_of_day.id_for_label }}">Time of day</label>
-                    </div>
-                    {{ modify_session_form.time_of_day }}
-                    {% if modify_session_form.time_of_day.errors %}
-                    <div class="form-errors">{{ modify_session_form.time_of_day.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.scoring_arrows.id_for_label }}">Scoring arrows</label>
+                            </div>
+                            <p class="form-field-help">{{ modify_session_form.scoring_arrows.help_text }}</p>
+                            {{ modify_session_form.scoring_arrows }}
+                            {% if modify_session_form.scoring_arrows.errors %}
+                            <div class="form-errors">{{ modify_session_form.scoring_arrows.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.weather.id_for_label }}">Weather</label>
-                    </div>
-                    {{ modify_session_form.weather }}
-                    {% if modify_session_form.weather.errors %}
-                    <div class="form-errors">{{ modify_session_form.weather.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.target_face.id_for_label }}">Target face</label>
+                            </div>
+                            {{ modify_session_form.target_face }}
+                            {% if modify_session_form.target_face.errors %}
+                            <div class="form-errors">{{ modify_session_form.target_face.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.temperature_celsius.id_for_label }}">Temperature (°C)</label>
-                    </div>
-                    {{ modify_session_form.temperature_celsius }}
-                    {% if modify_session_form.temperature_celsius.errors %}
-                    <div class="form-errors">{{ modify_session_form.temperature_celsius.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.total_score.id_for_label }}">Total score</label>
+                            </div>
+                            <p class="form-field-help">{{ modify_session_form.total_score.help_text }}</p>
+                            {{ modify_session_form.total_score }}
+                            {% if modify_session_form.total_score.errors %}
+                            <div class="form-errors">{{ modify_session_form.total_score.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.wind_force.id_for_label }}">Wind force</label>
                     </div>
-                    {{ modify_session_form.wind_force }}
-                    {% if modify_session_form.wind_force.errors %}
-                    <div class="form-errors">{{ modify_session_form.wind_force.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                </details>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.wind_direction.id_for_label }}">Wind direction</label>
-                    </div>
-                    {{ modify_session_form.wind_direction }}
-                    {% if modify_session_form.wind_direction.errors %}
-                    <div class="form-errors">{{ modify_session_form.wind_direction.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                <!-- 3. Conditions (collapsed by default) -->
+                <details class="form-section">
+                    <summary class="form-section-heading">
+                        Conditions
+                        <span class="form-section-chevron" aria-hidden="true">&#9658;</span>
+                    </summary>
+                    <div class="form-section-body">
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.nutrition.id_for_label }}">Nutrition before session</label>
-                    </div>
-                    {{ modify_session_form.nutrition }}
-                    {% if modify_session_form.nutrition.errors %}
-                    <div class="form-errors">{{ modify_session_form.nutrition.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.time_of_day.id_for_label }}">Time of day</label>
+                            </div>
+                            {{ modify_session_form.time_of_day }}
+                            {% if modify_session_form.time_of_day.errors %}
+                            <div class="form-errors">{{ modify_session_form.time_of_day.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.sleep_hours.id_for_label }}">Hours of sleep last night</label>
-                    </div>
-                    {{ modify_session_form.sleep_hours }}
-                    {% if modify_session_form.sleep_hours.errors %}
-                    <div class="form-errors">{{ modify_session_form.sleep_hours.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field" data-outdoor-only>
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.weather.id_for_label }}">Weather</label>
+                            </div>
+                            {{ modify_session_form.weather }}
+                            {% if modify_session_form.weather.errors %}
+                            <div class="form-errors">{{ modify_session_form.weather.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.sleep_notes.id_for_label }}">Sleep notes</label>
-                    </div>
-                    <p class="form-field-help">{{ modify_session_form.sleep_notes.help_text }}</p>
-                    {{ modify_session_form.sleep_notes }}
-                    {% if modify_session_form.sleep_notes.errors %}
-                    <div class="form-errors">{{ modify_session_form.sleep_notes.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field" data-outdoor-only>
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.temperature_celsius.id_for_label }}">Temperature (°C)</label>
+                            </div>
+                            {{ modify_session_form.temperature_celsius }}
+                            {% if modify_session_form.temperature_celsius.errors %}
+                            <div class="form-errors">{{ modify_session_form.temperature_celsius.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.stress.id_for_label }}">Stress level during session</label>
-                    </div>
-                    {{ modify_session_form.stress }}
-                    {% if modify_session_form.stress.errors %}
-                    <div class="form-errors">{{ modify_session_form.stress.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field" data-outdoor-only>
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.wind_force.id_for_label }}">Wind force</label>
+                            </div>
+                            {{ modify_session_form.wind_force }}
+                            {% if modify_session_form.wind_force.errors %}
+                            <div class="form-errors">{{ modify_session_form.wind_force.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.fatigue.id_for_label }}">Fatigue at end of session</label>
-                    </div>
-                    {{ modify_session_form.fatigue }}
-                    {% if modify_session_form.fatigue.errors %}
-                    <div class="form-errors">{{ modify_session_form.fatigue.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                        <div class="form-field" data-outdoor-only>
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.wind_direction.id_for_label }}">Wind direction</label>
+                            </div>
+                            {{ modify_session_form.wind_direction }}
+                            {% if modify_session_form.wind_direction.errors %}
+                            <div class="form-errors">{{ modify_session_form.wind_direction.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.physical_sensations.id_for_label }}">Physical sensations</label>
                     </div>
-                    <p class="form-field-help">{{ modify_session_form.physical_sensations.help_text }}</p>
-                    {{ modify_session_form.physical_sensations }}
-                    {% if modify_session_form.physical_sensations.errors %}
-                    <div class="form-errors">{{ modify_session_form.physical_sensations.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                </details>
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.notes.id_for_label }}">Notes</label>
-                    </div>
-                    <p class="form-field-help">Anything else you want to record about this session.</p>
-                    {{ modify_session_form.notes }}
-                    {% if modify_session_form.notes.errors %}
-                    <div class="form-errors">{{ modify_session_form.notes.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                <!-- 4. How you felt (collapsed by default) -->
+                <details class="form-section">
+                    <summary class="form-section-heading">
+                        How you felt
+                        <span class="form-section-chevron" aria-hidden="true">&#9658;</span>
+                    </summary>
+                    <div class="form-section-body">
 
-                <div class="form-field">
-                    <div class="form-field-label">
-                        <label for="{{ modify_session_form.next_focus.id_for_label }}">Focus for next session</label>
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.nutrition.id_for_label }}">Nutrition before session</label>
+                            </div>
+                            {{ modify_session_form.nutrition }}
+                            {% if modify_session_form.nutrition.errors %}
+                            <div class="form-errors">{{ modify_session_form.nutrition.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.sleep_hours.id_for_label }}">Hours of sleep last night</label>
+                            </div>
+                            {{ modify_session_form.sleep_hours }}
+                            {% if modify_session_form.sleep_hours.errors %}
+                            <div class="form-errors">{{ modify_session_form.sleep_hours.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.sleep_notes.id_for_label }}">Sleep notes</label>
+                            </div>
+                            <p class="form-field-help">{{ modify_session_form.sleep_notes.help_text }}</p>
+                            {{ modify_session_form.sleep_notes }}
+                            {% if modify_session_form.sleep_notes.errors %}
+                            <div class="form-errors">{{ modify_session_form.sleep_notes.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.stress.id_for_label }}">Stress level during session</label>
+                            </div>
+                            {{ modify_session_form.stress }}
+                            {% if modify_session_form.stress.errors %}
+                            <div class="form-errors">{{ modify_session_form.stress.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.fatigue.id_for_label }}">Fatigue at end of session</label>
+                            </div>
+                            {{ modify_session_form.fatigue }}
+                            {% if modify_session_form.fatigue.errors %}
+                            <div class="form-errors">{{ modify_session_form.fatigue.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.physical_sensations.id_for_label }}">Physical sensations</label>
+                            </div>
+                            <p class="form-field-help">{{ modify_session_form.physical_sensations.help_text }}</p>
+                            {{ modify_session_form.physical_sensations }}
+                            {% if modify_session_form.physical_sensations.errors %}
+                            <div class="form-errors">{{ modify_session_form.physical_sensations.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
                     </div>
-                    <p class="form-field-help">Optional. What do you want to work on in your next training session? This will appear on the homepage as a reminder.</p>
-                    {{ modify_session_form.next_focus }}
-                    {% if modify_session_form.next_focus.errors %}
-                    <div class="form-errors">{{ modify_session_form.next_focus.errors.as_text }}</div>
-                    {% endif %}
-                </div>
+                </details>
+
+                <!-- 5. Reflection -->
+                <details class="form-section" open>
+                    <summary class="form-section-heading">
+                        Reflection
+                        <span class="form-section-chevron" aria-hidden="true">&#9658;</span>
+                    </summary>
+                    <div class="form-section-body">
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.notes.id_for_label }}">Notes</label>
+                            </div>
+                            <p class="form-field-help">Anything else you want to record about this session.</p>
+                            {{ modify_session_form.notes }}
+                            {% if modify_session_form.notes.errors %}
+                            <div class="form-errors">{{ modify_session_form.notes.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <div class="form-field-label">
+                                <label for="{{ modify_session_form.next_focus.id_for_label }}">Focus for next session</label>
+                            </div>
+                            <p class="form-field-help">Optional. What do you want to work on in your next training session? This will appear on the homepage as a reminder.</p>
+                            {{ modify_session_form.next_focus }}
+                            {% if modify_session_form.next_focus.errors %}
+                            <div class="form-errors">{{ modify_session_form.next_focus.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </details>
 
             </div>
             <div class="modal-footer">
@@ -632,6 +742,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="/static/js/session-form.js"></script>
 <script>
     const addSessionModal    = initModal('add-session-modal');
     const modifySessionModal = initModal('modify-session-modal');
@@ -672,6 +783,8 @@
         modifySessionForm.querySelector('[name="modify-physical_sensations"]').value = d.physicalSensations ?? '';
         modifySessionForm.querySelector('[name="modify-notes"]').value         = d.notes;
         modifySessionForm.querySelector('[name="modify-next_focus"]').value  = d.nextFocus ?? '';
+        // Re-run outdoor-field visibility after populating location
+        modifySessionForm.querySelector('[name="modify-location"]').dispatchEvent(new Event('change'));
     }
 
     function takeMsSnapshot() {
