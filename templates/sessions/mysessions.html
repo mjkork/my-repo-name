@@ -26,7 +26,18 @@
             data-target-face="{{ session.target_face|default:'' }}"
             data-total-score="{{ session.total_score|default:'' }}"
             data-notes="{{ session.notes }}"
-            data-next-focus="{{ session.next_focus }}">
+            data-next-focus="{{ session.next_focus }}"
+            data-time-of-day="{{ session.time_of_day|default:'' }}"
+            data-weather="{{ session.weather|default:'' }}"
+            data-temperature-celsius="{{ session.temperature_celsius|default:'' }}"
+            data-wind-force="{{ session.wind_force|default:'' }}"
+            data-wind-direction="{{ session.wind_direction|default:'' }}"
+            data-nutrition="{{ session.nutrition|default:'' }}"
+            data-sleep-hours="{{ session.sleep_hours|default:'' }}"
+            data-sleep-notes="{{ session.sleep_notes }}"
+            data-stress="{{ session.stress|default:'' }}"
+            data-fatigue="{{ session.fatigue|default:'' }}"
+            data-physical-sensations="{{ session.physical_sensations }}">
             <span class="list-row-main">
                 <span class="session-name">{{ session.name }}</span>
                 <span class="session-meta">{{ session.date|date:"j F Y" }}{% if session.bow %} · {{ session.bow.name }}{% endif %}</span>
@@ -208,6 +219,118 @@
 
                 <div class="form-field">
                     <div class="form-field-label">
+                        <label for="{{ session_form.time_of_day.id_for_label }}">Time of day</label>
+                    </div>
+                    {{ session_form.time_of_day }}
+                    {% if session_form.time_of_day.errors %}
+                    <div class="form-errors">{{ session_form.time_of_day.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.weather.id_for_label }}">Weather</label>
+                    </div>
+                    {{ session_form.weather }}
+                    {% if session_form.weather.errors %}
+                    <div class="form-errors">{{ session_form.weather.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.temperature_celsius.id_for_label }}">Temperature (°C)</label>
+                    </div>
+                    {{ session_form.temperature_celsius }}
+                    {% if session_form.temperature_celsius.errors %}
+                    <div class="form-errors">{{ session_form.temperature_celsius.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.wind_force.id_for_label }}">Wind force</label>
+                    </div>
+                    {{ session_form.wind_force }}
+                    {% if session_form.wind_force.errors %}
+                    <div class="form-errors">{{ session_form.wind_force.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.wind_direction.id_for_label }}">Wind direction</label>
+                    </div>
+                    {{ session_form.wind_direction }}
+                    {% if session_form.wind_direction.errors %}
+                    <div class="form-errors">{{ session_form.wind_direction.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.nutrition.id_for_label }}">Nutrition before session</label>
+                    </div>
+                    {{ session_form.nutrition }}
+                    {% if session_form.nutrition.errors %}
+                    <div class="form-errors">{{ session_form.nutrition.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.sleep_hours.id_for_label }}">Hours of sleep last night</label>
+                    </div>
+                    {{ session_form.sleep_hours }}
+                    {% if session_form.sleep_hours.errors %}
+                    <div class="form-errors">{{ session_form.sleep_hours.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.sleep_notes.id_for_label }}">Sleep notes</label>
+                    </div>
+                    <p class="form-field-help">{{ session_form.sleep_notes.help_text }}</p>
+                    {{ session_form.sleep_notes }}
+                    {% if session_form.sleep_notes.errors %}
+                    <div class="form-errors">{{ session_form.sleep_notes.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.stress.id_for_label }}">Stress level during session</label>
+                    </div>
+                    {{ session_form.stress }}
+                    {% if session_form.stress.errors %}
+                    <div class="form-errors">{{ session_form.stress.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.fatigue.id_for_label }}">Fatigue at end of session</label>
+                    </div>
+                    {{ session_form.fatigue }}
+                    {% if session_form.fatigue.errors %}
+                    <div class="form-errors">{{ session_form.fatigue.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.physical_sensations.id_for_label }}">Physical sensations</label>
+                    </div>
+                    <p class="form-field-help">{{ session_form.physical_sensations.help_text }}</p>
+                    {{ session_form.physical_sensations }}
+                    {% if session_form.physical_sensations.errors %}
+                    <div class="form-errors">{{ session_form.physical_sensations.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
                         <label for="{{ session_form.notes.id_for_label }}">Notes</label>
                     </div>
                     <p class="form-field-help">Anything else you want to record about this session.</p>
@@ -357,6 +480,118 @@
 
                 <div class="form-field">
                     <div class="form-field-label">
+                        <label for="{{ modify_session_form.time_of_day.id_for_label }}">Time of day</label>
+                    </div>
+                    {{ modify_session_form.time_of_day }}
+                    {% if modify_session_form.time_of_day.errors %}
+                    <div class="form-errors">{{ modify_session_form.time_of_day.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.weather.id_for_label }}">Weather</label>
+                    </div>
+                    {{ modify_session_form.weather }}
+                    {% if modify_session_form.weather.errors %}
+                    <div class="form-errors">{{ modify_session_form.weather.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.temperature_celsius.id_for_label }}">Temperature (°C)</label>
+                    </div>
+                    {{ modify_session_form.temperature_celsius }}
+                    {% if modify_session_form.temperature_celsius.errors %}
+                    <div class="form-errors">{{ modify_session_form.temperature_celsius.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.wind_force.id_for_label }}">Wind force</label>
+                    </div>
+                    {{ modify_session_form.wind_force }}
+                    {% if modify_session_form.wind_force.errors %}
+                    <div class="form-errors">{{ modify_session_form.wind_force.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.wind_direction.id_for_label }}">Wind direction</label>
+                    </div>
+                    {{ modify_session_form.wind_direction }}
+                    {% if modify_session_form.wind_direction.errors %}
+                    <div class="form-errors">{{ modify_session_form.wind_direction.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.nutrition.id_for_label }}">Nutrition before session</label>
+                    </div>
+                    {{ modify_session_form.nutrition }}
+                    {% if modify_session_form.nutrition.errors %}
+                    <div class="form-errors">{{ modify_session_form.nutrition.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.sleep_hours.id_for_label }}">Hours of sleep last night</label>
+                    </div>
+                    {{ modify_session_form.sleep_hours }}
+                    {% if modify_session_form.sleep_hours.errors %}
+                    <div class="form-errors">{{ modify_session_form.sleep_hours.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.sleep_notes.id_for_label }}">Sleep notes</label>
+                    </div>
+                    <p class="form-field-help">{{ modify_session_form.sleep_notes.help_text }}</p>
+                    {{ modify_session_form.sleep_notes }}
+                    {% if modify_session_form.sleep_notes.errors %}
+                    <div class="form-errors">{{ modify_session_form.sleep_notes.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.stress.id_for_label }}">Stress level during session</label>
+                    </div>
+                    {{ modify_session_form.stress }}
+                    {% if modify_session_form.stress.errors %}
+                    <div class="form-errors">{{ modify_session_form.stress.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.fatigue.id_for_label }}">Fatigue at end of session</label>
+                    </div>
+                    {{ modify_session_form.fatigue }}
+                    {% if modify_session_form.fatigue.errors %}
+                    <div class="form-errors">{{ modify_session_form.fatigue.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.physical_sensations.id_for_label }}">Physical sensations</label>
+                    </div>
+                    <p class="form-field-help">{{ modify_session_form.physical_sensations.help_text }}</p>
+                    {{ modify_session_form.physical_sensations }}
+                    {% if modify_session_form.physical_sensations.errors %}
+                    <div class="form-errors">{{ modify_session_form.physical_sensations.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
                         <label for="{{ modify_session_form.notes.id_for_label }}">Notes</label>
                     </div>
                     <p class="form-field-help">Anything else you want to record about this session.</p>
@@ -424,6 +659,17 @@
         modifySessionForm.querySelector('[name="modify-scoring_arrows"]').value = d.scoringArrows;
         modifySessionForm.querySelector('[name="modify-target_face"]').value   = d.targetFace;
         modifySessionForm.querySelector('[name="modify-total_score"]').value   = d.totalScore;
+        modifySessionForm.querySelector('[name="modify-time_of_day"]').value   = d.timeOfDay ?? '';
+        modifySessionForm.querySelector('[name="modify-weather"]').value        = d.weather ?? '';
+        modifySessionForm.querySelector('[name="modify-temperature_celsius"]').value = d.temperatureCelsius ?? '';
+        modifySessionForm.querySelector('[name="modify-wind_force"]').value     = d.windForce ?? '';
+        modifySessionForm.querySelector('[name="modify-wind_direction"]').value = d.windDirection ?? '';
+        modifySessionForm.querySelector('[name="modify-nutrition"]').value      = d.nutrition ?? '';
+        modifySessionForm.querySelector('[name="modify-sleep_hours"]').value    = d.sleepHours ?? '';
+        modifySessionForm.querySelector('[name="modify-sleep_notes"]').value    = d.sleepNotes ?? '';
+        modifySessionForm.querySelector('[name="modify-stress"]').value         = d.stress ?? '';
+        modifySessionForm.querySelector('[name="modify-fatigue"]').value        = d.fatigue ?? '';
+        modifySessionForm.querySelector('[name="modify-physical_sensations"]').value = d.physicalSensations ?? '';
         modifySessionForm.querySelector('[name="modify-notes"]').value         = d.notes;
         modifySessionForm.querySelector('[name="modify-next_focus"]').value  = d.nextFocus ?? '';
     }

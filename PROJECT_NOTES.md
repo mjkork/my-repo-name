@@ -539,7 +539,7 @@ The mirror's most powerful displays will pair **subjective inputs**
 (sleep, stress, etc.) with **objective outputs (total_score)** — which is
 why scored sessions must come first.
 ---
-### Subjective variables — finalized design (not yet built)
+### Subjective variables
 
 Locked through deliberate design conversation. The "monster form" complexity
 is accepted as the price of admission to the eventual mirror — the app is
@@ -642,29 +642,24 @@ for.
 
 1. **Scored sessions architecture** — ✅ SHIPPED (Prompt 1). Scoring fields
    exist on the Session model and form. `arrow_count` renamed to `total_arrows`.
-   Target-face-by-distance constraint still pending (Prompt 2).
-2. **Target-face-by-distance JS constraint** — Prompt 2. Filters dropdown to
-   valid faces for selected distance.
-3. **Subjective variables** — Prompt 3. All fields added to Session model.
-   Form restructured with sections and conditional display.
-4. **Mirror / analysis** — deferred until 30+ scored sessions exist. Frame
-   findings as associations, not causation. Enforce minimum-N thresholds.
+   Target-face-by-distance constraint was evaluated and deliberately NOT built —
+   see "Target face — deliberate non-constraint" section.
+2. **Subjective variables data layer** — ✅ SHIPPED (Prompt 2A). All 11 fields
+   added to Session model and SessionForm. Flat layout, no sections, no
+   indoor/outdoor conditional display. Data layer only.
+3. **Subjective variables UX** — Prompt 2B (NEXT). Form restructured into
+   logical `<details>/<summary>` sections. JavaScript hides outdoor-only fields
+   when location = indoor.
+4. **Mirror / analysis** — deferred until 30+ scored sessions exist with rich
+   subjective data. Frame findings as associations, not causation. Enforce
+   minimum-N thresholds.
 5. **Optional cosmetic refactor**: rename Session → ArcherySession. Separate
    focused prompt; cascades to URL namespace, templates, tests.
 ---
 ## What's next
 
-### Next prompt (Prompt 2)
-- **Target-face-by-distance constraint** — JavaScript filters the target face dropdown to only valid options for the selected distance (using the static `TARGET_FACES_BY_DISTANCE` dict). All 6 options currently show regardless of distance.
-
-### Next major feature (Prompt 3)
-- **Subjective session variables** — sleep, nutrition, stress, fatigue, time of day, wind, physical sensations. Design finalized in "Subjective variables — finalized design" section below. Form restructured with sections and conditional indoor/outdoor display.
-
-### Earlier "next major feature" notes (superseded by the sequencing above)
-- Standardize on **1–5 integer scales** (5 = best), with labels shown only in the UI.
-- Make subjective fields **optional but prompted** — don't require them, don't bury them either.
-- Show the user **their own historical distribution** when rating (anchors ratings to their personal scale over time, mitigates drift).
-- Wind v2 idea worth revisiting: track **wind direction relative to shooting line** (head/tail/cross), not just strength.
+### Next prompt (Prompt 2B)
+- **Subjective variables UX** — Restructure the session form into logical collapsible sections using `<details>`/`<summary>`. Add JavaScript to hide outdoor-only fields (`weather`, `temperature_celsius`, `wind_force`, `wind_direction`) when `location = indoor`. The data layer (all 11 fields on the model and form) is already in place from Prompt 2A.
 
 ### Polish phase (when nearing feature completion)
 - **Language consistency pass** — review wording across all UI strings, modal labels, button text, hints. Avoid confusing phrasing like the earlier "No bow" example.

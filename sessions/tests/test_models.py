@@ -61,3 +61,119 @@ class TestScoringFields:
         session = SessionFactory(target_face="garbage")
         with pytest.raises(ValidationError):
             session.full_clean()
+
+
+@pytest.mark.django_db
+class TestSubjectiveVariableFields:
+    def test_all_subjective_fields_can_be_null_or_blank(self):
+        """Existing sessions without subjective data are valid."""
+        session = SessionFactory(
+            time_of_day=None,
+            weather=None,
+            temperature_celsius=None,
+            wind_force=None,
+            wind_direction=None,
+            nutrition=None,
+            sleep_hours=None,
+            sleep_notes="",
+            stress=None,
+            fatigue=None,
+            physical_sensations="",
+        )
+        session.full_clean()
+        session.refresh_from_db()
+        assert session.time_of_day is None
+        assert session.weather is None
+        assert session.temperature_celsius is None
+        assert session.wind_force is None
+        assert session.wind_direction is None
+        assert session.nutrition is None
+        assert session.sleep_hours is None
+        assert session.sleep_notes == ""
+        assert session.stress is None
+        assert session.fatigue is None
+        assert session.physical_sensations == ""
+
+    def test_all_subjective_fields_can_be_populated(self):
+        """Round-trip: every subjective field saves and loads correctly."""
+        session = SessionFactory(
+            time_of_day=Session.TimeOfDay.MORNING,
+            weather=Session.Weather.OVERCAST,
+            temperature_celsius=-5,
+            wind_force=Session.WindForce.LIGHT,
+            wind_direction=Session.WindDirection.FROM_LEFT,
+            nutrition=Session.Nutrition.GOOD,
+            sleep_hours="7.5",
+            sleep_notes="Woke up once but fell back asleep quickly",
+            stress=Session.Stress.LOW,
+            fatigue=Session.Fatigue.MEDIUM,
+            physical_sensations="Slight tightness in bow-arm shoulder",
+        )
+        session.refresh_from_db()
+        assert session.time_of_day == "morning"
+        assert session.weather == "overcast"
+        assert session.temperature_celsius == -5
+        assert session.wind_force == 2
+        assert session.wind_direction == "from_left"
+        assert session.nutrition == 4
+        assert float(session.sleep_hours) == 7.5
+        assert session.sleep_notes == "Woke up once but fell back asleep quickly"
+        assert session.stress == 2
+        assert session.fatigue == 3
+        assert session.physical_sensations == "Slight tightness in bow-arm shoulder"
+
+    def test_temperature_celsius_accepts_negative_values(self):
+        """Finland winter test: negative temperatures must be storable."""
+        session = SessionFactory(temperature_celsius=-20)
+        session.refresh_from_db()
+        assert session.temperature_celsius == -20
+
+    def test_sleep_hours_accepts_decimal(self):
+        session = SessionFactory(sleep_hours="6.5")
+        session.refresh_from_db()
+        assert float(session.sleep_hours) == 6.5
+
+    def test_sleep_hours_rejects_negative(self):
+        session = SessionFactory(sleep_hours="-1")
+        with pytest.raises(ValidationError):
+            session.full_clean()
+
+    def test_sleep_hours_rejects_above_24(self):
+        session = SessionFactory(sleep_hours="25")
+        with pytest.raises(ValidationError):
+            session.full_clean()
+
+    def test_sleep_hours_boundary_zero_is_valid(self):
+        session = SessionFactory(sleep_hours="0")
+        session.full_clean()
+
+    def test_sleep_hours_boundary_24_is_valid(self):
+        session = SessionFactory(sleep_hours="24")
+        session.full_clean()
+
+    def test_integer_choice_fields_reject_out_of_range(self):
+        for field in ("wind_force", "nutrition", "stress", "fatigue"):
+            session = SessionFactory(**{field: 6})
+            with pytest.raises(ValidationError):
+                session.full_clean()
+
+    def test_integer_choice_fields_reject_zero(self):
+        for field in ("wind_force", "nutrition", "stress", "fatigue"):
+            session = SessionFactory(**{field: 0})
+            with pytest.raises(ValidationError):
+                session.full_clean()
+
+    def test_weather_rejects_invalid_choice(self):
+        session = SessionFactory(weather="hailstorm")
+        with pytest.raises(ValidationError):
+            session.full_clean()
+
+    def test_wind_direction_rejects_invalid_choice(self):
+        session = SessionFactory(wind_direction="north")
+        with pytest.raises(ValidationError):
+            session.full_clean()
+
+    def test_time_of_day_rejects_invalid_choice(self):
+        session = SessionFactory(time_of_day="noon")
+        with pytest.raises(ValidationError):
+            session.full_clean()
