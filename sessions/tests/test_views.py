@@ -21,9 +21,9 @@ class TestHomeViewStats:
 
     def test_single_bow_with_sessions(self, client):
         bow = BowFactory()
-        SessionFactory(bow=bow, arrow_count=10)
-        SessionFactory(bow=bow, arrow_count=15)
-        SessionFactory(bow=bow, arrow_count=None)
+        SessionFactory(bow=bow, total_arrows=10)
+        SessionFactory(bow=bow, total_arrows=15)
+        SessionFactory(bow=bow, total_arrows=None)
         response = client.get(reverse("practice_sessions:home"))
         assert response.context["total_sessions"] == 3
         assert response.context["total_arrows"] == 25
@@ -36,8 +36,8 @@ class TestHomeViewStats:
     def test_multiple_bows_sorted_by_sessions_desc(self, client):
         bow1 = BowFactory()
         bow2 = BowFactory()
-        SessionFactory.create_batch(3, bow=bow1, arrow_count=10)
-        SessionFactory(bow=bow2, arrow_count=5)
+        SessionFactory.create_batch(3, bow=bow1, total_arrows=10)
+        SessionFactory(bow=bow2, total_arrows=5)
         response = client.get(reverse("practice_sessions:home"))
         breakdown = response.context["per_bow_breakdown"]
         assert len(breakdown) == 2
@@ -47,8 +47,8 @@ class TestHomeViewStats:
         assert breakdown[1]["sessions_count"] == 1
 
     def test_no_bow_sessions(self, client):
-        SessionFactory(bow=None, arrow_count=20)
-        SessionFactory(bow=None, arrow_count=10)
+        SessionFactory(bow=None, total_arrows=20)
+        SessionFactory(bow=None, total_arrows=10)
         response = client.get(reverse("practice_sessions:home"))
         assert response.context["total_sessions"] == 2
         assert response.context["total_arrows"] == 30
@@ -60,8 +60,8 @@ class TestHomeViewStats:
 
     def test_mixed_bows_and_no_bow(self, client):
         bow = BowFactory()
-        SessionFactory.create_batch(2, bow=bow, arrow_count=10)
-        SessionFactory(bow=None, arrow_count=5)
+        SessionFactory.create_batch(2, bow=bow, total_arrows=10)
+        SessionFactory(bow=None, total_arrows=5)
         response = client.get(reverse("practice_sessions:home"))
         assert response.context["total_sessions"] == 3
         assert response.context["total_arrows"] == 25

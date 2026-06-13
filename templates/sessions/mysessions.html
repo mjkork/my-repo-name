@@ -21,7 +21,10 @@
             data-bow-id="{{ session.bow_id|default:'' }}"
             data-location="{{ session.location }}"
             data-distance="{{ session.distance_m|default:'' }}"
-            data-arrow-count="{{ session.arrow_count|default:'' }}"
+            data-total-arrows="{{ session.total_arrows|default:'' }}"
+            data-scoring-arrows="{{ session.scoring_arrows|default:'' }}"
+            data-target-face="{{ session.target_face|default:'' }}"
+            data-total-score="{{ session.total_score|default:'' }}"
             data-notes="{{ session.notes }}"
             data-next-focus="{{ session.next_focus }}">
             <span class="list-row-main">
@@ -162,11 +165,44 @@
 
                 <div class="form-field">
                     <div class="form-field-label">
-                        <label for="{{ session_form.arrow_count.id_for_label }}">Total arrows</label>
+                        <label for="{{ session_form.total_arrows.id_for_label }}">Total arrows</label>
                     </div>
-                    {{ session_form.arrow_count }}
-                    {% if session_form.arrow_count.errors %}
-                    <div class="form-errors">{{ session_form.arrow_count.errors.as_text }}</div>
+                    <p class="form-field-help">{{ session_form.total_arrows.help_text }}</p>
+                    {{ session_form.total_arrows }}
+                    {% if session_form.total_arrows.errors %}
+                    <div class="form-errors">{{ session_form.total_arrows.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.scoring_arrows.id_for_label }}">Scoring arrows</label>
+                    </div>
+                    <p class="form-field-help">{{ session_form.scoring_arrows.help_text }}</p>
+                    {{ session_form.scoring_arrows }}
+                    {% if session_form.scoring_arrows.errors %}
+                    <div class="form-errors">{{ session_form.scoring_arrows.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.target_face.id_for_label }}">Target face</label>
+                    </div>
+                    {{ session_form.target_face }}
+                    {% if session_form.target_face.errors %}
+                    <div class="form-errors">{{ session_form.target_face.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ session_form.total_score.id_for_label }}">Total score</label>
+                    </div>
+                    <p class="form-field-help">{{ session_form.total_score.help_text }}</p>
+                    {{ session_form.total_score }}
+                    {% if session_form.total_score.errors %}
+                    <div class="form-errors">{{ session_form.total_score.errors.as_text }}</div>
                     {% endif %}
                 </div>
 
@@ -278,11 +314,44 @@
 
                 <div class="form-field">
                     <div class="form-field-label">
-                        <label for="{{ modify_session_form.arrow_count.id_for_label }}">Total arrows</label>
+                        <label for="{{ modify_session_form.total_arrows.id_for_label }}">Total arrows</label>
                     </div>
-                    {{ modify_session_form.arrow_count }}
-                    {% if modify_session_form.arrow_count.errors %}
-                    <div class="form-errors">{{ modify_session_form.arrow_count.errors.as_text }}</div>
+                    <p class="form-field-help">{{ modify_session_form.total_arrows.help_text }}</p>
+                    {{ modify_session_form.total_arrows }}
+                    {% if modify_session_form.total_arrows.errors %}
+                    <div class="form-errors">{{ modify_session_form.total_arrows.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.scoring_arrows.id_for_label }}">Scoring arrows</label>
+                    </div>
+                    <p class="form-field-help">{{ modify_session_form.scoring_arrows.help_text }}</p>
+                    {{ modify_session_form.scoring_arrows }}
+                    {% if modify_session_form.scoring_arrows.errors %}
+                    <div class="form-errors">{{ modify_session_form.scoring_arrows.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.target_face.id_for_label }}">Target face</label>
+                    </div>
+                    {{ modify_session_form.target_face }}
+                    {% if modify_session_form.target_face.errors %}
+                    <div class="form-errors">{{ modify_session_form.target_face.errors.as_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <div class="form-field-label">
+                        <label for="{{ modify_session_form.total_score.id_for_label }}">Total score</label>
+                    </div>
+                    <p class="form-field-help">{{ modify_session_form.total_score.help_text }}</p>
+                    {{ modify_session_form.total_score }}
+                    {% if modify_session_form.total_score.errors %}
+                    <div class="form-errors">{{ modify_session_form.total_score.errors.as_text }}</div>
                     {% endif %}
                 </div>
 
@@ -350,9 +419,12 @@
         modifySessionForm.querySelector('[name="modify-date"]').value        = d.date;
         modifySessionForm.querySelector('[name="modify-bow"]').value         = d.bowId;
         modifySessionForm.querySelector('[name="modify-location"]').value    = d.location;
-        modifySessionForm.querySelector('[name="modify-distance_m"]').value  = d.distance;
-        modifySessionForm.querySelector('[name="modify-arrow_count"]').value = d.arrowCount;
-        modifySessionForm.querySelector('[name="modify-notes"]').value       = d.notes;
+        modifySessionForm.querySelector('[name="modify-distance_m"]').value    = d.distance;
+        modifySessionForm.querySelector('[name="modify-total_arrows"]').value  = d.totalArrows;
+        modifySessionForm.querySelector('[name="modify-scoring_arrows"]').value = d.scoringArrows;
+        modifySessionForm.querySelector('[name="modify-target_face"]').value   = d.targetFace;
+        modifySessionForm.querySelector('[name="modify-total_score"]').value   = d.totalScore;
+        modifySessionForm.querySelector('[name="modify-notes"]').value         = d.notes;
         modifySessionForm.querySelector('[name="modify-next_focus"]').value  = d.nextFocus ?? '';
     }
 

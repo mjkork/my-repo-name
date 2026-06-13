@@ -39,12 +39,12 @@ class HomeView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         totals = Session.objects.aggregate(
             total_sessions=Count("pk"),
-            total_arrows=Coalesce(Sum("arrow_count"), 0),
+            total_arrows=Coalesce(Sum("total_arrows"), 0),
         )
         raw_breakdown = list(
             Session.objects.values("bow__name").annotate(
                 sessions_count=Count("pk"),
-                arrows_count=Coalesce(Sum("arrow_count"), 0),
+                arrows_count=Coalesce(Sum("total_arrows"), 0),
             )
         )
         named = sorted(

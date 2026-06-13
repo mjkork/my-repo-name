@@ -281,7 +281,7 @@ A site-wide nav bar lives in `base.html` and appears on every page except the ho
 
 Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions`.
 
-### v1 fields (objective only — subjective fields deliberately deferred)
+### Fields
 
 | Field | Type | Notes |
 |---|---|---|
@@ -291,18 +291,21 @@ Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions
 | `location` | CharField choices | `indoor` / `outdoor` |
 | `session_type` | CharField choices | `free_practice` only for now; structured for future expansion |
 | `distance_m` | PositiveSmallIntegerField | nullable |
-| `arrow_count` | PositiveIntegerField | nullable |
+| `total_arrows` | PositiveIntegerField | nullable — every arrow shot (warmup + scored + cooldown) |
+| `scoring_arrows` | PositiveIntegerField | nullable — subset shot at a target face for scoring; null/0 = blank-bale session |
+| `target_face` | CharField choices, max_length=40 | nullable — 40 cm, 40 cm 3-spot, 60 cm, 60 cm 3-spot, 80 cm, 122 cm |
+| `total_score` | PositiveIntegerField | nullable — points from the scoring arrows |
 | `notes` | TextField | blank=True |
 
-### Deferred (CLAUDE.md lists these; skipped in v1 by deliberate choice)
+### Deferred (CLAUDE.md lists these; skipped so far by deliberate choice)
 `temperature`, `wind`, `energy_before`, `energy_after` — subjective ordinal fields. Will be added in a future iteration once the scale granularity decision is made.
 
 ### Naming reconciliation vs CLAUDE.md
 - `distance_m` (not `distance`) — CLAUDE.md naming preferred
-- `arrow_count` (not `total_arrows`) — CLAUDE.md naming preferred
+- `total_arrows` (renamed from initial `arrow_count`) — now matches CLAUDE.md spec
 - `date` (not `started_at`) — intentional v1 simplification; `started_at` (timezone datetime) may be added later
 
-**CLAUDE.md is the long-term spec.** The v1 Session model is a deliberate subset of it.
+**CLAUDE.md is the long-term spec.** The Session model is a deliberate subset of it.
 
 ### List display and pagination
 
@@ -366,11 +369,14 @@ The right side of the homepage is intentionally empty pending the subjective var
 A "recent sessions mini-list" was considered and rejected — the totals + per-bow tooltip already serve the "what have I done lately" need; a recent list would duplicate that less elegantly.
 
 ---
-### Scored sessions architecture (design decided, not yet built)
+### Scored sessions architecture
 
 Reached through deliberate design conversation. Recorded here because the
 reasoning matters as much as the decisions — future-you should know *why*
 we chose simplicity over more elaborate alternatives.
+
+**Prompt 1 SHIPPED** — scoring fields exist on the Session model and form.
+See Session fields table above.
 
 **Core decision: one unified Session model, not multiple session types.**
 
@@ -408,16 +414,7 @@ queries the data itself. If a casual user-facing tag is wanted later
 ("competition prep day", "technique session"), it can be added as free-text
 metadata — but it's not architecture.
 
-**Fields to add to Session (when the build prompt happens):**
-
-- `total_arrows` — currently `arrow_count`; either rename or keep.
-- `scoring_arrows` — PositiveIntegerField, optional (null/blank=True).
-- `target_face` — choice field, constrained by distance via a static dict
-  in the view.
-- `total_score` — PositiveIntegerField, optional.
-- (Possible future: `is_competition` flag + `competition_name` free text.)
-
-**Target face by distance — static dict, not a model:**
+**Target face by distance — static dict, not a model (STILL PENDING — Prompt 2):**
 
 ```python
 TARGET_FACES_BY_DISTANCE = {
@@ -431,7 +428,8 @@ TARGET_FACES_BY_DISTANCE = {
 ```
 
 Custom distances get the full list. JavaScript repopulates the target face
-dropdown when distance changes. Don't over-design — it's a dict.
+dropdown when distance changes. Not yet implemented — all 6 target face
+options appear regardless of distance until Prompt 2 ships.
 
 **Scoring granularity: total score only, for now.**
 
@@ -457,18 +455,17 @@ is more descriptive and accurate. The rename would cascade to:
 - Should be its own focused prompt, not bundled with the scoring fields
   addition. Cosmetic but real work.
 
-**Build sequencing:**
+**What's still pending from this architecture:**
 
-1. **First prompt** — add scoring fields to the existing Session model.
-   Keep model name `Session` for now.
-2. **Second prompt (optional)** — rename `Session` → `ArcherySession` if
-   still wanted.
-3. **Third prompt** — subjective variables, once the list is settled.
-4. **Eventually** — the Mirror feature (analysis / correlations).
-   Minimum 30+ scored sessions before this is meaningful.
+- **Prompt 2** — target-face-by-distance JavaScript constraint (filter
+  dropdown to valid faces for the selected distance).
+- **Prompt 3** — subjective variables (all fields added to Session, form
+  restructured with sections and conditional display).
+- **Optional** — rename `Session` → `ArcherySession`.
+- **Eventually** — the Mirror feature (analysis / correlations). Minimum
+  30+ scored sessions before this is meaningful.
 
-Each phase is shippable on its own. No phase requires future ones to be
-useful.
+Each phase is shippable on its own.
 
 ---
 
@@ -600,25 +597,31 @@ for.
 
 **Build sequencing (locked):**
 
-1. **Scored sessions architecture** — first prompt. Adds the scoring fields
-   to the Session model. Pre-requisite for everything else; the mirror
-   needs scored outputs to correlate against.
-2. **Subjective variables** — second prompt. All fields added to Session
-   model. Form restructured with sections and conditional display.
-3. **Mirror / analysis** — third feature, deferred until 30+ scored
-   sessions exist. Frame findings as associations, not causation. Enforce
-   minimum-N thresholds before displaying correlations.
-4. **Optional cosmetic refactor**: rename Session → ArcherySession. Separate
+1. **Scored sessions architecture** — ✅ SHIPPED (Prompt 1). Scoring fields
+   exist on the Session model and form. `arrow_count` renamed to `total_arrows`.
+   Target-face-by-distance constraint still pending (Prompt 2).
+2. **Target-face-by-distance JS constraint** — Prompt 2. Filters dropdown to
+   valid faces for selected distance.
+3. **Subjective variables** — Prompt 3. All fields added to Session model.
+   Form restructured with sections and conditional display.
+4. **Mirror / analysis** — deferred until 30+ scored sessions exist. Frame
+   findings as associations, not causation. Enforce minimum-N thresholds.
+5. **Optional cosmetic refactor**: rename Session → ArcherySession. Separate
    focused prompt; cascades to URL namespace, templates, tests.
 ---
 ## What's next
 
-### Next major feature
-- **Subjective session variables** — sleep, nutrition, stress, time of day, wind, self-rating, key takeaway. Deliberately deferred from v1. Design notes for the eventual build:
-  - Standardize on **1–5 integer scales** (5 = best), with labels shown only in the UI.
-  - Make subjective fields **optional but prompted** — don't require them, don't bury them either.
-  - Show the user **their own historical distribution** when rating (anchors ratings to their personal scale over time, mitigates drift).
-  - Wind v2 idea worth revisiting: track **wind direction relative to shooting line** (head/tail/cross), not just strength.
+### Next prompt (Prompt 2)
+- **Target-face-by-distance constraint** — JavaScript filters the target face dropdown to only valid options for the selected distance (using the static `TARGET_FACES_BY_DISTANCE` dict). All 6 options currently show regardless of distance.
+
+### Next major feature (Prompt 3)
+- **Subjective session variables** — sleep, nutrition, stress, fatigue, time of day, wind, physical sensations. Design finalized in "Subjective variables — finalized design" section below. Form restructured with sections and conditional indoor/outdoor display.
+
+### Earlier "next major feature" notes (superseded by the sequencing above)
+- Standardize on **1–5 integer scales** (5 = best), with labels shown only in the UI.
+- Make subjective fields **optional but prompted** — don't require them, don't bury them either.
+- Show the user **their own historical distribution** when rating (anchors ratings to their personal scale over time, mitigates drift).
+- Wind v2 idea worth revisiting: track **wind direction relative to shooting line** (head/tail/cross), not just strength.
 
 ### Polish phase (when nearing feature completion)
 - **Language consistency pass** — review wording across all UI strings, modal labels, button text, hints. Avoid confusing phrasing like the earlier "No bow" example.

@@ -14,6 +14,14 @@ class Session(models.Model):
     class SessionType(models.TextChoices):
         FREE_PRACTICE = "free_practice", "Free practice"
 
+    class TargetFace(models.TextChoices):
+        CM_40 = "40cm", "40 cm standard"
+        CM_40_3SPOT = "40cm 3-spot vertical", "40 cm 3-spot vertical"
+        CM_60 = "60cm", "60 cm standard"
+        CM_60_3SPOT = "60cm 3-spot", "60 cm 3-spot"
+        CM_80 = "80cm", "80 cm"
+        CM_122 = "122cm", "122 cm"
+
     name = models.CharField(max_length=100)
     date = models.DateField(default=timezone.localdate)
     bow = models.ForeignKey(
@@ -30,7 +38,12 @@ class Session(models.Model):
         default=SessionType.FREE_PRACTICE,
     )
     distance_m = models.PositiveSmallIntegerField(null=True, blank=True)
-    arrow_count = models.PositiveIntegerField(null=True, blank=True)
+    total_arrows = models.PositiveIntegerField(null=True, blank=True)
+    scoring_arrows = models.PositiveIntegerField(null=True, blank=True)
+    target_face = models.CharField(
+        max_length=40, choices=TargetFace.choices, null=True, blank=True
+    )
+    total_score = models.PositiveIntegerField(null=True, blank=True)
     notes = models.TextField(blank=True)
     next_focus = models.TextField(blank=True)
 
