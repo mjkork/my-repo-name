@@ -499,7 +499,118 @@ The mirror's most powerful displays will pair **subjective inputs**
 (sleep, stress, etc.) with **objective outputs (total_score)** — which is
 why scored sessions must come first.
 ---
+### Subjective variables — finalized design (not yet built)
 
+Locked through deliberate design conversation. The "monster form" complexity
+is accepted as the price of admission to the eventual mirror — the app is
+self-selecting for archers serious enough to provide rich input data.
+
+**The variable list:**
+
+*Environmental (archer-independent, mostly outdoor-only):*
+- `weather` — Sunny / Partly cloudy / Overcast / Rainy (choice)
+- `temperature_celsius` — number, optional. Localization to Fahrenheit
+  possible later.
+- `wind_force` — Calm / Light / Medium / Strong / Very Strong (choice)
+- `wind_direction` — from Left / Right / Front / Back / Front-Left /
+  Front-Right / Back-Left / Back-Right (choice)
+- `time_of_day` — Morning / Day / Afternoon / Evening (choice)
+
+*Personal state (archer-dependent, fills in before/at start of session):*
+- `nutrition` — Very Poor / Poor / OK / Good / Very Good (choice)
+- `sleep_hours` — decimal/integer hours, optional
+- `sleep_notes` — optional free text (captures sleep quality when the user
+  wants to note it; not forced every session)
+- `stress` — Very Low / Low / Medium / High / Very High (choice)
+
+*Session experience (fills in at end of session):*
+- `fatigue` — Very Low / Low / Medium / High / Very High (choice).
+  Kept because it's diagnostic — high fatigue can indicate lack of sleep,
+  poor nutrition, too-heavy bow, intense same-day physical exercise, or
+  environmental stress (notably temperature).
+- `physical_sensations` — optional free text. Captures the "language between
+  archer and body" that later — with a coach or in retrospect — can pinpoint
+  technique/form issues (e.g., bow-arm shoulder sensations indicating
+  shoulder rises too high due to lack of strength or mobility).
+
+**Why weather stays in (against my earlier instinct to drop it):**
+
+- Weather does NOT reliably correlate with wind (rainy days can be calm;
+  sunny days can be windy).
+- Sunlight has effects beyond hitting-your-face: string reflection (many
+  bowstrings are made of white/light materials, can distract aiming) and
+  reflection from clothes. Experienced archers choose darker string
+  materials for this reason.
+- The mirror could surface non-obvious correlations like "you score lower
+  on sunny outdoor days" — and a domain-aware archer can then interpret it.
+
+**Polarity / scale convention (CRITICAL):**
+
+Internally store all 1–5 choice fields as integers (1–5). The UI shows ONLY
+the descriptive labels — the user never sees the numbers.
+
+- Wind: 1=Calm, 5=Very Strong (intensity scale)
+- Stress: 1=Very Low, 5=Very High (intensity scale)
+- Nutrition: 1=Very Poor, 5=Very Good (quality scale)
+- Fatigue: 1=Very Low, 5=Very High (intensity scale)
+
+Polarity differs by variable, but that's invisible to the user. The mirror
+knows per-variable polarity for correlation logic. Form rendering should
+never expose numeric values.
+
+**Conditional display (UX rule):**
+
+Outdoor-only fields (`weather`, `temperature_celsius`, `wind_force`,
+`wind_direction`) are HIDDEN when `location = indoor`. JavaScript shows
+them when the user selects outdoor. Reduces form clutter for indoor
+sessions and signals which variables matter when.
+
+`time_of_day` applies to both indoor and outdoor sessions (some archers
+shoot better at certain times regardless of light).
+
+**Form layout (UX rule):**
+
+The session form will be long (~20 fields total). Group into logical
+sections:
+
+1. **Session basics** — name, date, bow, location, session type indicators.
+2. **Shooting details** — distance, total_arrows, scoring_arrows,
+   target_face, total_score.
+3. **Conditions** — environmental variables (collapsible, hidden when
+   indoor).
+4. **How you felt** — personal state + session experience (collapsible).
+5. **Reflection** — notes, next_focus.
+
+Use native `<details>`/`<summary>` for collapsible sections (already an
+established pattern from the Settings page). Less-common groups default to
+COLLAPSED so the form looks manageable on first glance and expands as the
+user wants to fill in more.
+
+**Form scope philosophy:**
+
+A 20-field form is friction. That friction is acceptable because:
+- Every field is OPTIONAL — users fill in what they care about.
+- The eventual mirror requires rich input data to produce meaningful
+  correlations. There's no shortcut.
+- An archer too casual to engage with the form is also too casual to
+  benefit from the mirror's eventual output.
+
+The form's complexity self-selects for the audience the app is actually
+for.
+
+**Build sequencing (locked):**
+
+1. **Scored sessions architecture** — first prompt. Adds the scoring fields
+   to the Session model. Pre-requisite for everything else; the mirror
+   needs scored outputs to correlate against.
+2. **Subjective variables** — second prompt. All fields added to Session
+   model. Form restructured with sections and conditional display.
+3. **Mirror / analysis** — third feature, deferred until 30+ scored
+   sessions exist. Frame findings as associations, not causation. Enforce
+   minimum-N thresholds before displaying correlations.
+4. **Optional cosmetic refactor**: rename Session → ArcherySession. Separate
+   focused prompt; cascades to URL namespace, templates, tests.
+---
 ## What's next
 
 ### Next major feature
