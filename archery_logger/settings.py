@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "equipment",
     "plotting",
     "preferences",
+    "analytics",
 ]
 
 MIDDLEWARE = [

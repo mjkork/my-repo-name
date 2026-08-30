@@ -23,6 +23,8 @@
                    class="btn btn-primary{% if request.resolver_match.namespace == 'practice_sessions' %} nav-active{% endif %}">My Sessions</a>
             </div>
             <div class="site-nav-right">
+                <a href="{% url 'analytics:mystatistics' %}"
+                   class="btn btn-primary{% if request.resolver_match.namespace == 'analytics' %} nav-active{% endif %}">Statistics</a>
                 <a href="{% url 'preferences:mysettings' %}"
                    class="btn btn-primary{% if request.resolver_match.namespace == 'preferences' %} nav-active{% endif %}">Settings</a>
             </div>

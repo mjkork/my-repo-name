@@ -177,6 +177,13 @@ class TestHomeViewNextFocus:
 
 
 @pytest.mark.django_db
+class TestHomeViewButtons:
+    def test_homepage_contains_statistics_link(self, client):
+        html = client.get(reverse("practice_sessions:home")).content.decode()
+        assert "/mystatistics/" in html
+
+
+@pytest.mark.django_db
 class TestSessionListPaginationRespectsPreference:
     def test_default_page_size_is_8(self, client):
         SessionFactory.create_batch(10)

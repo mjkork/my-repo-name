@@ -6,4 +6,5 @@ urlpatterns = [
     path("", include("sessions.urls", namespace="practice_sessions")),
     path("", include("equipment.urls")),
     path("", include("preferences.urls")),
+    path("", include("analytics.urls", namespace="analytics")),
 ]

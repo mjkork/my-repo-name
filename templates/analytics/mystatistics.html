@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics — MyShots{% endblock %}
+
+{% block content %}
+<div class="stats-page">
+    <div class="page-heading-row">
+        <h1>Statistics</h1>
+    </div>
+
+    {# ── 1. Overview ─────────────────────────────────────────────────────── #}
+    <details class="stats-section" open>
+        <summary class="form-section-heading">
+            Overview
+            <span class="form-section-chevron" aria-hidden="true">▸</span>
+        </summary>
+        <div class="stats-section-body">
+            <div class="stat-card-row stats-overview-row">
+                <div class="stat-card">
+                    <div class="stat-card-label">Total sessions</div>
+                    <div class="stat-card-value">{{ total_sessions }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Sessions this year</div>
+                    <div class="stat-card-value">{{ total_sessions_this_year }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Total arrows</div>
+                    <div class="stat-card-value">{{ total_arrows }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Scoring arrows</div>
+                    <div class="stat-card-value">{{ total_scoring_arrows }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Non-scoring arrows</div>
+                    <div class="stat-card-value">{{ total_non_scoring_arrows }}</div>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    {# ── 2. Sessions by bow ────────────────────────────────────────────────── #}
+    <details class="stats-section" open>
+        <summary class="form-section-heading">
+            Sessions by bow
+            <span class="form-section-chevron" aria-hidden="true">▸</span>
+        </summary>
+        <div class="stats-section-body">
+            {% if bow_rows %}
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Bow</th>
+                        <th class="stats-table-num">Sessions</th>
+                        <th class="stats-table-num">Arrows</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in bow_rows %}
+                    <tr>
+                        <td>{{ row.bow_name }}</td>
+                        <td class="stats-table-num">{{ row.sessions_count }}</td>
+                        <td class="stats-table-num">{{ row.arrows_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">No sessions logged yet.</p>
+            {% endif %}
+        </div>
+    </details>
+
+    {# ── 3. Location and distance ──────────────────────────────────────────── #}
+    <details class="stats-section" open>
+        <summary class="form-section-heading">
+            Location and distance
+            <span class="form-section-chevron" aria-hidden="true">▸</span>
+        </summary>
+        <div class="stats-section-body stats-section-body--columns">
+
+            <div class="stats-subsection">
+                <h3 class="stats-subsection-heading">By location</h3>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th class="stats-table-num">Sessions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Indoor</td>
+                            <td class="stats-table-num">{{ indoor_count }}</td>
+                        </tr>
+                        <tr>
+                            <td>Outdoor</td>
+                            <td class="stats-table-num">{{ outdoor_count }}</td>
+                        </tr>
+                        {% if location_not_recorded %}
+                        <tr class="stats-table-row--muted">
+                            <td>(not recorded)</td>
+                            <td class="stats-table-num">{{ location_not_recorded }}</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stats-subsection">
+                <h3 class="stats-subsection-heading">By distance</h3>
+                {% if dist_rows %}
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Distance</th>
+                            <th class="stats-table-num">Sessions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in dist_rows %}
+                        <tr{% if row.distance_m is None %} class="stats-table-row--muted"{% endif %}>
+                            <td>{% if row.distance_m is not None %}{{ row.distance_m }} m{% else %}(not recorded){% endif %}</td>
+                            <td class="stats-table-num">{{ row.sessions_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="empty-state">No sessions logged yet.</p>
+                {% endif %}
+            </div>
+
+        </div>
+    </details>
+
+    {# ── 4. Session types ──────────────────────────────────────────────────── #}
+    <details class="stats-section" open>
+        <summary class="form-section-heading">
+            Session types
+            <span class="form-section-chevron" aria-hidden="true">▸</span>
+        </summary>
+        <div class="stats-section-body">
+            <table class="stats-table stats-table--narrow">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th class="stats-table-num">Sessions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Blank bale</td>
+                        <td class="stats-table-num">{{ blank_bale_sessions }}</td>
+                    </tr>
+                    <tr>
+                        <td>Scored</td>
+                        <td class="stats-table-num">{{ scored_sessions }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    {# ── 5. Subjective variable averages ──────────────────────────────────── #}
+    <details class="stats-section" open>
+        <summary class="form-section-heading">
+            Subjective variable averages
+            <span class="form-section-chevron" aria-hidden="true">▸</span>
+        </summary>
+        <div class="stats-section-body">
+            <p class="stats-note">Averages are shown only when at least {{ subjective_min_n }} sessions have that field filled in. "Insufficient data" means fewer than {{ subjective_min_n }} logged values.</p>
+            <table class="stats-table stats-table--narrow">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th class="stats-table-num">Avg (1–5)</th>
+                        <th class="stats-table-num">Logged</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Nutrition</td>
+                        <td class="stats-table-num">{% if avg_nutrition.avg is not None %}{{ avg_nutrition.avg }}{% else %}<em class="stats-insufficient">Insufficient data</em>{% endif %}</td>
+                        <td class="stats-table-num">{{ avg_nutrition.count }}</td>
+                    </tr>
+                    <tr>
+                        <td>Stress</td>
+                        <td class="stats-table-num">{% if avg_stress.avg is not None %}{{ avg_stress.avg }}{% else %}<em class="stats-insufficient">Insufficient data</em>{% endif %}</td>
+                        <td class="stats-table-num">{{ avg_stress.count }}</td>
+                    </tr>
+                    <tr>
+                        <td>Fatigue</td>
+                        <td class="stats-table-num">{% if avg_fatigue.avg is not None %}{{ avg_fatigue.avg }}{% else %}<em class="stats-insufficient">Insufficient data</em>{% endif %}</td>
+                        <td class="stats-table-num">{{ avg_fatigue.count }}</td>
+                    </tr>
+                    <tr>
+                        <td>Wind force</td>
+                        <td class="stats-table-num">{% if avg_wind_force.avg is not None %}{{ avg_wind_force.avg }}{% else %}<em class="stats-insufficient">Insufficient data</em>{% endif %}</td>
+                        <td class="stats-table-num">{{ avg_wind_force.count }}</td>
+                    </tr>
+                    <tr>
+                        <td>Sleep hours</td>
+                        <td class="stats-table-num">{% if avg_sleep_hours.avg is not None %}{{ avg_sleep_hours.avg }} h{% else %}<em class="stats-insufficient">Insufficient data</em>{% endif %}</td>
+                        <td class="stats-table-num">{{ avg_sleep_hours.count }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="stats-table stats-table--narrow">
+                <thead>
+                    <tr>
+                        <th>Categorical variable</th>
+                        <th>Most common</th>
+                        <th class="stats-table-num">Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Weather</td>
+                        <td>{% if common_weather.label %}{{ common_weather.label }}{% else %}<em class="stats-insufficient">Insufficient data</em>{% endif %}</td>
+                        <td class="stats-table-num">{% if common_weather.label %}{{ common_weather.count }}{% else %}—{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td>Wind direction</td>
+                        <td>{% if common_wind_direction.label %}{{ common_wind_direction.label }}{% else %}<em class="stats-insufficient">Insufficient data</em>{% endif %}</td>
+                        <td class="stats-table-num">{% if common_wind_direction.label %}{{ common_wind_direction.count }}{% else %}—{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td>Time of day</td>
+                        <td>{% if common_time_of_day.label %}{{ common_time_of_day.label }}{% else %}<em class="stats-insufficient">Insufficient data</em>{% endif %}</td>
+                        <td class="stats-table-num">{% if common_time_of_day.label %}{{ common_time_of_day.count }}{% else %}—{% endif %}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    {# ── 6. Score analysis ────────────────────────────────────────────────── #}
+    <details class="stats-section" open>
+        <summary class="form-section-heading">
+            Score analysis
+            <span class="form-section-chevron" aria-hidden="true">▸</span>
+        </summary>
+        <div class="stats-section-body">
+            {% if score_analysis.available %}
+            <table class="stats-table stats-table--narrow">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th class="stats-table-num">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Average score</td>
+                        <td class="stats-table-num">{{ score_analysis.avg_score }}</td>
+                    </tr>
+                    <tr>
+                        <td>Best score</td>
+                        <td class="stats-table-num">{{ score_analysis.best_score }}</td>
+                    </tr>
+                    <tr>
+                        <td>Worst score</td>
+                        <td class="stats-table-num">{{ score_analysis.worst_score }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            {% else %}
+            <p class="stats-gate-message">
+                Score analysis unlocks at {{ score_min_n }} scored sessions.
+                You have {{ score_analysis.scored_count }}.
+                <em>Log more scored sessions to unlock this view.</em>
+            </p>
+            {% endif %}
+        </div>
+    </details>
+
+</div>
+{% endblock %}

@@ -32,6 +32,7 @@ uv run python manage.py makemigrations && uv run python manage.py migrate
 | `sessions` | `practice_sessions` | Training sessions CRUD. Label is **`practice_sessions`**, not `sessions`, to avoid clash with Django's built-in `django.contrib.sessions` middleware. All URL `{% url %}` calls and `reverse()` calls must use the `practice_sessions:` prefix. |
 | `equipment` | `equipment` | Bows and type-specific component setups (`OlympicBowSetup`). |
 | `plotting` | `plotting` | Arrow-plot photo detection — stub only, models empty, no functionality yet. |
+| `analytics` | `analytics` | Read-only aggregations and derived views over Session/Bow data. Contains no models of its own — all queries run against `sessions` and `equipment` models. |
 
 The `sessions` app must be registered in `INSTALLED_APPS` as `"sessions.apps.SessionsConfig"` (not bare `"sessions"`) so Django picks up the custom app label.
 
@@ -270,7 +271,8 @@ Neither alone is bulletproof; together they cover all cases and survive future r
 
 A site-wide nav bar lives in `base.html` and appears on every page except the homepage (detected via `request.resolver_match.url_name == 'home'`).
 
-- **Contents (left-aligned):** Home (green), My Bows (blue → `equipment:mybows`), My Sessions (blue → `practice_sessions:mysessions`)
+- **Contents (left group):** Home (green), My Bows (blue → `equipment:mybows`), My Sessions (blue → `practice_sessions:mysessions`)
+- **Contents (right group):** Statistics (blue → `analytics:mystatistics`), Settings (blue → `preferences:mysettings`). Both are utility/analysis destinations rather than primary CRUD actions — grouped together for that reason. Statistics sits to the left of Settings: it's visited more often; Settings is more "terminal" utility.
 - **Active state:** the current page's button gets a colored ring via `.nav-active` class, assigned by checking `request.resolver_match.namespace` in the template
 - **Homepage:** suppresses the nav entirely; uses its own in-page entry-point buttons (My Bows, My Sessions)
 - **URL namespace:** the `sessions` app has `app_name = "practice_sessions"` (to avoid the Django session middleware clash); all its URL references use the `practice_sessions:` prefix
@@ -663,7 +665,43 @@ for.
 5. **Optional cosmetic refactor**: rename Session → ArcherySession. Separate
    focused prompt; cascades to URL namespace, templates, tests.
 ---
+---
+## Statistics (analytics app)
+
+The `/mystatistics/` page is a fixed MVP dashboard — numbers and tables only.
+No charts, no filters, no user-controlled parameters.
+
+### What the MVP shows
+Six collapsible sections, all expanded by default:
+1. **Overview** — total sessions, sessions this year, total arrows, scoring arrows, non-scoring arrows.
+2. **Sessions by bow** — table of (bow, sessions_count, arrows_count), sorted by sessions desc. "(no bow recorded)" row appended only when such sessions exist.
+3. **Location and distance** — indoor/outdoor counts; distance breakdown sorted ascending. "(not recorded)" rows appear only when such sessions exist.
+4. **Session types** — blank bale vs scored counts.
+5. **Subjective variable averages** — per-field average (1–5) and session count. Three categorical most-common tables (weather, wind direction, time of day). Both classes gate at N≥5: if fewer than 5 non-null values, "Insufficient data" is shown instead.
+6. **Score analysis** — gated at 20+ scored sessions. When under the threshold, shows an honest count-and-threshold message. When over, shows average/best/worst score.
+
+### What is NOT built (deliberate scope boundary)
+- No charts or visualizations (deferred; will need Chart.js or similar when desired).
+- No filters, date range pickers, or exploration tools (deferred).
+- No Excel/CSV data export (deferred).
+- Score analysis is currently locked (threshold: 20 scored sessions; current count: far below).
+- No correlation analysis between subjective variables and score — requires very careful design and sufficient data; may never be built as an automated stat.
+- No AI-driven interpretation, diagnosis, or advice (violates the North Star — explicit non-goal).
+
+### Minimum-N gating pattern (reusable)
+Rather than computing meaningless statistics on tiny samples, any stat that requires a minimum N should:
+1. Compute the count of non-null values for the relevant field.
+2. If count < threshold: pass `{"avg": None, "count": n}` (or similar) to the template; template renders *"Insufficient data"* in a subtle italic style.
+3. Display the threshold and current count in the message so the user understands what they need to do ("Score analysis unlocks at 20 scored sessions. You have 2.").
+
+Apply this pattern to any future stat that could be meaningless on small samples.
+
+---
 ## What's next
+
+### Statistics MVP: ✅ DONE
+- `/mystatistics/` page ships with all six sections and honest insufficient-data messages.
+- Statistics enhancements (charts, exports, exploration): possible future work; wait for real usage to reveal what's genuinely wanted.
 
 ### Next: Mirror / analysis
 - Deferred until 30+ scored sessions exist with rich subjective data.
@@ -672,6 +710,9 @@ for.
   not causation. Group scores by `(distance, target_face)` together — never
   distance alone. Ignore outdoor-condition fields on indoor sessions (filter in
   the mirror, not the form).
+
+### Parked: "Your own words, resurfaced"
+- Deferred; may earn implementation later based on how the archer uses Statistics.
 
 ### Polish phase (when nearing feature completion)
 - **Language consistency pass** — review wording across all UI strings, modal labels, button text, hints. Avoid confusing phrasing like the earlier "No bow" example.
