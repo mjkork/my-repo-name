@@ -826,17 +826,26 @@ details[open] .settings-card-chevron {
 .field-hidden { display: none !important; }
 
 /* ---- Statistics page ---- */
+/* Expandable card sections reuse .settings-card + .settings-card--expandable for the container
+ * and .settings-card-summary / .settings-card-chevron for the summary bar.
+ * The title text differs: settings uses centered italic, stats uses uppercase left-aligned. */
 .stats-page { padding: var(--sp-8) 0; }
 
-/* Each major section is a <details open> using .form-section-heading for the summary. */
-.stats-section {
-    margin-bottom: var(--sp-6);
-    border-bottom: 1px solid var(--color-border);
-    padding-bottom: var(--sp-2);
+/* Stack of expandable card sections with consistent vertical gap */
+.stats-sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
 }
 
-.stats-section-body {
-    padding: var(--sp-5) 0 var(--sp-4);
+/* Uppercase left-aligned title — overrides the centered italic of .settings-card-title */
+.stats-section-title {
+    flex: 1;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted);
 }
 
 /* Two-column layout for location + distance tables side by side */

@@ -279,6 +279,34 @@ A site-wide nav bar lives in `base.html` and appears on every page except the ho
 
 ---
 
+## Expandable card pattern
+
+Used in three places: Settings page, session form sections, and Statistics page sections.
+
+**HTML structure:**
+```html
+<details class="settings-card settings-card--expandable">
+    <summary class="settings-card-summary">
+        <span class="...title class...">Section title</span>
+        <span class="settings-card-chevron" aria-hidden="true">▸</span>
+    </summary>
+    <div class="settings-card-body">
+        ... content ...
+    </div>
+</details>
+```
+
+**Visual:** white/light background, rounded corners (`--radius-lg`), 1.5px border, soft shadow. Summary bar has flex layout with padding; chevron rotates 90° when open (CSS only, no JS). Body separated by a 1px border-top.
+
+**Title text varies by context (valid divergence):**
+- Settings: `settings-card-title` — centered, italic, normal weight
+- Statistics: `stats-section-title` — left-aligned, uppercase, small bold letter-spaced (analytical feel)
+- Session form: `form-section-heading` applied to the `<summary>` itself — same uppercase style as stats
+
+**When to add a third collapsible section to a new page:** reuse `settings-card settings-card--expandable` for the container, `settings-card-summary` for the summary bar, `settings-card-chevron` for the chevron, and `settings-card-body` for the content. Add a page-specific title class only if the text style differs from what already exists.
+
+---
+
 ## Session model
 
 Lives in the `sessions` app (`sessions/models.py`), app_label `practice_sessions`.
@@ -621,8 +649,9 @@ form to prevent it.
 
 The session form is grouped into five collapsible `<details>`/`<summary>`
 sections — the same native pattern used by the Settings page's expandable
-cards (`.settings-card--expandable`). This is now an established reusable
-pattern across the app.
+cards (`.settings-card--expandable`). The Statistics page's six sections
+also use this pattern. This is now an established reusable pattern across
+the app — see "Expandable card pattern" below.
 
 1. **Session basics** — name, date, bow, location — `open` by default
 2. **Shooting details** — distance, total_arrows, scoring_arrows,
@@ -672,7 +701,7 @@ The `/mystatistics/` page is a fixed MVP dashboard — numbers and tables only.
 No charts, no filters, no user-controlled parameters.
 
 ### What the MVP shows
-Six collapsible sections, all expanded by default:
+Six collapsible sections, all **collapsed by default** (the user expands whichever they want to read). No persistence — sections return to collapsed on each page load, which keeps the initial view clean.
 1. **Overview** — total sessions, sessions this year, total arrows, scoring arrows, non-scoring arrows.
 2. **Sessions by bow** — table of (bow, sessions_count, arrows_count), sorted by sessions desc. "(no bow recorded)" row appended only when such sessions exist.
 3. **Location and distance** — indoor/outdoor counts; distance breakdown sorted ascending. "(not recorded)" rows appear only when such sessions exist.
@@ -701,6 +730,7 @@ Apply this pattern to any future stat that could be meaningless on small samples
 
 ### Statistics MVP: ✅ DONE
 - `/mystatistics/` page ships with all six sections and honest insufficient-data messages.
+- Sections default to collapsed for a clean initial view; each uses the shared expandable-card pattern (same as Settings).
 - Statistics enhancements (charts, exports, exploration): possible future work; wait for real usage to reveal what's genuinely wanted.
 
 ### Next: Mirror / analysis

@@ -8,13 +8,15 @@
         <h1>Statistics</h1>
     </div>
 
+    <div class="stats-sections">
+
     {# ── 1. Overview ─────────────────────────────────────────────────────── #}
-    <details class="stats-section" open>
-        <summary class="form-section-heading">
-            Overview
-            <span class="form-section-chevron" aria-hidden="true">▸</span>
+    <details class="settings-card settings-card--expandable">
+        <summary class="settings-card-summary">
+            <span class="stats-section-title">Overview</span>
+            <span class="settings-card-chevron" aria-hidden="true">▸</span>
         </summary>
-        <div class="stats-section-body">
+        <div class="settings-card-body">
             <div class="stat-card-row stats-overview-row">
                 <div class="stat-card">
                     <div class="stat-card-label">Total sessions</div>
@@ -41,12 +43,12 @@
     </details>
 
     {# ── 2. Sessions by bow ────────────────────────────────────────────────── #}
-    <details class="stats-section" open>
-        <summary class="form-section-heading">
-            Sessions by bow
-            <span class="form-section-chevron" aria-hidden="true">▸</span>
+    <details class="settings-card settings-card--expandable">
+        <summary class="settings-card-summary">
+            <span class="stats-section-title">Sessions by bow</span>
+            <span class="settings-card-chevron" aria-hidden="true">▸</span>
         </summary>
-        <div class="stats-section-body">
+        <div class="settings-card-body">
             {% if bow_rows %}
             <table class="stats-table">
                 <thead>
@@ -73,12 +75,12 @@
     </details>
 
     {# ── 3. Location and distance ──────────────────────────────────────────── #}
-    <details class="stats-section" open>
-        <summary class="form-section-heading">
-            Location and distance
-            <span class="form-section-chevron" aria-hidden="true">▸</span>
+    <details class="settings-card settings-card--expandable">
+        <summary class="settings-card-summary">
+            <span class="stats-section-title">Location and distance</span>
+            <span class="settings-card-chevron" aria-hidden="true">▸</span>
         </summary>
-        <div class="stats-section-body stats-section-body--columns">
+        <div class="settings-card-body stats-section-body--columns">
 
             <div class="stats-subsection">
                 <h3 class="stats-subsection-heading">By location</h3>
@@ -136,12 +138,12 @@
     </details>
 
     {# ── 4. Session types ──────────────────────────────────────────────────── #}
-    <details class="stats-section" open>
-        <summary class="form-section-heading">
-            Session types
-            <span class="form-section-chevron" aria-hidden="true">▸</span>
+    <details class="settings-card settings-card--expandable">
+        <summary class="settings-card-summary">
+            <span class="stats-section-title">Session types</span>
+            <span class="settings-card-chevron" aria-hidden="true">▸</span>
         </summary>
-        <div class="stats-section-body">
+        <div class="settings-card-body">
             <table class="stats-table stats-table--narrow">
                 <thead>
                     <tr>
@@ -164,12 +166,12 @@
     </details>
 
     {# ── 5. Subjective variable averages ──────────────────────────────────── #}
-    <details class="stats-section" open>
-        <summary class="form-section-heading">
-            Subjective variable averages
-            <span class="form-section-chevron" aria-hidden="true">▸</span>
+    <details class="settings-card settings-card--expandable">
+        <summary class="settings-card-summary">
+            <span class="stats-section-title">Subjective variable averages</span>
+            <span class="settings-card-chevron" aria-hidden="true">▸</span>
         </summary>
-        <div class="stats-section-body">
+        <div class="settings-card-body">
             <p class="stats-note">Averages are shown only when at least {{ subjective_min_n }} sessions have that field filled in. "Insufficient data" means fewer than {{ subjective_min_n }} logged values.</p>
             <table class="stats-table stats-table--narrow">
                 <thead>
@@ -238,12 +240,12 @@
     </details>
 
     {# ── 6. Score analysis ────────────────────────────────────────────────── #}
-    <details class="stats-section" open>
-        <summary class="form-section-heading">
-            Score analysis
-            <span class="form-section-chevron" aria-hidden="true">▸</span>
+    <details class="settings-card settings-card--expandable">
+        <summary class="settings-card-summary">
+            <span class="stats-section-title">Score analysis</span>
+            <span class="settings-card-chevron" aria-hidden="true">▸</span>
         </summary>
-        <div class="stats-section-body">
+        <div class="settings-card-body">
             {% if score_analysis.available %}
             <table class="stats-table stats-table--narrow">
                 <thead>
@@ -277,5 +279,6 @@
         </div>
     </details>
 
+    </div>{# end .stats-sections #}
 </div>
 {% endblock %}

@@ -28,9 +28,14 @@ class TestStatisticsViewRenders:
         ):
             assert heading in html, f"Section heading '{heading}' missing from page"
 
-    def test_all_sections_expanded_by_default(self, client):
+    def test_sections_use_expandable_card_class(self, client):
         html = client.get(URL).content.decode()
-        assert html.count('<details class="stats-section" open>') == 6
+        assert html.count("settings-card--expandable") == 6
+
+    def test_all_sections_collapsed_by_default(self, client):
+        html = client.get(URL).content.decode()
+        assert "<details" in html
+        assert "<details open" not in html
 
 
 @pytest.mark.django_db
