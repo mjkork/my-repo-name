@@ -34,20 +34,6 @@ If a change to this stack is proposed, discuss trade-offs first before implement
 
 ## Project Structure
 
-```
-archery_logger/
-├── archery_logger/        # Django project (settings, urls, wsgi, celery)
-├── accounts/              # App: user accounts and profile
-├── sessions/              # App: practice sessions (CRUD + analysis)
-├── equipment/             # App: bows and other gear
-├── plotting/              # App: photo-based arrow plot detection
-├── templates/             # Django templates (HTMX partials in templates/partials/)
-├── static/                # CSS, JS, images
-├── manage.py
-├── pyproject.toml
-└── README.md
-```
-
 App-specific tests live in `<app>/tests/`. Cross-cutting tests live in a top-level `tests/`.
 
 ## Domain Model (current concept)
@@ -205,16 +191,6 @@ These habits keep the door open to a public service without slowing solo develop
 - Never commit secrets, `.env` files, local databases, virtualenvs, or media uploads.
 - Schema changes: generate and check in the migration alongside the model change in the same commit.
 - Don't add new dependencies without discussing first; the dep list should stay small.
-
-## Infrastructure (planned, not all needed for v1)
-
-- **CI:** GitHub Actions running tests + lint on every push, blocking merge on failure.
-- **Error monitoring:** Sentry from the first deploy.
-- **Email:** transactional provider (Postmark, Resend, or SES) for verification, password reset, notifications.
-- **Hosting:** start on Fly.io, Railway, or Render — managed Postgres + Redis, simple deploy. Larger clouds only if/when needed.
-- **Backups:** automated daily Postgres backups; periodic restore drills.
-- **Rate limiting:** `django-ratelimit` on auth and upload endpoints.
-- **Security headers + HTTPS:** `django-csp`, secure cookies, HSTS in prod.
 
 ## Open Questions / Decisions Pending
 
