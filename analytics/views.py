@@ -1,5 +1,7 @@
+import datetime
+
 from django.db.models import Avg, Count, Max, Min, Q, Sum
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncMonth, TruncWeek, TruncYear
 from django.utils import timezone
 from django.views.generic import TemplateView
 
@@ -7,6 +9,100 @@ from sessions.models import Session
 
 _SUBJECTIVE_MIN_N = 5
 _SCORE_MIN_N = 20
+_WEEKS_SHOWN = 12
+_MONTHS_SHOWN = 12
+_YEARS_SHOWN = 5
+
+
+def _week_start(d: datetime.date) -> datetime.date:
+    """Return the Monday of the week containing d (matches Django's TruncWeek)."""
+    return d - datetime.timedelta(days=d.weekday())
+
+
+def _month_start(d: datetime.date) -> datetime.date:
+    return d.replace(day=1)
+
+
+def _shift_month(d: datetime.date, delta: int) -> datetime.date:
+    """Return the first-of-month `delta` months away from d's month."""
+    zero_based = d.month - 1 + delta
+    year = d.year + zero_based // 12
+    month = zero_based % 12 + 1
+    return datetime.date(year, month, 1)
+
+
+def _time_distribution(qs, earliest_date: datetime.date | None) -> dict:
+    """Compute Week/Month/Year arrow-count series, including zero-arrow gap periods.
+
+    Periods before the archer's first-ever session are never padded in.
+    """
+    if earliest_date is None:
+        return {
+            "week": {"labels": [], "data": []},
+            "month": {"labels": [], "data": []},
+            "year": {"labels": [], "data": []},
+        }
+
+    today = timezone.localdate()
+
+    # --- Weekly ---
+    current_week_start = _week_start(today)
+    week_starts = [
+        current_week_start - datetime.timedelta(weeks=i)
+        for i in range(_WEEKS_SHOWN - 1, -1, -1)
+    ]
+    earliest_week_start = _week_start(earliest_date)
+    week_starts = [w for w in week_starts if w >= earliest_week_start]
+    weekly_totals = {
+        row["period"]: row["total"]
+        for row in (
+            qs.annotate(period=TruncWeek("date"))
+            .values("period")
+            .annotate(total=Coalesce(Sum("total_arrows"), 0))
+        )
+    }
+    week_series = {
+        "labels": [f"{w.day} {w.strftime('%b')}" for w in week_starts],
+        "data": [weekly_totals.get(w, 0) for w in week_starts],
+    }
+
+    # --- Monthly ---
+    current_month_start = _month_start(today)
+    month_starts = [
+        _shift_month(current_month_start, -i) for i in range(_MONTHS_SHOWN - 1, -1, -1)
+    ]
+    earliest_month_start = _month_start(earliest_date)
+    month_starts = [m for m in month_starts if m >= earliest_month_start]
+    monthly_totals = {
+        row["period"]: row["total"]
+        for row in (
+            qs.annotate(period=TruncMonth("date"))
+            .values("period")
+            .annotate(total=Coalesce(Sum("total_arrows"), 0))
+        )
+    }
+    month_series = {
+        "labels": [m.strftime("%B %Y") for m in month_starts],
+        "data": [monthly_totals.get(m, 0) for m in month_starts],
+    }
+
+    # --- Yearly ---
+    years = [today.year - i for i in range(_YEARS_SHOWN - 1, -1, -1)]
+    years = [y for y in years if y >= earliest_date.year]
+    yearly_totals = {
+        row["period"].year: row["total"]
+        for row in (
+            qs.annotate(period=TruncYear("date"))
+            .values("period")
+            .annotate(total=Coalesce(Sum("total_arrows"), 0))
+        )
+    }
+    year_series = {
+        "labels": [str(y) for y in years],
+        "data": [yearly_totals.get(y, 0) for y in years],
+    }
+
+    return {"week": week_series, "month": month_series, "year": year_series}
 
 
 def _avg_or_none(qs, field: str) -> dict:
@@ -64,6 +160,11 @@ class StatisticsView(TemplateView):
         ctx["total_non_scoring_arrows"] = (
             totals["total_arrows"] - totals["total_scoring_arrows"]
         )
+
+        # --- Time distribution (Overview chart) ---
+        earliest_date = qs.aggregate(earliest=Min("date"))["earliest"]
+        ctx["time_distribution"] = _time_distribution(qs, earliest_date)
+        ctx["has_time_distribution_data"] = totals["total_sessions"] > 0
 
         # --- Sessions by bow ---
         raw_bow = list(

@@ -931,3 +931,57 @@ details[open] .settings-card-chevron {
     color: var(--color-text-muted);
     line-height: 1.6;
 }
+
+/* Time-distribution chart block (Overview section) — separated from the
+ * stat cards above by a visible vertical gap, since they're a distinct
+ * visual group (view controls + a chart, not another row of stats). */
+.stats-chart-block {
+    margin-top: var(--sp-6);
+    padding-top: var(--sp-5);
+    border-top: 1px solid var(--color-border);
+}
+
+/* View-control buttons (time-frame toggle) — deliberately subdued/outlined,
+ * distinct from .btn-primary, to read as "chart display option" rather
+ * than a primary action. */
+.stats-timeframe-selector {
+    display: flex;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-4);
+}
+
+.stats-timeframe-btn {
+    padding: 0.4rem 1rem;
+    border: 1.5px solid var(--color-btn-sec-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-card);
+    color: var(--color-text-muted);
+    font-family: var(--font);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.stats-timeframe-btn:hover {
+    background: #f9fafb;
+}
+
+.stats-timeframe-btn.is-active {
+    background: var(--color-stat-card-bg);
+    border-color: #c9a961;
+    color: var(--color-text);
+}
+
+.stats-chart-canvas-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    height: 300px;
+    overflow-x: auto;
+}
+
+.stats-chart-empty {
+    margin-top: var(--sp-6);
+    border-top: 1px solid var(--color-border);
+}

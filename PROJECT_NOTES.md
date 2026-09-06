@@ -38,6 +38,26 @@ The `sessions` app must be registered in `INSTALLED_APPS` as `"sessions.apps.Ses
 
 ---
 
+## Frontend dependencies
+
+The app is otherwise dependency-free on the frontend (vanilla JS, plain CSS). One exception:
+
+- **Chart.js v4.5.1** — used for the Statistics page's time-distribution chart (see below). Chosen for its small footprint and good compatibility with server-rendered Django pages (no build step, no framework required — just a `<script>` tag and a `<canvas>`).
+- Vendored locally at `static/js/vendor/chart.min.js` (UMD, minified), **not loaded from a CDN** — keeps the app self-contained and reliable offline, consistent with running entirely locally. The template comment above the `<script>` tag records the exact source URL and version for future upgrades.
+- Any future chart needs should reuse this same vendored copy rather than adding another charting library.
+
+---
+
+## Design rule — in-page views vs. modals
+
+**Modals are for actions** (create, edit, delete, confirm) — anything that changes data or requires a decision before returning to the page.
+
+**In-page views are for data** (charts, reports, dashboards, tables) — anything the user is just looking at. A chart is a view of data, not an action, so it belongs directly in the page (e.g. inside an expandable card section), never behind a modal.
+
+This emerged explicitly during the time-distribution chart design conversation and generalizes to any future visualization or report: don't reach for a modal just because something feels like "extra" content — ask whether it's an action or a view first.
+
+---
+
 ## Visual identity
 
 The app intentionally blends two aesthetics: a **classical brand** (the header) and **modern UI** (the buttons and modals inside the page).
@@ -702,15 +722,27 @@ No charts, no filters, no user-controlled parameters.
 
 ### What the MVP shows
 Six collapsible sections, all **collapsed by default** (the user expands whichever they want to read). No persistence — sections return to collapsed on each page load, which keeps the initial view clean.
-1. **Overview** — total sessions, sessions this year, total arrows, scoring arrows, non-scoring arrows.
+1. **Overview** — total sessions, sessions this year, total arrows, scoring arrows, non-scoring arrows. Below the stat cards: a **time-distribution chart** (see below).
 2. **Sessions by bow** — table of (bow, sessions_count, arrows_count), sorted by sessions desc. "(no bow recorded)" row appended only when such sessions exist.
 3. **Location and distance** — indoor/outdoor counts; distance breakdown sorted ascending. "(not recorded)" rows appear only when such sessions exist.
 4. **Session types** — blank bale vs scored counts.
 5. **Subjective variable averages** — per-field average (1–5) and session count. Three categorical most-common tables (weather, wind direction, time of day). Both classes gate at N≥5: if fewer than 5 non-null values, "Insufficient data" is shown instead.
 6. **Score analysis** — gated at 20+ scored sessions. When under the threshold, shows an honest count-and-threshold message. When over, shows average/best/worst score.
 
+### Time-distribution chart (Overview section) — ✅ SHIPPED
+Lives directly inside the Overview section's expanded body, below the 5 stat cards — an in-page view, not a modal (see "Design rule — in-page views vs. modals" below).
+
+- **Chart type:** columns (bars) only. No pie, line, scatter, zoom, pan, or drill-down.
+- **Metric:** total arrows shot per time period (`total_arrows`, summed; null counts as 0).
+- **Time frames:** Week (last 12 weeks), Month (last 12 months), Year (last 5 years) — a three-button toggle group, styled as subdued view controls (outlined, not primary blue) so they read as display options rather than actions.
+- **Default selection:** Month.
+- **Zero-count periods:** gap periods (e.g. a week with no sessions) render as an explicit 0 bar, not a missing bar. Periods are never padded before the archer's first-ever logged session.
+- **Empty state:** with zero sessions total, an italic message replaces the selector+chart entirely ("No sessions logged yet. Log a session to see your training distribution.").
+- **Computation:** `analytics/views.py` computes all three series server-side per request using `TruncWeek`/`TruncMonth`/`TruncYear` + `Coalesce(Sum(...), 0)`, then fills any ORM-skipped zero periods in Python. All three series are passed to the template in one request — no AJAX. The frontend only swaps `chart.data`/`chart.update()` on button click.
+- **Purely descriptive:** no interpretation, coaching, or advice — consistent with the app's North Star.
+- **Scoring-session differentiation — deliberately deferred.** The chart does not color-code or distinguish scoring vs. blank-bale sessions. With only ~2 scoring sessions out of ~36 total at the time this shipped, differentiating them would be visual noise, not signal. Revisit once scoring sessions reach 15+.
+
 ### What is NOT built (deliberate scope boundary)
-- No charts or visualizations (deferred; will need Chart.js or similar when desired).
 - No filters, date range pickers, or exploration tools (deferred).
 - No Excel/CSV data export (deferred).
 - Score analysis is currently locked (threshold: 20 scored sessions; current count: far below).
@@ -731,7 +763,8 @@ Apply this pattern to any future stat that could be meaningless on small samples
 ### Statistics MVP: ✅ DONE
 - `/mystatistics/` page ships with all six sections and honest insufficient-data messages.
 - Sections default to collapsed for a clean initial view; each uses the shared expandable-card pattern (same as Settings).
-- Statistics enhancements (charts, exports, exploration): possible future work; wait for real usage to reveal what's genuinely wanted.
+- **Overview time-distribution chart: ✅ SHIPPED.** Chart.js bar chart with Week/Month/Year toggle, in-page (no modal). See "Time-distribution chart" above.
+- Similar in-section charts could later be added to other Statistics sections (Sessions by bow, Location and distance, etc.) — each should be its own focused prompt driven by a real question that comes up in practice, not "chart everything" for its own sake.
 
 ### Next: Mirror / analysis
 - Deferred until 30+ scored sessions exist with rich subjective data.

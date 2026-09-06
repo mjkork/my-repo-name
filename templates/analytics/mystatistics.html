@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Statistics — MyShots{% endblock %}
 
@@ -39,6 +40,22 @@
                     <div class="stat-card-value">{{ total_non_scoring_arrows }}</div>
                 </div>
             </div>
+
+            {% if has_time_distribution_data %}
+            {{ time_distribution|json_script:"time-distribution-data" }}
+            <div class="stats-chart-block">
+                <div class="stats-timeframe-selector" role="group" aria-label="Chart time frame">
+                    <button type="button" class="stats-timeframe-btn" data-timeframe="week">Week</button>
+                    <button type="button" class="stats-timeframe-btn is-active" data-timeframe="month">Month</button>
+                    <button type="button" class="stats-timeframe-btn" data-timeframe="year">Year</button>
+                </div>
+                <div class="stats-chart-canvas-wrap">
+                    <canvas id="time-distribution-chart" height="300"></canvas>
+                </div>
+            </div>
+            {% else %}
+            <p class="empty-state stats-chart-empty">No sessions logged yet. Log a session to see your training distribution.</p>
+            {% endif %}
         </div>
     </details>
 
@@ -281,4 +298,14 @@
 
     </div>{# end .stats-sections #}
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if has_time_distribution_data %}
+<!-- Chart.js v4.5.1 UMD (minified), vendored locally from
+     https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js
+     for offline reliability — not loaded from a CDN. -->
+<script src="{% static 'js/vendor/chart.min.js' %}"></script>
+<script src="{% static 'js/stats-chart.js' %}"></script>
+{% endif %}
 {% endblock %}
