@@ -203,6 +203,11 @@ class TestStatisticsSessionTypes:
         SessionFactory(scoring_arrows=30, total_score=None)
         assert self._ctx(client)["scored_sessions"] == 0
 
+    def test_non_scored_label_rendered(self, client):
+        html = client.get(URL).content.decode()
+        assert "Non-scored session" in html
+        assert "Blank bale" not in html
+
 
 @pytest.mark.django_db
 class TestStatisticsNoBowEdgeCase:

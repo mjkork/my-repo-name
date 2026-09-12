@@ -725,7 +725,7 @@ Six collapsible sections, all **collapsed by default** (the user expands whichev
 1. **Overview** — total sessions, sessions this year, total arrows, scoring arrows, non-scoring arrows. Below the stat cards: a **time-distribution chart** (see below).
 2. **Sessions by bow** — table of (bow, sessions_count, arrows_count), sorted by sessions desc. "(no bow recorded)" row appended only when such sessions exist.
 3. **Location and distance** — indoor/outdoor counts; distance breakdown sorted ascending. "(not recorded)" rows appear only when such sessions exist.
-4. **Session types** — blank bale vs scored counts.
+4. **Session types** — "Non-scored session" vs "Scored" counts. Labeled "Non-scored session" rather than "Blank bale" because the grouping covers any session with no recorded score, which includes shooting at a target face without tracking the score — not just true blank bale (a blank surface, no target face).
 5. **Subjective variable averages** — per-field average (1–5) and session count. Three categorical most-common tables (weather, wind direction, time of day). Both classes gate at N≥5: if fewer than 5 non-null values, "Insufficient data" is shown instead.
 6. **Score analysis** — gated at 20+ scored sessions. When under the threshold, shows an honest count-and-threshold message. When over, shows average/best/worst score.
 
