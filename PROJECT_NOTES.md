@@ -67,10 +67,11 @@ The app intentionally blends two aesthetics: a **classical brand** (the header) 
 - Earthy palette: forest green (`#2d4a2e`) to warm brown (`#4a3826`)
 - Aged-gold accents (`#c9a961`, `#b8965a`)
 - Serif typography (Georgia)
-- Left-positioned logo composition: a stylized gold bow tucked against the MYSHOTS wordmark, with a diagonal arrow passing through the wordmark area, and the italic tagline "Archery Companion" below it, also left-aligned. The right side of the banner is intentionally empty gradient.
+- Typography-only design: the MYSHOTS wordmark with the italic tagline "Archery Companion" beneath it, both left-positioned. No bow motif at this scale — a bow illustration doesn't read cleanly at the banner's slim rendered height, so it was dropped.
 - Thin decorative gold border lines top and bottom
-- Aspect ratio 8.5:1 (viewBox 680×80) — changed from the earlier 20:1 (2000×100) to give the logo composition more vertical room. `.page-header img { width: 100%; height: auto; }` in `main.css` renders it at natural proportions, so no CSS change was needed for the switch.
-- This is v1 of the redesigned banner (previous version used a "Training Journal" tagline and small bow/target ornaments, both since removed); further visual iterations are expected.
+- Slim aspect ratio, 20:1 (viewBox 680×34), matching the banner's full-width rendered container. CSS is the simple `.page-header img { width: 100%; height: auto; display: block; }` — no `max-height`, `object-fit`, or wrapping container needed.
+- Design principle learned from iterating on a taller (8.5:1) version with a bow motif: the SVG's aspect ratio must match the aspect ratio of its rendering container (full browser width, capped height). CSS alone can't reconcile a mismatch between the two without either letterboxing (gray gaps) or cropping (`object-fit: cover`) — both were tried and rejected. The fix was redesigning the SVG at the container's natural ratio, not compensating in CSS.
+- This is the current banner version (earlier iterations used a "Training Journal" tagline, then a taller bow-motif design; both superseded).
 
 ### Body UI
 - Sans-serif font throughout (system font stack)
