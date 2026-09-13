@@ -63,12 +63,14 @@ This emerged explicitly during the time-distribution chart design conversation a
 The app intentionally blends two aesthetics: a **classical brand** (the header) and **modern UI** (the buttons and modals inside the page).
 
 ### Header
-- Custom SVG banner at the top of every non-homepage view
+- Custom SVG banner at the top of every page (`static/img/myshots_page_header_wide.svg`)
 - Earthy palette: forest green (`#2d4a2e`) to warm brown (`#4a3826`)
 - Aged-gold accents (`#c9a961`, `#b8965a`)
 - Serif typography (Georgia)
-- Decorative double border, longbow + target ornaments
-- Wide aspect ratio (2000×100) so it stays slim across screen sizes
+- Left-positioned logo composition: a stylized gold bow tucked against the MYSHOTS wordmark, with a diagonal arrow passing through the wordmark area, and the italic tagline "Archery Companion" below it, also left-aligned. The right side of the banner is intentionally empty gradient.
+- Thin decorative gold border lines top and bottom
+- Aspect ratio 8.5:1 (viewBox 680×80) — changed from the earlier 20:1 (2000×100) to give the logo composition more vertical room. `.page-header img { width: 100%; height: auto; }` in `main.css` renders it at natural proportions, so no CSS change was needed for the switch.
+- This is v1 of the redesigned banner (previous version used a "Training Journal" tagline and small bow/target ornaments, both since removed); further visual iterations are expected.
 
 ### Body UI
 - Sans-serif font throughout (system font stack)
