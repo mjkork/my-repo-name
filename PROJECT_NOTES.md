@@ -46,6 +46,10 @@ The app is otherwise dependency-free on the frontend (vanilla JS, plain CSS). On
 - Vendored locally at `static/js/vendor/chart.min.js` (UMD, minified), **not loaded from a CDN** — keeps the app self-contained and reliable offline, consistent with running entirely locally. The template comment above the `<script>` tag records the exact source URL and version for future upgrades.
 - Any future chart needs should reuse this same vendored copy rather than adding another charting library.
 
+## Backend dependencies
+
+- **openpyxl** — writes the `.xlsx` file for the Settings page's Excel export (see "Settings (preferences app)" below). Chosen over `pandas` (too heavy for writing a single sheet) and `xlsxwriter` (openpyxl is the more standard Django choice and this app has no other spreadsheet-reading need).
+
 ---
 
 ## Design rule — in-page views vs. modals
@@ -718,6 +722,26 @@ for.
    focused prompt; cascades to URL namespace, templates, tests.
 ---
 ---
+## Settings (preferences app)
+
+The `/mysettings/` page hosts three cards, in order: **Manage Backups**, **Manage page properties**, **Export data for analysis**. The first and third are non-expandable single-action cards (reuse the `.settings-card` + `.settings-card-title` + right-aligned button layout); the middle one is the expandable `.settings-card--expandable` pattern.
+
+### Two data-export flows, different purposes
+- **JSON backup** (`myshots-backup-YYYY-MM-DD.json`, `preferences:backup_download`) — disaster recovery. Built on `dumpdata` with natural keys, structured so it round-trips through Django's `loaddata`. Covers all models (excluding `contenttypes`, `auth.permission`, and Django's own `django.contrib.sessions`).
+- **Excel export** (`myshots-export-YYYY-MM-DD.xlsx`, `preferences:export_download`) — external analysis. One row per Session, flattened and human/tool-readable, for pandas, spreadsheet tools, or another AI to consume directly.
+
+Both flows exist and serve different needs — the JSON backup is not a substitute for the Excel export or vice versa.
+
+### Excel export details
+- Session data only — one worksheet named `"Sessions"`, ordered chronologically (`date` ascending, then `pk` ascending, overriding the model's default `-date` list ordering).
+- Does **not** include the Bows table, equipment setups, or user preferences — those aren't needed for session-level analysis. If multi-bow equipment analysis is wanted later, the natural extension is a second worksheet (not a schema change to the first).
+- 27 columns, covering every Session field: basics (`session_id`, `date`, `name`, `bow_name`, `location`, `distance_m`), shooting details, environmental conditions, personal state, session experience, and reflection fields. Exact order is defined by `EXPORT_COLUMNS` in `preferences/views.py`.
+- `date` is written as a plain `YYYY-MM-DD` string, never an Excel date object — avoids timezone/locale rendering surprises for downstream tools.
+- The four 1–5 ordinal scale fields (`wind_force`, `nutrition`, `stress`, `fatigue`) each get **two** columns: the raw integer (for correlation) and a paired `_label` column (e.g. `wind_force_label` = "Medium") for human readability.
+- Blank/null values render as an empty cell, never the literal text "None".
+- Header row is bold; column widths are set manually (openpyxl has no autofit).
+
+---
 ## Statistics (analytics app)
 
 The `/mystatistics/` page is a fixed MVP dashboard — numbers and tables only.
@@ -747,7 +771,6 @@ Lives directly inside the Overview section's expanded body, below the 5 stat car
 
 ### What is NOT built (deliberate scope boundary)
 - No filters, date range pickers, or exploration tools (deferred).
-- No Excel/CSV data export (deferred).
 - Score analysis is currently locked (threshold: 20 scored sessions; current count: far below).
 - No correlation analysis between subjective variables and score — requires very careful design and sufficient data; may never be built as an automated stat.
 - No AI-driven interpretation, diagnosis, or advice (violates the North Star — explicit non-goal).

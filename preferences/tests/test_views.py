@@ -1,11 +1,16 @@
+import datetime
 import json
+from io import BytesIO
 
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from openpyxl import load_workbook
 
 from equipment.tests.factories import BowFactory
 from preferences.models import UserPreferences
+from preferences.views import EXPORT_COLUMNS
+from sessions.models import Session
 from sessions.tests.factories import SessionFactory
 
 
@@ -34,6 +39,15 @@ class TestMySettingsView:
     def test_manage_page_properties_card_present(self, client):
         response = client.get(reverse("preferences:mysettings"))
         assert b"Manage page properties" in response.content
+
+    def test_export_data_card_present(self, client):
+        response = client.get(reverse("preferences:mysettings"))
+        assert b"Export data for analysis" in response.content
+
+    def test_download_excel_link_present(self, client):
+        response = client.get(reverse("preferences:mysettings"))
+        assert b"Download Excel" in response.content
+        assert b"/mysettings/export/download/" in response.content
 
     def test_sessions_per_page_dropdown_present(self, client):
         response = client.get(reverse("preferences:mysettings"))
@@ -188,3 +202,87 @@ class TestBackupDownloadView:
         response = client.get(reverse("preferences:backup_download"))
         data = json.loads(response.content)
         assert isinstance(data, list)
+
+
+@pytest.mark.django_db
+class TestExportDownloadView:
+    def test_get_returns_200(self, client):
+        response = client.get(reverse("preferences:export_download"))
+        assert response.status_code == 200
+
+    def test_content_type_is_xlsx(self, client):
+        response = client.get(reverse("preferences:export_download"))
+        assert response["Content-Type"] == (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    def test_content_disposition_is_attachment_with_today_and_xlsx(self, client):
+        response = client.get(reverse("preferences:export_download"))
+        today = str(timezone.localdate())
+        expected = f'filename="myshots-export-{today}.xlsx"'
+        assert "attachment" in response["Content-Disposition"]
+        assert expected in response["Content-Disposition"]
+
+    def test_url_reversible(self):
+        assert reverse("preferences:export_download") == "/mysettings/export/download/"
+
+    def test_export_data_integrity(self, client):
+        bow = BowFactory(name="Export Test Bow")
+        session_with_bow = SessionFactory(
+            name="Session A",
+            date=datetime.date(2024, 6, 1),
+            bow=bow,
+            location=Session.Location.OUTDOOR,
+            distance_m=50,
+            total_arrows=36,
+            scoring_arrows=36,
+            target_face=Session.TargetFace.CM_122,
+            total_score=300,
+            wind_force=Session.WindForce.MEDIUM,
+            stress=Session.Stress.LOW,
+            fatigue=None,
+            notes="",
+        )
+        SessionFactory(
+            name="Session B",
+            date=datetime.date(2024, 6, 2),
+            bow=None,
+            location=Session.Location.INDOOR,
+        )
+        SessionFactory(
+            name="Session C",
+            date=datetime.date(2024, 6, 3),
+        )
+
+        response = client.get(reverse("preferences:export_download"))
+        workbook = load_workbook(BytesIO(response.content))
+
+        assert workbook.sheetnames == ["Sessions"]
+        sheet = workbook["Sessions"]
+
+        assert sheet.max_row == 4  # header + 3 sessions
+
+        header_row = [cell.value for cell in sheet[1]]
+        assert header_row == [col for col, _, _ in EXPORT_COLUMNS]
+
+        first_data_row = {
+            header: cell.value
+            for header, cell in zip(header_row, sheet[2], strict=True)
+        }
+        assert first_data_row["session_id"] == session_with_bow.pk
+        assert first_data_row["date"] == "2024-06-01"
+        assert first_data_row["name"] == "Session A"
+        assert first_data_row["bow_name"] == "Export Test Bow"
+        assert first_data_row["wind_force"] == 3
+        assert first_data_row["wind_force_label"] == "Medium"
+        # openpyxl round-trips a blank cell as None rather than "" — either
+        # way, the cell is empty, never the literal text "None".
+        assert first_data_row["fatigue"] in (None, "")
+        assert first_data_row["notes"] in (None, "")
+
+        second_data_row = {
+            header: cell.value
+            for header, cell in zip(header_row, sheet[3], strict=True)
+        }
+        assert second_data_row["bow_name"] in (None, "")
+        assert second_data_row["bow_name"] != "None"

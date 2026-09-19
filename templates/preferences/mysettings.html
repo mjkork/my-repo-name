@@ -35,6 +35,14 @@
                 </div>
             </details>
         </li>
+
+        <li class="settings-card">
+            <div class="settings-card-row list-row">
+                <span class="settings-card-title">Export data for analysis</span>
+                <a href="{% url 'preferences:export_download' %}" class="btn btn-primary">Download Excel</a>
+            </div>
+            <p class="settings-card-hint">Downloads all session data as an .xlsx file for use with external analysis tools.</p>
+        </li>
     </ul>
 </div>
 {% endblock %}

@@ -2,6 +2,7 @@ from django.urls import path
 
 from preferences.views import (
     BackupDownloadView,
+    ExportDownloadView,
     MySettingsView,
     UpdatePreferencesView,
 )
@@ -19,5 +20,10 @@ urlpatterns = [
         "mysettings/backup/download/",
         BackupDownloadView.as_view(),
         name="backup_download",
+    ),
+    path(
+        "mysettings/export/download/",
+        ExportDownloadView.as_view(),
+        name="export_download",
     ),
 ]

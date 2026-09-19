@@ -479,6 +479,20 @@ details[open] .settings-card-chevron {
     color: var(--color-text);
 }
 
+/* Non-expandable card with a helper line below the title+action row (e.g. Export data) */
+.settings-card-row {
+    display: flex;
+    align-items: center;
+}
+
+.settings-card-hint {
+    margin: var(--sp-2) 0 0;
+    font-size: var(--text-sm);
+    font-style: italic;
+    color: var(--color-text-muted);
+    text-align: center;
+}
+
 /* ---- Bow detail (view modal) ---- */
 .bow-detail-grid {
     display: grid;
