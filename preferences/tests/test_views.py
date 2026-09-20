@@ -228,7 +228,7 @@ class TestExportDownloadView:
 
     def test_export_data_integrity(self, client):
         bow = BowFactory(name="Export Test Bow")
-        session_with_bow = SessionFactory(
+        SessionFactory(
             name="Session A",
             date=datetime.date(2024, 6, 1),
             bow=bow,
@@ -269,7 +269,6 @@ class TestExportDownloadView:
             header: cell.value
             for header, cell in zip(header_row, sheet[2], strict=True)
         }
-        assert first_data_row["session_id"] == session_with_bow.pk
         assert first_data_row["date"] == "2024-06-01"
         assert first_data_row["name"] == "Session A"
         assert first_data_row["bow_name"] == "Export Test Bow"

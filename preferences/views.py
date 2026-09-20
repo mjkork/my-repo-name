@@ -63,7 +63,6 @@ class BackupDownloadView(View):
 
 # (column header, width, callable extracting the cell value from a Session)
 EXPORT_COLUMNS = [
-    ("session_id", 10, lambda s: s.pk),
     ("date", 12, lambda s: s.date.isoformat()),
     ("name", 25, lambda s: s.name),
     ("bow_name", 20, lambda s: s.bow.name if s.bow else ""),
