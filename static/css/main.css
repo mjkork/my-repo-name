@@ -753,10 +753,11 @@ details[open] .settings-card-chevron {
     font-style: italic;
 }
 
-/* Focus card — BEM modifier on .stat-card; same beige/border family, text-content layout */
+/* Focus card — BEM modifier on .stat-card; same beige/border family, text-content layout.
+   flex: 1 with no max-width lets it fill the row's remaining width, so its right
+   edge lines up with the button row's right edge (both share .page-wrap). */
 .stat-card--focus {
     flex: 1;
-    max-width: 480px;
     display: flex;
     flex-direction: column;
 }

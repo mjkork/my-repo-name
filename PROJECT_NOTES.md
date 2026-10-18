@@ -425,6 +425,8 @@ The right side of the homepage is intentionally empty pending the subjective var
 
 A "recent sessions mini-list" was considered and rejected — the totals + per-bow tooltip already serve the "what have I done lately" need; a recent list would duplicate that less elegantly.
 
+**Layout:** `.stat-card-row` and the entry-button row above it (`.home-actions`) both sit directly inside the shared `.page-wrap` container, so they already span the same content width — no separate alignment plumbing needed. The two stat cards keep their fixed `min-width`; the Focus card (`.stat-card--focus`) uses `flex: 1` with no `max-width`, so it grows to fill the row's remaining width and its right edge lines up with the Settings button's right edge.
+
 ---
 ### Scored sessions architecture
 
