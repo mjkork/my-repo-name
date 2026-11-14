@@ -751,7 +751,7 @@ No charts, no filters, no user-controlled parameters.
 
 ### What the MVP shows
 Six collapsible sections, all **collapsed by default** (the user expands whichever they want to read). No persistence — sections return to collapsed on each page load, which keeps the initial view clean.
-1. **Overview** — total sessions, sessions this year, total arrows, scoring arrows, non-scoring arrows. Below the stat cards: a **time-distribution chart** (see below).
+1. **Overview** — total sessions, sessions this year, total arrows, scoring arrows, non-scoring arrows. Below the stat cards: a **time-distribution chart** (see below). The "Scoring arrows" card has a small muted secondary line ("from N scoring rounds") giving the round count behind that arrow total; omitted when N is 0, singular wording at N=1. It reuses the exact `scored_sessions` value computed for the Session Types "Scored" count (see point 4) rather than a separate query, so the two numbers can never drift apart. "Scoring round" assumes one scored round per session — a deliberate simplification; revisit if a session with multiple scored rounds in it ever becomes a real case.
 2. **Sessions by bow** — table of (bow, sessions_count, arrows_count), sorted by sessions desc. "(no bow recorded)" row appended only when such sessions exist.
 3. **Location and distance** — indoor/outdoor counts; distance breakdown sorted ascending. "(not recorded)" rows appear only when such sessions exist.
 4. **Session types** — "Non-scored session" vs "Scored" counts. Labeled "Non-scored session" rather than "Blank bale" because the grouping covers any session with no recorded score, which includes shooting at a target face without tracking the score — not just true blank bale (a blank surface, no target face).

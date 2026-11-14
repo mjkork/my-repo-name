@@ -34,6 +34,9 @@
                 <div class="stat-card">
                     <div class="stat-card-label">Scoring arrows</div>
                     <div class="stat-card-value">{{ total_scoring_arrows }}</div>
+                    {% if scored_sessions > 0 %}
+                    <div class="stat-card-sublabel">from {{ scored_sessions }} scoring round{{ scored_sessions|pluralize }}</div>
+                    {% endif %}
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-label">Non-scoring arrows</div>

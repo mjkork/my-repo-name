@@ -210,6 +210,31 @@ class TestStatisticsSessionTypes:
 
 
 @pytest.mark.django_db
+class TestStatisticsScoringArrowsSublabel:
+    """Secondary line under the Scoring arrows card: 'from N scoring rounds'."""
+
+    def test_sublabel_absent_with_zero_scored_sessions(self, client):
+        html = client.get(URL).content.decode()
+        assert "scoring round" not in html
+
+    def test_sublabel_singular_with_one_scored_session(self, client):
+        SessionFactory(scoring_arrows=30, total_score=255)
+        html = client.get(URL).content.decode()
+        assert "from 1 scoring round" in html
+        assert "from 1 scoring rounds" not in html
+
+    def test_sublabel_plural_matches_session_types_scored_count(self, client):
+        SessionFactory(scoring_arrows=30, total_score=255)
+        SessionFactory(scoring_arrows=30, total_score=270)
+        SessionFactory(scoring_arrows=30, total_score=240)
+        response = client.get(URL)
+        html = response.content.decode()
+        scored_sessions = response.context["scored_sessions"]
+        assert scored_sessions == 3
+        assert f"from {scored_sessions} scoring rounds" in html
+
+
+@pytest.mark.django_db
 class TestStatisticsNoBowEdgeCase:
     def test_no_bow_row_appears_when_null_bow_sessions_exist(self, client):
         SessionFactory(bow=None, total_arrows=20)
