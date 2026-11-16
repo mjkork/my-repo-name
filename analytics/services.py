@@ -1,5 +1,7 @@
 """Reusable presentation helpers for the Statistics page."""
 
+import math
+
 from django.db.models import Q
 
 
@@ -41,3 +43,28 @@ def build_bar_rows(pairs: list[tuple[str, int]]) -> list[dict]:
             {"label": label, "count": count, "percent": percent, "width": width}
         )
     return rows
+
+
+def build_scale_marker(average: float, labels: list[str]) -> dict:
+    """Position-on-scale data for a 1-5 average, given the scale's 5 ordered labels.
+
+    `labels` is the scale's labels in declared order (label for 1 first, label
+    for 5 last) — e.g. Session.Stress.labels. Returns:
+    - `average` — formatted to one decimal place, e.g. "1.7".
+    - `nearest_label` — the label for the average rounded to the nearest integer,
+      rounding .5 up (not Python's round-half-to-even).
+    - `position` — percent along the track, (average - 1) / 4 * 100.
+    - `low_label` / `high_label` — the labels for 1 and 5.
+
+    This marks a *position*, not a quantity — there is no good/bad framing here,
+    since scale polarity differs by variable (see PROJECT_NOTES.md).
+    """
+    nearest_index = math.floor(average + 0.5)
+    nearest_index = min(max(nearest_index, 1), 5)
+    return {
+        "average": f"{average:.1f}",
+        "nearest_label": labels[nearest_index - 1],
+        "position": round((average - 1) / 4 * 100, 2),
+        "low_label": labels[0],
+        "high_label": labels[-1],
+    }

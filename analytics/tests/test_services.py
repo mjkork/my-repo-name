@@ -1,4 +1,4 @@
-from analytics.services import build_bar_rows
+from analytics.services import build_bar_rows, build_scale_marker
 
 
 class TestBuildBarRows:
@@ -29,3 +29,36 @@ class TestBuildBarRows:
 
     def test_empty_input_returns_empty_list(self):
         assert build_bar_rows([]) == []
+
+
+_LABELS = ["Very low", "Low", "Medium", "High", "Very high"]
+
+
+class TestBuildScaleMarker:
+    def test_average_1_0_gives_position_0_and_lowest_label(self):
+        marker = build_scale_marker(1.0, _LABELS)
+        assert marker["position"] == 0
+        assert marker["nearest_label"] == "Very low"
+        assert marker["average"] == "1.0"
+
+    def test_average_5_0_gives_position_100_and_highest_label(self):
+        marker = build_scale_marker(5.0, _LABELS)
+        assert marker["position"] == 100
+        assert marker["nearest_label"] == "Very high"
+
+    def test_average_1_7_gives_position_17_5_and_rounds_to_label_2(self):
+        marker = build_scale_marker(1.7, _LABELS)
+        assert marker["position"] == 17.5
+        assert marker["nearest_label"] == "Low"
+        assert marker["average"] == "1.7"
+
+    def test_average_2_5_rounds_half_up_to_label_3(self):
+        """2.5 must round up to label 3 ("Medium"); Python's banker's
+        rounding would give label 2 ("Low") instead."""
+        marker = build_scale_marker(2.5, _LABELS)
+        assert marker["nearest_label"] == "Medium"
+
+    def test_low_and_high_labels_are_the_scale_ends(self):
+        marker = build_scale_marker(3.0, _LABELS)
+        assert marker["low_label"] == "Very low"
+        assert marker["high_label"] == "Very high"

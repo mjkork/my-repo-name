@@ -26,7 +26,7 @@ class TestStatisticsViewRenders:
             "Sessions by bow",
             "Location and distance",
             "Session types",
-            "Subjective variable averages",
+            "Conditions and how you felt",
             "Score analysis",
         ):
             assert heading in html, f"Section heading '{heading}' missing from page"
@@ -89,10 +89,14 @@ class TestStatisticsAggregationsEmpty:
         ):
             assert ctx[key]["avg"] is None, f"{key} avg should be None with no data"
 
-    def test_all_categorical_labels_are_none(self, client):
+    def test_all_categorical_breakdowns_are_gated(self, client):
         ctx = self._ctx(client)
-        for key in ("common_weather", "common_wind_direction", "common_time_of_day"):
-            assert ctx[key]["label"] is None, f"{key} label should be None with no data"
+        for key in (
+            "weather_breakdown",
+            "wind_direction_breakdown",
+            "time_of_day_breakdown",
+        ):
+            assert ctx[key]["bar_rows"] is None, f"{key} should be gated with no data"
 
     def test_score_analysis_not_available(self, client):
         assert self._ctx(client)["score_analysis"]["available"] is False
@@ -183,6 +187,80 @@ class TestStatisticsAggregationsSufficientData:
     def test_other_averages_still_insufficient(self, client):
         ctx = self._ctx(client)
         assert ctx["avg_stress"]["avg"] is None
+
+
+@pytest.mark.django_db
+class TestStatisticsSubjectiveVariables:
+    """Subjective variable averages: scale markers, numeric rows, bar rows."""
+
+    def _html(self, client):
+        return client.get(URL).content.decode()
+
+    def test_scale_variables_render_nearest_label_and_average(self, client):
+        for _ in range(5):
+            SessionFactory(stress=2, fatigue=4, nutrition=1, wind_force=5)
+        html = self._html(client)
+        assert "Low &middot; 2.0" in html  # stress
+        assert "High &middot; 4.0" in html  # fatigue
+        assert "Very poor &middot; 1.0" in html  # nutrition
+        assert "Very strong &middot; 5.0" in html  # wind_force
+
+    def test_scale_marker_rounds_half_up(self, client):
+        """Alternating 2/3 averages to 2.5, which must round UP to label 3."""
+        for _ in range(3):
+            SessionFactory(stress=2)
+        for _ in range(3):
+            SessionFactory(stress=3)
+        html = self._html(client)
+        assert "Medium &middot; 2.5" in html
+
+    def test_sleep_renders_as_number_with_unit(self, client):
+        for _ in range(5):
+            SessionFactory(sleep_hours=6.4)
+        html = self._html(client)
+        assert "6.4 h" in html
+
+    def test_categorical_renders_bar_rows_with_labels_and_counts(self, client):
+        for _ in range(3):
+            SessionFactory(time_of_day="morning")
+        for _ in range(2):
+            SessionFactory(time_of_day="evening")
+        html = self._html(client)
+        assert "Morning" in html
+        assert "Evening" in html
+        ctx = client.get(URL).context
+        bar_rows = ctx["time_of_day_breakdown"]["bar_rows"]
+        by_label = {row["label"]: row["count"] for row in bar_rows}
+        assert by_label["Morning"] == 3
+        assert by_label["Evening"] == 2
+
+    def test_below_threshold_shows_insufficient_data_with_count(self, client):
+        SessionFactory(stress=3)
+        SessionFactory(stress=4)
+        html = self._html(client)
+        assert "Insufficient data" in html
+        assert "from 2 sessions" in html
+
+    def test_outdoor_only_note_shown_for_outdoor_variables(self, client):
+        html = self._html(client)
+        # Weather and wind direction each show the note twice (heading + the
+        # insufficient-data row); wind force shows it once (no heading of its
+        # own, just its row) — 5 total with no data.
+        assert html.count("outdoor sessions only") == 5
+
+    def test_outdoor_only_note_absent_for_indoor_variables(self, client):
+        for _ in range(5):
+            SessionFactory(stress=3, fatigue=3, nutrition=3, time_of_day="morning")
+        html = self._html(client)
+        # Once real data exists, the always-visible variables render their
+        # markers/bars with no outdoor-only note attached anywhere.
+        assert html.count("outdoor sessions only") == 5  # still just the 3 outdoor ones
+
+    def test_old_table_markup_removed(self, client):
+        html = self._html(client)
+        assert "<th>Variable</th>" not in html
+        assert "Avg (1" not in html
+        assert "Most common" not in html
 
 
 @pytest.mark.django_db

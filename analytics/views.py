@@ -5,7 +5,7 @@ from django.db.models.functions import Coalesce, TruncMonth, TruncWeek, TruncYea
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from analytics.services import build_bar_rows, scored_session_filter
+from analytics.services import build_bar_rows, build_scale_marker, scored_session_filter
 from sessions.models import Session
 
 _SUBJECTIVE_MIN_N = 5
@@ -117,25 +117,34 @@ def _avg_or_none(qs, field: str) -> dict:
     return {"avg": avg if count >= _SUBJECTIVE_MIN_N else None, "count": count}
 
 
-def _most_common_or_none(qs, field: str, choices: list) -> dict:
-    """Return {"label": display_label, "count": n} or {"label": None, "count": n}."""
-    label_map = dict(choices)
-    annotated = (
+def _category_breakdown_or_none(qs, field: str, choices: list) -> dict:
+    """Return {"bar_rows": [...], "count": n} or {"bar_rows": None, "count": n}.
+
+    `bar_rows` covers every choice value in its declared order (zero-count
+    categories included, via build_bar_rows), gated at the same minimum-N
+    threshold as the averages above. `count` is the total non-null, non-blank
+    logged value count, shown even when bar_rows is None so the archer can
+    see how far away the threshold is.
+    """
+    counts = dict(
         qs.filter(**{f"{field}__isnull": False})
         .exclude(**{field: ""})
         .values(field)
         .annotate(count=Count("pk"))
-        .order_by("-count")
+        .values_list(field, "count")
     )
-    total = annotated.aggregate(total=Coalesce(Sum("count"), 0))["total"]
+    total = sum(counts.values())
     if total < _SUBJECTIVE_MIN_N:
-        return {"label": None, "count": total}
-    top = annotated.first()
-    raw_value = top[field] if top else None
-    return {
-        "label": label_map.get(raw_value, raw_value) if raw_value is not None else None,
-        "count": top["count"] if top else 0,
-    }
+        return {"bar_rows": None, "count": total}
+    pairs = [(label, counts.get(value, 0)) for value, label in choices]
+    return {"bar_rows": build_bar_rows(pairs), "count": total}
+
+
+def _marker_or_none(avg_result: dict, labels: list[str]) -> dict | None:
+    """Wrap _avg_or_none's result as a build_scale_marker dict, or None if gated."""
+    if avg_result["avg"] is None:
+        return None
+    return build_scale_marker(avg_result["avg"], labels)
 
 
 class StatisticsView(TemplateView):
@@ -267,14 +276,26 @@ class StatisticsView(TemplateView):
         ctx["avg_wind_force"] = _avg_or_none(qs, "wind_force")
         ctx["avg_sleep_hours"] = _avg_or_none(qs, "sleep_hours")
 
-        # --- Most common categorical values ---
-        ctx["common_weather"] = _most_common_or_none(
+        # --- Scale markers (position on a 1-5 scale, not a quantity) ---
+        ctx["marker_nutrition"] = _marker_or_none(
+            ctx["avg_nutrition"], Session.Nutrition.labels
+        )
+        ctx["marker_stress"] = _marker_or_none(ctx["avg_stress"], Session.Stress.labels)
+        ctx["marker_fatigue"] = _marker_or_none(
+            ctx["avg_fatigue"], Session.Fatigue.labels
+        )
+        ctx["marker_wind_force"] = _marker_or_none(
+            ctx["avg_wind_force"], Session.WindForce.labels
+        )
+
+        # --- Categorical breakdowns (bar rows, one group per variable) ---
+        ctx["weather_breakdown"] = _category_breakdown_or_none(
             qs, "weather", Session.Weather.choices
         )
-        ctx["common_wind_direction"] = _most_common_or_none(
+        ctx["wind_direction_breakdown"] = _category_breakdown_or_none(
             qs, "wind_direction", Session.WindDirection.choices
         )
-        ctx["common_time_of_day"] = _most_common_or_none(
+        ctx["time_of_day_breakdown"] = _category_breakdown_or_none(
             qs, "time_of_day", Session.TimeOfDay.choices
         )
 

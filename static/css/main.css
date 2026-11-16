@@ -981,6 +981,87 @@ details[open] .settings-card-chevron {
     color: var(--color-text-muted);
 }
 
+/* ---- Scale marker (position-on-a-1-5-scale row, Subjective variable averages)
+ * Shares the .bar-row 3-column grid (label | track | value). Marks a position,
+ * not a quantity — the dot and ticks use the same gold/beige tokens as bar
+ * rows, never good/bad colouring, since scale polarity differs per variable. */
+.scale-marker-track-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.scale-marker-track {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 14px;
+    background: var(--color-stat-card-bg);
+    border-radius: var(--radius-md);
+    padding: 0 2px;
+}
+
+.scale-marker-tick {
+    width: 2px;
+    height: 8px;
+    background: var(--color-border);
+    border-radius: 1px;
+}
+
+.scale-marker-dot {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    background: #c9a961;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.scale-marker-endlabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+.scale-marker-value {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.scale-marker-value-line {
+    display: block;
+}
+
+/* Grouping for Subjective variable averages ("Conditions" / "How you felt") */
+.stats-subjective-group {
+    margin-bottom: var(--sp-6);
+}
+.stats-subjective-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Vertical stack of mixed rows/sub-groups within a Subjective variable group */
+.stats-subjective-rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+}
+
+.stats-outdoor-note {
+    text-transform: none;
+    font-weight: 400;
+    letter-spacing: normal;
+    color: var(--color-text-muted);
+}
+
+.stats-insufficient-row {
+    font-size: var(--text-sm);
+}
+
 /* Insufficient-data inline message */
 .stats-insufficient {
     color: var(--color-text-muted);

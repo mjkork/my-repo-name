@@ -1,0 +1,24 @@
+{% comment %}
+Reusable "position on a 1-5 scale" row for Statistics averages.
+Usage: {% include "analytics/_scale_marker.html" with marker=marker_stress label="Stress" count=avg_stress.count outdoor_only=True %}
+`marker` is a dict from analytics.services.build_scale_marker:
+{"average": str, "nearest_label": str, "position": float, "low_label": str, "high_label": str}.
+Marks a position, not a quantity — no good/bad colouring, same gold as bar rows.
+{% endcomment %}
+<div class="bar-row">
+    <span class="bar-row__label">{{ label }}</span>
+    <span class="scale-marker-track-wrap">
+        <span class="scale-marker-track" aria-hidden="true">
+            {% for _ in "12345" %}<span class="scale-marker-tick"></span>{% endfor %}
+            <span class="scale-marker-dot" style="left: {{ marker.position }}%;"></span>
+        </span>
+        <span class="scale-marker-endlabels">
+            <span class="scale-marker-endlabel">{{ marker.low_label }}</span>
+            <span class="scale-marker-endlabel scale-marker-endlabel--high">{{ marker.high_label }}</span>
+        </span>
+    </span>
+    <span class="bar-row__value scale-marker-value">
+        <span class="scale-marker-value-line">{{ marker.nearest_label }} &middot; {{ marker.average }}</span>
+        <span class="bar-row__percent scale-marker-value-line">from {{ count }} session{{ count|pluralize }}{% if outdoor_only %} &middot; outdoor sessions only{% endif %}</span>
+    </span>
+</div>
