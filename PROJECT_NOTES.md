@@ -753,7 +753,7 @@ No charts, no filters, no user-controlled parameters.
 Six collapsible sections, all **collapsed by default** (the user expands whichever they want to read). No persistence — sections return to collapsed on each page load, which keeps the initial view clean.
 1. **Overview** — total sessions, sessions this year, total arrows, scoring arrows, non-scoring arrows. Below the stat cards: a **time-distribution chart** (see below). The "Scoring arrows" card has a small muted secondary line ("from N scoring rounds") giving the round count behind that arrow total; omitted when N is 0, singular wording at N=1. It reuses the exact `scored_sessions` value computed for the Session Types "Scored" count (see point 4) rather than a separate query, so the two numbers can never drift apart. "Scoring round" assumes one scored round per session — a deliberate simplification; revisit if a session with multiple scored rounds in it ever becomes a real case.
 2. **Sessions by bow** — table of (bow, sessions_count, arrows_count), sorted by sessions desc. "(no bow recorded)" row appended only when such sessions exist.
-3. **Location and distance** — indoor/outdoor counts; distance breakdown sorted ascending. "(not recorded)" rows appear only when such sessions exist.
+3. **Location and distance** — indoor/outdoor counts; distance breakdown sorted ascending, rendered as the **bar-row component** (see below) rather than tables. "(not recorded)" rows appear only when such sessions exist.
 4. **Session types** — "Non-scored session" vs "Scored" counts. Labeled "Non-scored session" rather than "Blank bale" because the grouping covers any session with no recorded score, which includes shooting at a target face without tracking the score — not just true blank bale (a blank surface, no target face).
 5. **Subjective variable averages** — per-field average (1–5) and session count. Three categorical most-common tables (weather, wind direction, time of day). Both classes gate at N≥5: if fewer than 5 non-null values, "Insufficient data" is shown instead.
 6. **Score analysis** — gated at 20+ scored sessions. When under the threshold, shows an honest count-and-threshold message. When over, shows average/best/worst score.
@@ -777,6 +777,15 @@ Lives directly inside the Overview section's expanded body, below the 5 stat car
 - No correlation analysis between subjective variables and score — requires very careful design and sufficient data; may never be built as an automated stat.
 - No AI-driven interpretation, diagnosis, or advice (violates the North Star — explicit non-goal).
 
+### Bar-row component (reusable) — ✅ SHIPPED
+Categorical breakdowns (counts per category) render as horizontal CSS bars instead of plain tables — first used for "Location and distance" (By location, By distance), intended for reuse by future sections with the same shape (e.g. Session types).
+
+- **Visualization rule: Chart.js is for time series only; CSS bar rows are for categorical breakdowns.** The Overview time-distribution chart stays Chart.js; anything that's "N sessions per category" uses this component instead. No JavaScript involved — pure HTML/CSS.
+- **Helper:** `analytics/services.py::build_bar_rows(pairs)` — generic, takes a list of `(label, count)` tuples and returns row dicts with `label`, `count`, `percent` (whole-number share of the group's total), and `width` (whole-number percentage of the *largest* count in the group — the largest bar is always 100%). A non-zero count that would round below 2% is floored to width 2 so small categories stay visible; a zero count is always width 0. Empty or all-zero input returns safely (no division by zero).
+- **Partial:** `templates/analytics/_bar_rows.html` — `{% include "analytics/_bar_rows.html" with rows=<bar_rows> heading="<label>" %}`. Renders one group: an optional uppercase `heading` (same style as the old subsection headings) followed by one `.bar-row` per row, or the existing "No sessions logged yet." empty state when the group's rows list is empty. The bar itself is `aria-hidden="true"`; the label, count, and percentage are always real text, so the row is fully readable without the bar.
+- **CSS classes:** `.bar-rows` (column of rows), `.bar-row` (3-column grid: ~80px label, flexible track, ~80px value), `.bar-row__track` (beige background, reuses `--color-stat-card-bg`), `.bar-row__fill` (aged-gold fill, `#c9a961`, width set inline per row), `.bar-row__value` / `.bar-row__percent` (count + muted percentage).
+- **View responsibility:** the view still computes the exact same categories/counts it always did (e.g. `indoor_count`, `outdoor_count`, `dist_rows` are untouched and still used elsewhere); it additionally builds `(label, count)` pairs from those same values and passes them through `build_bar_rows` into `location_bar_rows` / `distance_bar_rows`. Aggregation logic never changed — only how the counts are presented.
+
 ### Minimum-N gating pattern (reusable)
 Rather than computing meaningless statistics on tiny samples, any stat that requires a minimum N should:
 1. Compute the count of non-null values for the relevant field.
@@ -793,6 +802,11 @@ Apply this pattern to any future stat that could be meaningless on small samples
 - Sections default to collapsed for a clean initial view; each uses the shared expandable-card pattern (same as Settings).
 - **Overview time-distribution chart: ✅ SHIPPED.** Chart.js bar chart with Week/Month/Year toggle, in-page (no modal). See "Time-distribution chart" above.
 - Similar in-section charts could later be added to other Statistics sections (Sessions by bow, Location and distance, etc.) — each should be its own focused prompt driven by a real question that comes up in practice, not "chart everything" for its own sake.
+- **Bar-row component: ✅ SHIPPED** for Location and distance. Planned sequence for the rest:
+  - **Session types next** — same shape (a handful of categories, each a count), so it reuses the bar-row component directly.
+  - **Subjective variable averages** needs its own design discussion before any bar treatment — it mixes 1–5 scales with opposite polarities (e.g. stress/fatigue where lower is "better," vs. nutrition where higher is "better") plus sleep in hours, which isn't a 1–5 scale at all. Not a drop-in fit for `build_bar_rows`.
+  - **Sessions by bow** stays a plain table until a second real bow exists — a bar chart with one bar is pointless.
+  - **Score analysis** stays gated as-is; if it gets a chart later it needs a time-series view (best/avg score over time), which is a Chart.js job, not a categorical bar-row job.
 
 ### Next: Mirror / analysis
 - Deferred until 30+ scored sessions exist with rich subjective data.

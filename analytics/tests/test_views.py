@@ -186,6 +186,48 @@ class TestStatisticsAggregationsSufficientData:
 
 
 @pytest.mark.django_db
+class TestStatisticsLocationDistanceBarRows:
+    """Location and distance section renders as bar rows, not tables."""
+
+    def setup_method(self):
+        SessionFactory(location="indoor", distance_m=18, total_arrows=30)
+        SessionFactory(location="indoor", distance_m=18, total_arrows=30)
+        SessionFactory(location="outdoor", distance_m=30, total_arrows=36)
+
+    def test_location_labels_and_counts_rendered_as_text(self, client):
+        html = client.get(URL).content.decode()
+        assert "Indoor" in html
+        assert "Outdoor" in html
+
+    def test_distance_labels_and_counts_rendered_as_text(self, client):
+        html = client.get(URL).content.decode()
+        assert "18 m" in html
+        assert "30 m" in html
+
+    def test_bar_rows_component_present(self, client):
+        html = client.get(URL).content.decode()
+        assert html.count('class="bar-rows"') == 2
+
+    def test_old_table_markup_removed(self, client):
+        html = client.get(URL).content.decode()
+        assert "<th>Location</th>" not in html
+        assert "<th>Distance</th>" not in html
+        assert "stats-table-row--muted" not in html
+
+    def test_location_bar_rows_context_matches_counts(self, client):
+        ctx = client.get(URL).context
+        by_label = {row["label"]: row["count"] for row in ctx["location_bar_rows"]}
+        assert by_label["Indoor"] == 2
+        assert by_label["Outdoor"] == 1
+
+    def test_distance_bar_rows_context_matches_counts(self, client):
+        ctx = client.get(URL).context
+        by_label = {row["label"]: row["count"] for row in ctx["distance_bar_rows"]}
+        assert by_label["18 m"] == 2
+        assert by_label["30 m"] == 1
+
+
+@pytest.mark.django_db
 class TestStatisticsSessionTypes:
     def _ctx(self, client):
         return client.get(URL).context

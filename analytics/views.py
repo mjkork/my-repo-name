@@ -5,6 +5,7 @@ from django.db.models.functions import Coalesce, TruncMonth, TruncWeek, TruncYea
 from django.utils import timezone
 from django.views.generic import TemplateView
 
+from analytics.services import build_bar_rows
 from sessions.models import Session
 
 _SUBJECTIVE_MIN_N = 5
@@ -209,6 +210,13 @@ class StatisticsView(TemplateView):
         ctx["location_not_recorded"] = location_counts.get(
             None, location_counts.get("", 0)
         )
+        location_pairs = [
+            ("Indoor", ctx["indoor_count"]),
+            ("Outdoor", ctx["outdoor_count"]),
+        ]
+        if ctx["location_not_recorded"]:
+            location_pairs.append(("(not recorded)", ctx["location_not_recorded"]))
+        ctx["location_bar_rows"] = build_bar_rows(location_pairs)
 
         # --- Sessions by distance ---
         raw_dist = list(
@@ -226,6 +234,14 @@ class StatisticsView(TemplateView):
                 }
             )
         ctx["dist_rows"] = dist_rows
+        distance_pairs = [
+            (
+                f"{row['distance_m']} m" if row["distance_m"] is not None else "(not recorded)",
+                row["sessions_count"],
+            )
+            for row in dist_rows
+        ]
+        ctx["distance_bar_rows"] = build_bar_rows(distance_pairs)
 
         # --- Session types ---
         scored_sessions = qs.filter(

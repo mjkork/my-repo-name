@@ -931,6 +931,56 @@ details[open] .settings-card-chevron {
 /* Muted row for "(not recorded)" entries */
 .stats-table-row--muted td { color: var(--color-text-muted); font-style: italic; }
 
+/* ---- Bar rows (reusable categorical breakdown component for Statistics)
+ * HTML structure: .bar-rows > .bar-row > .bar-row__label
+ *                                       + .bar-row__track[aria-hidden] > .bar-row__fill
+ *                                       + .bar-row__value > .bar-row__percent
+ * Decorative bar is aria-hidden; label/count/percent are real text, so the
+ * row is fully readable without it. See PROJECT_NOTES.md "Bar-row component". */
+.bar-rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+.bar-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 80px;
+    align-items: center;
+    gap: var(--sp-3);
+    font-size: var(--text-sm);
+}
+
+.bar-row__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bar-row__track {
+    display: block;
+    height: 14px;
+    background: var(--color-stat-card-bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.bar-row__fill {
+    display: block;
+    height: 100%;
+    background: #c9a961;
+    border-radius: var(--radius-md);
+}
+
+.bar-row__value {
+    text-align: right;
+}
+
+.bar-row__percent {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
 /* Insufficient-data inline message */
 .stats-insufficient {
     color: var(--color-text-muted);

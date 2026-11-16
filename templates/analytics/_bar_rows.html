@@ -1,0 +1,22 @@
+{% comment %}
+Reusable horizontal bar-row group for Statistics categorical breakdowns.
+Usage: {% include "analytics/_bar_rows.html" with rows=some_bar_rows heading="By X" %}
+`rows` is a list of dicts from analytics.services.build_bar_rows:
+{"label": str, "count": int, "percent": int, "width": int}.
+{% endcomment %}
+{% if heading %}<h3 class="stats-subsection-heading">{{ heading }}</h3>{% endif %}
+{% if rows %}
+<div class="bar-rows">
+    {% for row in rows %}
+    <div class="bar-row">
+        <span class="bar-row__label">{{ row.label }}</span>
+        <span class="bar-row__track" aria-hidden="true">
+            <span class="bar-row__fill" style="width: {{ row.width }}%;"></span>
+        </span>
+        <span class="bar-row__value">{{ row.count }} <span class="bar-row__percent">{{ row.percent }}%</span></span>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">No sessions logged yet.</p>
+{% endif %}

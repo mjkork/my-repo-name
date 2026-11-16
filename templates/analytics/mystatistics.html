@@ -103,55 +103,11 @@
         <div class="settings-card-body stats-section-body--columns">
 
             <div class="stats-subsection">
-                <h3 class="stats-subsection-heading">By location</h3>
-                <table class="stats-table">
-                    <thead>
-                        <tr>
-                            <th>Location</th>
-                            <th class="stats-table-num">Sessions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Indoor</td>
-                            <td class="stats-table-num">{{ indoor_count }}</td>
-                        </tr>
-                        <tr>
-                            <td>Outdoor</td>
-                            <td class="stats-table-num">{{ outdoor_count }}</td>
-                        </tr>
-                        {% if location_not_recorded %}
-                        <tr class="stats-table-row--muted">
-                            <td>(not recorded)</td>
-                            <td class="stats-table-num">{{ location_not_recorded }}</td>
-                        </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
+                {% include "analytics/_bar_rows.html" with rows=location_bar_rows heading="By location" %}
             </div>
 
             <div class="stats-subsection">
-                <h3 class="stats-subsection-heading">By distance</h3>
-                {% if dist_rows %}
-                <table class="stats-table">
-                    <thead>
-                        <tr>
-                            <th>Distance</th>
-                            <th class="stats-table-num">Sessions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in dist_rows %}
-                        <tr{% if row.distance_m is None %} class="stats-table-row--muted"{% endif %}>
-                            <td>{% if row.distance_m is not None %}{{ row.distance_m }} m{% else %}(not recorded){% endif %}</td>
-                            <td class="stats-table-num">{{ row.sessions_count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p class="empty-state">No sessions logged yet.</p>
-                {% endif %}
+                {% include "analytics/_bar_rows.html" with rows=distance_bar_rows heading="By distance" %}
             </div>
 
         </div>
