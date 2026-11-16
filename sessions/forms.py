@@ -102,3 +102,23 @@ class SessionForm(forms.ModelForm):
         if date and date > timezone.localdate():
             raise forms.ValidationError("Session date cannot be in the future.")
         return date
+
+    def clean(self) -> dict:
+        cleaned_data = super().clean()
+        scoring_arrows = cleaned_data.get("scoring_arrows")
+        total_score = cleaned_data.get("total_score")
+        has_scoring_arrows = bool(scoring_arrows) and scoring_arrows > 0
+        has_total_score = total_score is not None
+
+        if has_scoring_arrows and not has_total_score:
+            self.add_error(
+                "total_score",
+                "Enter a total score for the scoring arrows, or leave both empty.",
+            )
+        elif has_total_score and not has_scoring_arrows:
+            self.add_error(
+                "scoring_arrows",
+                "Enter the scoring arrows this total score came from,"
+                " or leave both empty.",
+            )
+        return cleaned_data

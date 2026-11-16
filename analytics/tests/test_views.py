@@ -206,7 +206,9 @@ class TestStatisticsLocationDistanceBarRows:
 
     def test_bar_rows_component_present(self, client):
         html = client.get(URL).content.decode()
-        assert html.count('class="bar-rows"') == 2
+        # Location and distance renders two bar-row groups; Session types
+        # (converted separately) also renders one — three total on the page.
+        assert html.count('class="bar-rows"') == 3
 
     def test_old_table_markup_removed(self, client):
         html = client.get(URL).content.decode()
@@ -229,6 +231,9 @@ class TestStatisticsLocationDistanceBarRows:
 
 @pytest.mark.django_db
 class TestStatisticsSessionTypes:
+    """Scored = scoring_arrows > 0, regardless of total_score. See
+    analytics.services.scored_session_filter for the single definition."""
+
     def _ctx(self, client):
         return client.get(URL).context
 
@@ -241,14 +246,40 @@ class TestStatisticsSessionTypes:
         SessionFactory(scoring_arrows=30, total_score=255)
         assert self._ctx(client)["scored_sessions"] == 1
 
-    def test_scored_requires_total_score_not_null(self, client):
-        SessionFactory(scoring_arrows=30, total_score=None)
-        assert self._ctx(client)["scored_sessions"] == 0
+    def test_scoring_arrows_without_total_score_counts_as_scored(self, client):
+        """Regression: this is the exact edge case that used to fall through
+        both buckets (scoring arrows entered, total_score never tallied)."""
+        SessionFactory(scoring_arrows=72, total_score=None)
+        assert self._ctx(client)["scored_sessions"] == 1
+        assert self._ctx(client)["blank_bale_sessions"] == 0
+
+    def test_every_session_counted_in_exactly_one_category(self, client):
+        SessionFactory(scoring_arrows=None, total_score=None)  # blank bale
+        SessionFactory(scoring_arrows=0, total_score=None)  # blank bale
+        SessionFactory(scoring_arrows=30, total_score=255)  # fully scored
+        SessionFactory(scoring_arrows=72, total_score=None)  # scored, no tally
+        ctx = self._ctx(client)
+        assert ctx["blank_bale_sessions"] == 2
+        assert ctx["scored_sessions"] == 2
+        assert (
+            ctx["blank_bale_sessions"] + ctx["scored_sessions"] == ctx["total_sessions"]
+        )
 
     def test_non_scored_label_rendered(self, client):
         html = client.get(URL).content.decode()
         assert "Non-scored session" in html
         assert "Blank bale" not in html
+
+    def test_scored_session_label_rendered(self, client):
+        SessionFactory(scoring_arrows=30, total_score=255)
+        html = client.get(URL).content.decode()
+        assert "Scored session" in html
+
+    def test_bar_rows_component_present_and_old_table_removed(self, client):
+        html = client.get(URL).content.decode()
+        assert 'class="bar-rows"' in html
+        assert "<th>Type</th>" not in html
+        assert "<th>Sessions</th>" not in html
 
 
 @pytest.mark.django_db
@@ -274,6 +305,13 @@ class TestStatisticsScoringArrowsSublabel:
         scored_sessions = response.context["scored_sessions"]
         assert scored_sessions == 3
         assert f"from {scored_sessions} scoring rounds" in html
+
+    def test_sublabel_counts_scoring_arrows_without_total_score(self, client):
+        """A session with scoring arrows but no tallied total_score still
+        counts toward the round total — same definition as Session types."""
+        SessionFactory(scoring_arrows=72, total_score=None)
+        html = client.get(URL).content.decode()
+        assert "from 1 scoring round" in html
 
 
 @pytest.mark.django_db

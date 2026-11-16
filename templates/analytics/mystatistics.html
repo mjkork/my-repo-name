@@ -120,24 +120,7 @@
             <span class="settings-card-chevron" aria-hidden="true">▸</span>
         </summary>
         <div class="settings-card-body">
-            <table class="stats-table stats-table--narrow">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th class="stats-table-num">Sessions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Non-scored session</td>
-                        <td class="stats-table-num">{{ blank_bale_sessions }}</td>
-                    </tr>
-                    <tr>
-                        <td>Scored</td>
-                        <td class="stats-table-num">{{ scored_sessions }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            {% include "analytics/_bar_rows.html" with rows=session_type_bar_rows %}
         </div>
     </details>
 

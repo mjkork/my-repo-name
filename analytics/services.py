@@ -1,5 +1,19 @@
 """Reusable presentation helpers for the Statistics page."""
 
+from django.db.models import Q
+
+
+def scored_session_filter() -> Q:
+    """The single definition of a "scored" session: at least one scoring arrow.
+
+    A session is scored if it has any scoring arrows recorded, regardless of
+    whether a total_score was ever tallied for it — "scored" means "shot at
+    a scored target face," not "has a final number." This is a true complement
+    of "non-scored" (no scoring arrows recorded), so every session falls into
+    exactly one of the two buckets.
+    """
+    return Q(scoring_arrows__gt=0)
+
 
 def build_bar_rows(pairs: list[tuple[str, int]]) -> list[dict]:
     """Turn (label, count) pairs into rows for the bar-row template component.
@@ -23,5 +37,7 @@ def build_bar_rows(pairs: list[tuple[str, int]]) -> list[dict]:
             width = 0
         else:
             width = max(round(count / max_count * 100), 2)
-        rows.append({"label": label, "count": count, "percent": percent, "width": width})
+        rows.append(
+            {"label": label, "count": count, "percent": percent, "width": width}
+        )
     return rows

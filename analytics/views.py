@@ -1,11 +1,11 @@
 import datetime
 
-from django.db.models import Avg, Count, Max, Min, Q, Sum
+from django.db.models import Avg, Count, Max, Min, Sum
 from django.db.models.functions import Coalesce, TruncMonth, TruncWeek, TruncYear
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from analytics.services import build_bar_rows
+from analytics.services import build_bar_rows, scored_session_filter
 from sessions.models import Session
 
 _SUBJECTIVE_MIN_N = 5
@@ -236,7 +236,9 @@ class StatisticsView(TemplateView):
         ctx["dist_rows"] = dist_rows
         distance_pairs = [
             (
-                f"{row['distance_m']} m" if row["distance_m"] is not None else "(not recorded)",
+                f"{row['distance_m']} m"
+                if row["distance_m"] is not None
+                else "(not recorded)",
                 row["sessions_count"],
             )
             for row in dist_rows
@@ -244,14 +246,19 @@ class StatisticsView(TemplateView):
         ctx["distance_bar_rows"] = build_bar_rows(distance_pairs)
 
         # --- Session types ---
-        scored_sessions = qs.filter(
-            scoring_arrows__gt=0, total_score__isnull=False
-        ).count()
-        blank_bale_sessions = qs.filter(
-            Q(scoring_arrows__isnull=True) | Q(scoring_arrows=0)
-        ).count()
+        # Single definition of "scored" lives in scored_session_filter(); "non-scored"
+        # is its exact complement via .exclude(), so every session lands in exactly one
+        # bucket. Reused below for the Scoring arrows card and Score analysis gating.
+        scored_sessions = qs.filter(scored_session_filter()).count()
+        blank_bale_sessions = qs.exclude(scored_session_filter()).count()
         ctx["scored_sessions"] = scored_sessions
         ctx["blank_bale_sessions"] = blank_bale_sessions
+        ctx["session_type_bar_rows"] = build_bar_rows(
+            [
+                ("Non-scored session", blank_bale_sessions),
+                ("Scored session", scored_sessions),
+            ]
+        )
 
         # --- Subjective variable averages ---
         ctx["avg_nutrition"] = _avg_or_none(qs, "nutrition")
@@ -276,7 +283,7 @@ class StatisticsView(TemplateView):
         # --- Score analysis ---
         ctx["score_min_n"] = _SCORE_MIN_N
         if scored_sessions >= _SCORE_MIN_N:
-            score_qs = qs.filter(scoring_arrows__gt=0, total_score__isnull=False)
+            score_qs = qs.filter(scored_session_filter(), total_score__isnull=False)
             score_stats = score_qs.aggregate(
                 avg_score=Avg("total_score"),
                 best_score=Max("total_score"),

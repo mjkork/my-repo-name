@@ -110,6 +110,31 @@ class TestSessionFormScoringFields:
         assert not form.is_valid()
         assert "target_face" in form.errors
 
+    def test_scoring_arrows_without_total_score_is_invalid(self):
+        data = {**self._base(), "session-scoring_arrows": "72"}
+        form = SessionForm(data, prefix="session")
+        assert not form.is_valid()
+        assert "total_score" in form.errors
+
+    def test_total_score_without_scoring_arrows_is_invalid(self):
+        data = {**self._base(), "session-total_score": "657"}
+        form = SessionForm(data, prefix="session")
+        assert not form.is_valid()
+        assert "scoring_arrows" in form.errors
+
+    def test_scoring_arrows_and_total_score_together_is_valid(self):
+        data = {
+            **self._base(),
+            "session-scoring_arrows": "72",
+            "session-total_score": "657",
+        }
+        form = SessionForm(data, prefix="session")
+        assert form.is_valid(), form.errors
+
+    def test_scoring_arrows_and_total_score_both_blank_is_valid(self):
+        form = SessionForm(self._base(), prefix="session")
+        assert form.is_valid(), form.errors
+
 
 @pytest.mark.django_db
 class TestSessionFormSubjectiveFields:
