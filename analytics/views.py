@@ -275,6 +275,7 @@ class StatisticsView(TemplateView):
         ctx["avg_fatigue"] = _avg_or_none(qs, "fatigue")
         ctx["avg_wind_force"] = _avg_or_none(qs, "wind_force")
         ctx["avg_sleep_hours"] = _avg_or_none(qs, "sleep_hours")
+        ctx["avg_temperature"] = _avg_or_none(qs, "temperature_celsius")
 
         # --- Scale markers (position on a 1-5 scale, not a quantity) ---
         ctx["marker_nutrition"] = _marker_or_none(

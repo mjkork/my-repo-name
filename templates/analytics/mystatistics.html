@@ -124,126 +124,159 @@
         </div>
     </details>
 
-    {# ── 5. Conditions and how you felt (formerly "Subjective variable averages") #}
+    {# ── 5. Time of day ──────────────────────────────────────────────────── #}
     <details class="settings-card settings-card--expandable">
         <summary class="settings-card-summary">
-            <span class="stats-section-title">Conditions and how you felt</span>
+            <span class="stats-section-title">Time of day</span>
             <span class="settings-card-chevron" aria-hidden="true">▸</span>
         </summary>
         <div class="settings-card-body">
             <p class="stats-note">Rows are shown only when at least {{ subjective_min_n }} sessions have that field filled in. "Insufficient data" means fewer than {{ subjective_min_n }} logged values.</p>
 
-            <div class="stats-subjective-group">
-                <h3 class="stats-subsection-heading">Conditions</h3>
-                <div class="stats-subjective-rows">
+            {% if time_of_day_breakdown.bar_rows %}
+            {% include "analytics/_bar_rows.html" with rows=time_of_day_breakdown.bar_rows %}
+            {% else %}
+            <p class="stats-insufficient-row"><em class="stats-insufficient">Insufficient data</em> &middot; from {{ time_of_day_breakdown.count }} session{{ time_of_day_breakdown.count|pluralize }}</p>
+            {% endif %}
+        </div>
+    </details>
 
-                    <div>
-                        <h3 class="stats-subsection-heading">Time of day</h3>
-                        {% if time_of_day_breakdown.bar_rows %}
-                        {% include "analytics/_bar_rows.html" with rows=time_of_day_breakdown.bar_rows %}
-                        {% else %}
-                        <p class="stats-insufficient-row"><em class="stats-insufficient">Insufficient data</em> &middot; from {{ time_of_day_breakdown.count }} session{{ time_of_day_breakdown.count|pluralize }}</p>
-                        {% endif %}
-                    </div>
+    {# ── 6. Outdoor conditions ───────────────────────────────────────────── #}
+    <details class="settings-card settings-card--expandable">
+        <summary class="settings-card-summary">
+            <span class="stats-section-title">Outdoor conditions</span>
+            <span class="settings-card-chevron" aria-hidden="true">▸</span>
+        </summary>
+        <div class="settings-card-body">
+            <p class="stats-note">Outdoor sessions only.</p>
+            <p class="stats-note">Rows are shown only when at least {{ subjective_min_n }} sessions have that field filled in. "Insufficient data" means fewer than {{ subjective_min_n }} logged values.</p>
 
-                    <div>
-                        <h3 class="stats-subsection-heading">Weather<span class="stats-outdoor-note"> &middot; outdoor sessions only</span></h3>
-                        {% if weather_breakdown.bar_rows %}
-                        {% include "analytics/_bar_rows.html" with rows=weather_breakdown.bar_rows %}
-                        {% else %}
-                        <p class="stats-insufficient-row"><em class="stats-insufficient">Insufficient data</em> &middot; from {{ weather_breakdown.count }} session{{ weather_breakdown.count|pluralize }} &middot; outdoor sessions only</p>
-                        {% endif %}
-                    </div>
+            <div class="stats-subjective-rows">
 
-                    {% if marker_wind_force %}
-                    {% include "analytics/_scale_marker.html" with marker=marker_wind_force label="Wind force" count=avg_wind_force.count outdoor_only=True %}
+                <div>
+                    <h3 class="stats-subsection-heading">Weather</h3>
+                    {% if weather_breakdown.bar_rows %}
+                    {% include "analytics/_bar_rows.html" with rows=weather_breakdown.bar_rows %}
                     {% else %}
-                    <div class="bar-row">
-                        <span class="bar-row__label">Wind force</span>
-                        <em class="stats-insufficient">Insufficient data</em>
-                        <span class="bar-row__value scale-marker-value">
-                            <span class="bar-row__percent scale-marker-value-line">from {{ avg_wind_force.count }} session{{ avg_wind_force.count|pluralize }} &middot; outdoor sessions only</span>
-                        </span>
-                    </div>
+                    <p class="stats-insufficient-row"><em class="stats-insufficient">Insufficient data</em> &middot; from {{ weather_breakdown.count }} session{{ weather_breakdown.count|pluralize }}</p>
                     {% endif %}
-
-                    <div>
-                        <h3 class="stats-subsection-heading">Wind direction<span class="stats-outdoor-note"> &middot; outdoor sessions only</span></h3>
-                        {% if wind_direction_breakdown.bar_rows %}
-                        {% include "analytics/_bar_rows.html" with rows=wind_direction_breakdown.bar_rows %}
-                        {% else %}
-                        <p class="stats-insufficient-row"><em class="stats-insufficient">Insufficient data</em> &middot; from {{ wind_direction_breakdown.count }} session{{ wind_direction_breakdown.count|pluralize }} &middot; outdoor sessions only</p>
-                        {% endif %}
-                    </div>
-
                 </div>
-            </div>
 
-            <div class="stats-subjective-group">
-                <h3 class="stats-subsection-heading">How you felt</h3>
-                <div class="stats-subjective-rows">
-
-                    {% if marker_stress %}
-                    {% include "analytics/_scale_marker.html" with marker=marker_stress label="Stress" count=avg_stress.count %}
-                    {% else %}
-                    <div class="bar-row">
-                        <span class="bar-row__label">Stress</span>
-                        <em class="stats-insufficient">Insufficient data</em>
-                        <span class="bar-row__value scale-marker-value">
-                            <span class="bar-row__percent scale-marker-value-line">from {{ avg_stress.count }} session{{ avg_stress.count|pluralize }}</span>
-                        </span>
-                    </div>
-                    {% endif %}
-
-                    {% if marker_fatigue %}
-                    {% include "analytics/_scale_marker.html" with marker=marker_fatigue label="Fatigue" count=avg_fatigue.count %}
-                    {% else %}
-                    <div class="bar-row">
-                        <span class="bar-row__label">Fatigue</span>
-                        <em class="stats-insufficient">Insufficient data</em>
-                        <span class="bar-row__value scale-marker-value">
-                            <span class="bar-row__percent scale-marker-value-line">from {{ avg_fatigue.count }} session{{ avg_fatigue.count|pluralize }}</span>
-                        </span>
-                    </div>
-                    {% endif %}
-
-                    {% if marker_nutrition %}
-                    {% include "analytics/_scale_marker.html" with marker=marker_nutrition label="Nutrition" count=avg_nutrition.count %}
-                    {% else %}
-                    <div class="bar-row">
-                        <span class="bar-row__label">Nutrition</span>
-                        <em class="stats-insufficient">Insufficient data</em>
-                        <span class="bar-row__value scale-marker-value">
-                            <span class="bar-row__percent scale-marker-value-line">from {{ avg_nutrition.count }} session{{ avg_nutrition.count|pluralize }}</span>
-                        </span>
-                    </div>
-                    {% endif %}
-
-                    {% if avg_sleep_hours.avg is not None %}
-                    <div class="bar-row">
-                        <span class="bar-row__label">Sleep</span>
-                        <span></span>
-                        <span class="bar-row__value scale-marker-value">
-                            <span class="scale-marker-value-line">{{ avg_sleep_hours.avg }} h</span>
-                            <span class="bar-row__percent scale-marker-value-line">from {{ avg_sleep_hours.count }} session{{ avg_sleep_hours.count|pluralize }}</span>
-                        </span>
-                    </div>
-                    {% else %}
-                    <div class="bar-row">
-                        <span class="bar-row__label">Sleep</span>
-                        <em class="stats-insufficient">Insufficient data</em>
-                        <span class="bar-row__value scale-marker-value">
-                            <span class="bar-row__percent scale-marker-value-line">from {{ avg_sleep_hours.count }} session{{ avg_sleep_hours.count|pluralize }}</span>
-                        </span>
-                    </div>
-                    {% endif %}
-
+                {% if avg_temperature.avg is not None %}
+                <div class="bar-row">
+                    <span class="bar-row__label">Temperature</span>
+                    <span></span>
+                    <span class="bar-row__value scale-marker-value">
+                        <span class="scale-marker-value-line">{{ avg_temperature.avg }} &deg;C</span>
+                        <span class="bar-row__percent scale-marker-value-line">from {{ avg_temperature.count }} session{{ avg_temperature.count|pluralize }}</span>
+                    </span>
                 </div>
+                {% else %}
+                <div class="bar-row">
+                    <span class="bar-row__label">Temperature</span>
+                    <em class="stats-insufficient">Insufficient data</em>
+                    <span class="bar-row__value scale-marker-value">
+                        <span class="bar-row__percent scale-marker-value-line">from {{ avg_temperature.count }} session{{ avg_temperature.count|pluralize }}</span>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if marker_wind_force %}
+                {% include "analytics/_scale_marker.html" with marker=marker_wind_force label="Wind force" count=avg_wind_force.count %}
+                {% else %}
+                <div class="bar-row">
+                    <span class="bar-row__label">Wind force</span>
+                    <em class="stats-insufficient">Insufficient data</em>
+                    <span class="bar-row__value scale-marker-value">
+                        <span class="bar-row__percent scale-marker-value-line">from {{ avg_wind_force.count }} session{{ avg_wind_force.count|pluralize }}</span>
+                    </span>
+                </div>
+                {% endif %}
+
+                <div>
+                    <h3 class="stats-subsection-heading">Wind direction</h3>
+                    {% if wind_direction_breakdown.bar_rows %}
+                    {% include "analytics/_bar_rows.html" with rows=wind_direction_breakdown.bar_rows %}
+                    {% else %}
+                    <p class="stats-insufficient-row"><em class="stats-insufficient">Insufficient data</em> &middot; from {{ wind_direction_breakdown.count }} session{{ wind_direction_breakdown.count|pluralize }}</p>
+                    {% endif %}
+                </div>
+
             </div>
         </div>
     </details>
 
-    {# ── 6. Score analysis ────────────────────────────────────────────────── #}
+    {# ── 7. How you felt ─────────────────────────────────────────────────── #}
+    <details class="settings-card settings-card--expandable">
+        <summary class="settings-card-summary">
+            <span class="stats-section-title">How you felt</span>
+            <span class="settings-card-chevron" aria-hidden="true">▸</span>
+        </summary>
+        <div class="settings-card-body">
+            <p class="stats-note">Rows are shown only when at least {{ subjective_min_n }} sessions have that field filled in. "Insufficient data" means fewer than {{ subjective_min_n }} logged values.</p>
+
+            <div class="stats-subjective-rows">
+
+                {% if marker_stress %}
+                {% include "analytics/_scale_marker.html" with marker=marker_stress label="Stress" count=avg_stress.count %}
+                {% else %}
+                <div class="bar-row">
+                    <span class="bar-row__label">Stress</span>
+                    <em class="stats-insufficient">Insufficient data</em>
+                    <span class="bar-row__value scale-marker-value">
+                        <span class="bar-row__percent scale-marker-value-line">from {{ avg_stress.count }} session{{ avg_stress.count|pluralize }}</span>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if marker_fatigue %}
+                {% include "analytics/_scale_marker.html" with marker=marker_fatigue label="Fatigue" count=avg_fatigue.count %}
+                {% else %}
+                <div class="bar-row">
+                    <span class="bar-row__label">Fatigue</span>
+                    <em class="stats-insufficient">Insufficient data</em>
+                    <span class="bar-row__value scale-marker-value">
+                        <span class="bar-row__percent scale-marker-value-line">from {{ avg_fatigue.count }} session{{ avg_fatigue.count|pluralize }}</span>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if marker_nutrition %}
+                {% include "analytics/_scale_marker.html" with marker=marker_nutrition label="Nutrition" count=avg_nutrition.count %}
+                {% else %}
+                <div class="bar-row">
+                    <span class="bar-row__label">Nutrition</span>
+                    <em class="stats-insufficient">Insufficient data</em>
+                    <span class="bar-row__value scale-marker-value">
+                        <span class="bar-row__percent scale-marker-value-line">from {{ avg_nutrition.count }} session{{ avg_nutrition.count|pluralize }}</span>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if avg_sleep_hours.avg is not None %}
+                <div class="bar-row">
+                    <span class="bar-row__label">Sleep</span>
+                    <span></span>
+                    <span class="bar-row__value scale-marker-value">
+                        <span class="scale-marker-value-line">{{ avg_sleep_hours.avg }} h</span>
+                        <span class="bar-row__percent scale-marker-value-line">from {{ avg_sleep_hours.count }} session{{ avg_sleep_hours.count|pluralize }}</span>
+                    </span>
+                </div>
+                {% else %}
+                <div class="bar-row">
+                    <span class="bar-row__label">Sleep</span>
+                    <em class="stats-insufficient">Insufficient data</em>
+                    <span class="bar-row__value scale-marker-value">
+                        <span class="bar-row__percent scale-marker-value-line">from {{ avg_sleep_hours.count }} session{{ avg_sleep_hours.count|pluralize }}</span>
+                    </span>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </details>
+
+    {# ── 8. Score analysis ────────────────────────────────────────────────── #}
     <details class="settings-card settings-card--expandable">
         <summary class="settings-card-summary">
             <span class="stats-section-title">Score analysis</span>

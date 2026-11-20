@@ -945,16 +945,19 @@ details[open] .settings-card-chevron {
 
 .bar-row {
     display: grid;
-    grid-template-columns: 80px 1fr 80px;
+    grid-template-columns: 150px 1fr 100px;
     align-items: center;
     gap: var(--sp-3);
     font-size: var(--text-sm);
 }
 
 .bar-row__label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    /* Never truncate — fit the longest label (e.g. "Non-scored session",
+     * "From front-right") or wrap, so adjacent directions/categories stay
+     * distinguishable. The fixed column width above keeps rows aligned
+     * within a group since every .bar-row shares the same grid track sizes. */
+    white-space: normal;
+    word-break: break-word;
 }
 
 .bar-row__track {
@@ -981,7 +984,7 @@ details[open] .settings-card-chevron {
     color: var(--color-text-muted);
 }
 
-/* ---- Scale marker (position-on-a-1-5-scale row, Subjective variable averages)
+/* ---- Scale marker (position-on-a-1-5-scale row, Outdoor conditions / How you felt)
  * Shares the .bar-row 3-column grid (label | track | value). Marks a position,
  * not a quantity — the dot and ticks use the same gold/beige tokens as bar
  * rows, never good/bad colouring, since scale polarity differs per variable. */
@@ -1036,26 +1039,12 @@ details[open] .settings-card-chevron {
     display: block;
 }
 
-/* Grouping for Subjective variable averages ("Conditions" / "How you felt") */
-.stats-subjective-group {
-    margin-bottom: var(--sp-6);
-}
-.stats-subjective-group:last-child {
-    margin-bottom: 0;
-}
-
-/* Vertical stack of mixed rows/sub-groups within a Subjective variable group */
+/* Vertical stack of mixed rows/sub-groups within a card (Outdoor conditions,
+ * How you felt) */
 .stats-subjective-rows {
     display: flex;
     flex-direction: column;
     gap: var(--sp-4);
-}
-
-.stats-outdoor-note {
-    text-transform: none;
-    font-weight: 400;
-    letter-spacing: normal;
-    color: var(--color-text-muted);
 }
 
 .stats-insufficient-row {
