@@ -869,16 +869,29 @@ details[open] .settings-card-chevron {
     color: var(--color-text-muted);
 }
 
-/* Two-column layout for location + distance tables side by side */
+/* Two-column layout for groups placed side by side (e.g. location + distance).
+ * Explicit equal-width columns, not flex shrink-to-fit: a shrink-to-fit
+ * column's width is its content's intrinsic size, which for a .bar-row grid
+ * ignores the flexible track entirely (a flexible/fr track only receives
+ * space once the container has a DEFINITE width to distribute into) — so a
+ * content-sized column collapses the bar's track to zero. Explicit `1fr 1fr`
+ * columns always have a definite width, so the track inside always gets its
+ * real share. See PROJECT_NOTES.md "Bar-row component". */
 .stats-section-body--columns {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: var(--sp-8);
-    flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: start;
+}
+
+@media (max-width: 600px) {
+    .stats-section-body--columns {
+        grid-template-columns: 1fr;
+    }
 }
 
 .stats-subsection {
-    min-width: 200px;
+    min-width: 0;
 }
 
 .stats-subsection-heading {
@@ -945,7 +958,7 @@ details[open] .settings-card-chevron {
 
 .bar-row {
     display: grid;
-    grid-template-columns: 150px 1fr 100px;
+    grid-template-columns: 150px minmax(80px, 1fr) 100px;
     align-items: center;
     gap: var(--sp-3);
     font-size: var(--text-sm);
