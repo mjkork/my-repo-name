@@ -32,28 +32,53 @@ def _shift_month(d: datetime.date, delta: int) -> datetime.date:
     return datetime.date(year, month, 1)
 
 
+def _tidy_axis_max(value: int) -> int:
+    """Round a series' max value up to a tidy y-axis ceiling (next 50 or 100).
+
+    Always strictly above `value` (never exactly equal) so the tallest bar
+    has visible headroom instead of touching the top of the chart.
+    """
+    if value <= 0:
+        return 50
+    step = 50 if value <= 200 else 100
+    return (value // step + 1) * step
+
+
+def _empty_series(window_size: int) -> dict:
+    return {
+        "labels": [],
+        "data": [],
+        "period_starts": [],
+        "window_size": window_size,
+        "axis_max": _tidy_axis_max(0),
+    }
+
+
 def _time_distribution(qs, earliest_date: datetime.date | None) -> dict:
     """Compute Week/Month/Year arrow-count series, including zero-arrow gap periods.
 
-    Periods before the archer's first-ever session are never padded in.
+    Each series covers the archer's FULL history (first-ever session's period
+    through the current period) — not just a recent window. `window_size` is
+    passed alongside so the frontend can page through that history in fixed
+    windows aligned to the present; periods before the first session are
+    never padded in.
     """
     if earliest_date is None:
         return {
-            "week": {"labels": [], "data": []},
-            "month": {"labels": [], "data": []},
-            "year": {"labels": [], "data": []},
+            "week": _empty_series(_WEEKS_SHOWN),
+            "month": _empty_series(_MONTHS_SHOWN),
+            "year": _empty_series(_YEARS_SHOWN),
         }
 
     today = timezone.localdate()
 
     # --- Weekly ---
-    current_week_start = _week_start(today)
-    week_starts = [
-        current_week_start - datetime.timedelta(weeks=i)
-        for i in range(_WEEKS_SHOWN - 1, -1, -1)
-    ]
     earliest_week_start = _week_start(earliest_date)
-    week_starts = [w for w in week_starts if w >= earliest_week_start]
+    current_week_start = _week_start(today)
+    n_weeks = (current_week_start - earliest_week_start).days // 7
+    week_starts = [
+        earliest_week_start + datetime.timedelta(weeks=i) for i in range(n_weeks + 1)
+    ]
     weekly_totals = {
         row["period"]: row["total"]
         for row in (
@@ -62,18 +87,24 @@ def _time_distribution(qs, earliest_date: datetime.date | None) -> dict:
             .annotate(total=Coalesce(Sum("total_arrows"), 0))
         )
     }
+    week_data = [weekly_totals.get(w, 0) for w in week_starts]
     week_series = {
         "labels": [f"{w.day} {w.strftime('%b')}" for w in week_starts],
-        "data": [weekly_totals.get(w, 0) for w in week_starts],
+        "data": week_data,
+        "period_starts": [w.isoformat() for w in week_starts],
+        "window_size": _WEEKS_SHOWN,
+        "axis_max": _tidy_axis_max(max(week_data, default=0)),
     }
 
     # --- Monthly ---
-    current_month_start = _month_start(today)
-    month_starts = [
-        _shift_month(current_month_start, -i) for i in range(_MONTHS_SHOWN - 1, -1, -1)
-    ]
     earliest_month_start = _month_start(earliest_date)
-    month_starts = [m for m in month_starts if m >= earliest_month_start]
+    current_month_start = _month_start(today)
+    n_months = (
+        (current_month_start.year - earliest_month_start.year) * 12
+        + current_month_start.month
+        - earliest_month_start.month
+    )
+    month_starts = [_shift_month(earliest_month_start, i) for i in range(n_months + 1)]
     monthly_totals = {
         row["period"]: row["total"]
         for row in (
@@ -82,14 +113,17 @@ def _time_distribution(qs, earliest_date: datetime.date | None) -> dict:
             .annotate(total=Coalesce(Sum("total_arrows"), 0))
         )
     }
+    month_data = [monthly_totals.get(m, 0) for m in month_starts]
     month_series = {
         "labels": [m.strftime("%B %Y") for m in month_starts],
-        "data": [monthly_totals.get(m, 0) for m in month_starts],
+        "data": month_data,
+        "period_starts": [m.isoformat() for m in month_starts],
+        "window_size": _MONTHS_SHOWN,
+        "axis_max": _tidy_axis_max(max(month_data, default=0)),
     }
 
     # --- Yearly ---
-    years = [today.year - i for i in range(_YEARS_SHOWN - 1, -1, -1)]
-    years = [y for y in years if y >= earliest_date.year]
+    years = list(range(earliest_date.year, today.year + 1))
     yearly_totals = {
         row["period"].year: row["total"]
         for row in (
@@ -98,9 +132,13 @@ def _time_distribution(qs, earliest_date: datetime.date | None) -> dict:
             .annotate(total=Coalesce(Sum("total_arrows"), 0))
         )
     }
+    year_data = [yearly_totals.get(y, 0) for y in years]
     year_series = {
         "labels": [str(y) for y in years],
-        "data": [yearly_totals.get(y, 0) for y in years],
+        "data": year_data,
+        "period_starts": [datetime.date(y, 1, 1).isoformat() for y in years],
+        "window_size": _YEARS_SHOWN,
+        "axis_max": _tidy_axis_max(max(year_data, default=0)),
     }
 
     return {"week": week_series, "month": month_series, "year": year_series}

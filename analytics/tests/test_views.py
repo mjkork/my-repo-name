@@ -538,9 +538,27 @@ class TestTimeDistributionEmpty:
 
     def test_all_series_are_empty(self, client):
         td = self._ctx(client)["time_distribution"]
-        assert td["week"] == {"labels": [], "data": []}
-        assert td["month"] == {"labels": [], "data": []}
-        assert td["year"] == {"labels": [], "data": []}
+        assert td["week"] == {
+            "labels": [],
+            "data": [],
+            "period_starts": [],
+            "window_size": 12,
+            "axis_max": 50,
+        }
+        assert td["month"] == {
+            "labels": [],
+            "data": [],
+            "period_starts": [],
+            "window_size": 12,
+            "axis_max": 50,
+        }
+        assert td["year"] == {
+            "labels": [],
+            "data": [],
+            "period_starts": [],
+            "window_size": 5,
+            "axis_max": 50,
+        }
 
     def test_empty_state_message_shown(self, client):
         html = client.get(URL).content.decode()
@@ -552,6 +570,8 @@ class TestTimeDistributionEmpty:
         assert "time-distribution-chart" not in html
         assert "chart.min.js" not in html
         assert "stats-timeframe-btn" not in html
+        assert "stats-chart-earlier" not in html
+        assert "stats-chart-later" not in html
 
 
 @pytest.mark.django_db
@@ -614,6 +634,58 @@ class TestTimeDistributionAggregation:
         # Only one year bucket should appear since history starts this year.
         assert td["year"]["labels"] == [str(today.year)]
 
+    def test_weekly_full_history_beyond_old_window(self, client):
+        """History older than the 12-week paging window is still returned in full."""
+        today = datetime.date.today()
+        current_week_start = today - datetime.timedelta(days=today.weekday())
+        old_week_start = current_week_start - datetime.timedelta(weeks=20)
+        SessionFactory(date=old_week_start, total_arrows=9)
+        SessionFactory(date=current_week_start, total_arrows=11)
+
+        td = client.get(URL).context["time_distribution"]
+        week_labels = td["week"]["labels"]
+        assert len(week_labels) == 21
+        assert week_labels[0] == f"{old_week_start.day} {old_week_start.strftime('%b')}"
+        assert (
+            week_labels[-1]
+            == f"{current_week_start.day} {current_week_start.strftime('%b')}"
+        )
+        assert td["week"]["data"][0] == 9
+        assert td["week"]["data"][-1] == 11
+        # A gap week somewhere in the middle is zero, not missing.
+        assert 0 in td["week"]["data"][1:-1]
+
+    def test_monthly_full_history_beyond_old_window(self, client):
+        """History older than the 12-month paging window is still returned in full."""
+        today = datetime.date.today()
+        month_index = today.year * 12 + (today.month - 1) - 15
+        old_year, old_month = divmod(month_index, 12)
+        old_month += 1
+        old_month_start = datetime.date(old_year, old_month, 1)
+        SessionFactory(date=old_month_start, total_arrows=5)
+        SessionFactory(date=today, total_arrows=7)
+
+        td = client.get(URL).context["time_distribution"]
+        month_labels = td["month"]["labels"]
+        assert len(month_labels) == 16
+        assert month_labels[0] == old_month_start.strftime("%B %Y")
+        assert month_labels[-1] == today.replace(day=1).strftime("%B %Y")
+        assert td["month"]["data"][0] == 5
+        assert td["month"]["data"][-1] == 7
+
+    def test_yearly_full_history_beyond_old_window(self, client):
+        """History older than the 5-year paging window is still returned in full."""
+        today = datetime.date.today()
+        old_year = today.year - 6
+        SessionFactory(date=datetime.date(old_year, 6, 15), total_arrows=12)
+        SessionFactory(date=today, total_arrows=8)
+
+        td = client.get(URL).context["time_distribution"]
+        year_labels = td["year"]["labels"]
+        assert year_labels == [str(y) for y in range(old_year, today.year + 1)]
+        assert td["year"]["data"][0] == 12
+        assert td["year"]["data"][-1] == 8
+
 
 @pytest.mark.django_db
 class TestTimeDistributionTemplateRendering:
@@ -655,6 +727,14 @@ class TestTimeDistributionTemplateRendering:
         html = client.get(URL).content.decode()
         assert 'id="time-distribution-chart"' in html
         assert "<canvas" in html
+
+    def test_earlier_later_buttons_and_range_label_present(self, client):
+        html = client.get(URL).content.decode()
+        assert 'id="stats-chart-earlier"' in html
+        assert 'id="stats-chart-later"' in html
+        assert 'id="stats-chart-range"' in html
+        assert 'aria-label="Show earlier periods"' in html
+        assert 'aria-label="Show later periods"' in html
 
 
 @pytest.mark.django_db

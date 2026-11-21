@@ -769,13 +769,23 @@ Lives directly inside the Overview section's expanded body, below the 5 stat car
 
 - **Chart type:** columns (bars) only. No pie, line, scatter, zoom, pan, or drill-down.
 - **Metric:** total arrows shot per time period (`total_arrows`, summed; null counts as 0).
-- **Time frames:** Week (last 12 weeks), Month (last 12 months), Year (last 5 years) — a three-button toggle group, styled as subdued view controls (outlined, not primary blue) so they read as display options rather than actions.
-- **Default selection:** Month.
+- **Time frames:** Week, Month, Year — a three-button toggle group, styled as subdued view controls (outlined, not primary blue) so they read as display options rather than actions.
+- **Default selection:** Month, showing the latest window (see "History paging" below).
 - **Zero-count periods:** gap periods (e.g. a week with no sessions) render as an explicit 0 bar, not a missing bar. Periods are never padded before the archer's first-ever logged session.
 - **Empty state:** with zero sessions total, an italic message replaces the selector+chart entirely ("No sessions logged yet. Log a session to see your training distribution.").
-- **Computation:** `analytics/views.py` computes all three series server-side per request using `TruncWeek`/`TruncMonth`/`TruncYear` + `Coalesce(Sum(...), 0)`, then fills any ORM-skipped zero periods in Python. All three series are passed to the template in one request — no AJAX. The frontend only swaps `chart.data`/`chart.update()` on button click.
+- **Computation:** `analytics/views.py::_time_distribution` computes all three series server-side per request, **covering the archer's full history** (first-ever session's period through the current period) using `TruncWeek`/`TruncMonth`/`TruncYear` + `Coalesce(Sum(...), 0)`, then fills any ORM-skipped zero periods in Python. All three full series are passed to the template in one request via `json_script` — no AJAX, ever (including while paging). The frontend only slices a window out of the already-loaded arrays and swaps `chart.data`/`chart.update()`.
 - **Purely descriptive:** no interpretation, coaching, or advice — consistent with the app's North Star.
 - **Scoring-session differentiation — deliberately deferred.** The chart does not color-code or distinguish scoring vs. blank-bale sessions. With only ~2 scoring sessions out of ~36 total at the time this shipped, differentiating them would be visual noise, not signal. Revisit once scoring sessions reach 15+.
+
+#### History paging — ✅ SHIPPED
+Each series carries its full history, not just a recent slice, so a `‹ Earlier` / `Later ›` nav (next to the Week/Month/Year selector, right-aligned, same subdued button style) lets the archer page back through everything they've ever logged.
+
+- **Window sizes unchanged:** 12 weeks, 12 months, 5 years — now the *paging* window size (`window_size` in each series' JSON) rather than "periods shown," but the same constants (`_WEEKS_SHOWN`/`_MONTHS_SHOWN`/`_YEARS_SHOWN`) drive both meanings so there's one source of truth.
+- **Windows are fixed-size and aligned to the present:** the default window always ends at the current period; `Earlier` steps back by one full window size, `Later` steps forward. The earliest window may hold fewer periods than the window size — that's expected, not a bug.
+- **Button disabling:** `Later` disables when the window already ends at the current period (`windowIndex === 0`); `Earlier` disables when the window's start index is 0 (already includes the first-ever period). Both native-`disabled`, so clicks on a disabled button never fire — no manual guard needed in the handler.
+- **Switching Week/Month/Year resets paging** to that granularity's latest window — each granularity pages independently.
+- **Range label** (e.g. "31 Aug – 16 Nov 2026") is built client-side from a `period_starts` array of ISO dates passed alongside `labels`/`data` (the existing chart tick labels don't carry a year for Week, so a separate date-bearing array is needed to build an unambiguous label). The year is shown once, on the later boundary, and only repeated on the earlier boundary if the window spans two different years; a window that resolves to a single point (e.g. all history in one year, for Year) collapses to one value instead of a dash-range.
+- **Fixed y-axis scale per granularity, never per window:** `axis_max` is computed once from the *full* series (not the visible window) via `analytics/views.py::_tidy_axis_max` — rounds the series' true max up to the next tidy 50 (value ≤ 200) or 100 (value > 200) step, always strictly above the data max so the tallest bar has headroom. This value is set on `chart.options.scales.y.max` on every render, but since it's fixed per granularity it never visibly changes while paging — only when switching Week/Month/Year. Rationale: pages must stay visually comparable; a quiet period should look quiet, not get rescaled to fill the chart.
 
 ### What is NOT built (deliberate scope boundary)
 - No filters, date range pickers, or exploration tools (deferred).
@@ -832,7 +842,7 @@ Apply this pattern to any future stat that could be meaningless on small samples
 ### Statistics MVP: ✅ DONE
 - `/mystatistics/` page ships with all eight sections and honest insufficient-data messages.
 - Sections default to collapsed for a clean initial view; each uses the shared expandable-card pattern (same as Settings).
-- **Overview time-distribution chart: ✅ SHIPPED.** Chart.js bar chart with Week/Month/Year toggle, in-page (no modal). See "Time-distribution chart" above.
+- **Overview time-distribution chart: ✅ SHIPPED.** Chart.js bar chart with Week/Month/Year toggle, in-page (no modal). **History paging: ✅ SHIPPED** — Earlier/Later nav pages through the archer's full history per granularity, with a fixed y-axis per granularity. See "Time-distribution chart" and "History paging" above.
 - Similar in-section charts could later be added to other Statistics sections (Sessions by bow, Location and distance, etc.) — each should be its own focused prompt driven by a real question that comes up in practice, not "chart everything" for its own sake.
 - **Bar-row component: ✅ SHIPPED** for Location and distance, Session types, Time of day, and the categorical rows of Outdoor conditions. **Scale marker component: ✅ SHIPPED** for the 1–5 scale rows of Outdoor conditions and How you felt. See "Bar-row component (reusable)" and "Scale marker component (reusable)" above. Only Sessions by bow (stays a table until a second bow exists) and Score analysis (stays gated) remain untouched by this visual-component work.
 - **Conditions cards split: ✅ SHIPPED** — the old combined "Conditions and how you felt" card became three cards (Time of day, Outdoor conditions, How you felt). See "Conditions cards split" above.

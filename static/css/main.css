@@ -1095,16 +1095,36 @@ details[open] .settings-card-chevron {
     border-top: 1px solid var(--color-border);
 }
 
-/* View-control buttons (time-frame toggle) — deliberately subdued/outlined,
- * distinct from .btn-primary, to read as "chart display option" rather
- * than a primary action. */
-.stats-timeframe-selector {
+/* Row holding the Week/Month/Year selector (left) and the Earlier/Later
+ * paging nav (right) — wraps to a stacked column on narrow screens instead
+ * of squeezing both onto one line. */
+.stats-chart-controls {
     display: flex;
-    gap: var(--sp-2);
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-3);
     margin-bottom: var(--sp-4);
 }
 
-.stats-timeframe-btn {
+/* View-control buttons (time-frame toggle, paging nav) — deliberately
+ * subdued/outlined, distinct from .btn-primary, to read as "chart display
+ * option" rather than a primary action. Shared by .stats-timeframe-btn
+ * (Week/Month/Year) and .stats-nav-btn (Earlier/Later) so both read as the
+ * same kind of control. */
+.stats-timeframe-selector {
+    display: flex;
+    gap: var(--sp-2);
+}
+
+.stats-chart-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+}
+
+.stats-timeframe-btn,
+.stats-nav-btn {
     padding: 0.4rem 1rem;
     border: 1.5px solid var(--color-btn-sec-border);
     border-radius: var(--radius-pill);
@@ -1117,7 +1137,8 @@ details[open] .settings-card-chevron {
     transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.stats-timeframe-btn:hover {
+.stats-timeframe-btn:hover,
+.stats-nav-btn:not(:disabled):hover {
     background: #f9fafb;
 }
 
@@ -1125,6 +1146,29 @@ details[open] .settings-card-chevron {
     background: var(--color-stat-card-bg);
     border-color: #c9a961;
     color: var(--color-text);
+}
+
+.stats-nav-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.stats-chart-range {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .stats-chart-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .stats-chart-nav {
+        justify-content: space-between;
+    }
 }
 
 .stats-chart-canvas-wrap {
